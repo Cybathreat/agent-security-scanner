@@ -1,0 +1,50 @@
+# Agent Security Scanner Configuration
+# Default configuration for MVP v0.1
+
+scanner:
+  timeout: 30
+  max_retries: 3
+  rate_limit: 10.0
+  user_agent: "AgentSecurityScanner/0.1"
+  verify_ssl: true
+
+modules:
+  prompt_injection:
+    enabled: true
+    sensitivity: "high"
+    max_payload_size: 10000
+    detect_obfuscation: true
+
+  rag_security:
+    enabled: true
+    check_poisoning: true
+    check_exfiltration: true
+    vector_db_scan: true
+    max_document_size: 1000000
+
+  tool_boundaries:
+    enabled: true
+    check_permissions: true
+    audit_sandbox: true
+
+  misconfigurations:
+    enabled: true
+    check_auth: true
+    check_cors: true
+    check_rate_limiting: true
+    check_info_disclosure: true
+
+output:
+  format: "both"
+  output_dir: "output"
+  pretty_print: true
+  include_timestamp: true
+  verbose: false
+
+logging:
+  level: "INFO"
+  format: "{time:YYYY-MM-DD HH:mm:ss} | {level} | {name} | {function} | {message}"
+  rotation: "10 MB"
+  retention: "7 days"
+  compression: "zip"
+  serialize: false
