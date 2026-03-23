@@ -2,6 +2,7 @@
 
 **v0.1** — Security auditing tool for LLM agents, RAG pipelines, and agent frameworks.
 
+[![PyPI](https://img.shields.io/pypi/v/agent-security-scanner.svg)](https://pypi.org/project/agent-security-scanner/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![Security Research](https://img.shields.io/badge/Security-Research-red.svg)]()
@@ -52,6 +53,14 @@ This tool helps security teams, developers, and researchers identify potential s
 ---
 
 ## Installation
+
+### From PyPI
+
+```bash
+pip install agent-security-scanner
+```
+
+### From Source
 
 ```bash
 git clone https://github.com/Cybathreat/agent-security-scanner.git
