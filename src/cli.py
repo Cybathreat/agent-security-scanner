@@ -22,13 +22,8 @@ from typing import List, Optional
 from loguru import logger
 
 from .core.config import load_config
+from .core.engine import ScanEngine
 from .core.logging import setup_logger
-from .modules import (
-    MisconfigurationsModule,
-    PromptInjectionModule,
-    RAGSecurityModule,
-    ToolBoundariesModule,
-)
 from .modules.base import ScanResult
 from .output.json_report import JSONReport
 from .output.markdown_report import MarkdownReport
@@ -175,41 +170,10 @@ def run_scan(args: argparse.Namespace) -> List[ScanResult]:
     # Load configuration
     config = load_config(args.config)
 
-    logger.info(f"Starting scan on target: {args.target}")
-    logger.info(f"Modules: {args.modules}")
-    logger.info(f"Timeout: {args.timeout}s")
+    modules = None if args.modules == "all" else [m.strip() for m in args.modules.split(",")]
 
-    # Determine which modules to run
-    if args.modules == "all":
-        module_names = ["misconfigurations", "prompt_injection", "tool_boundaries", "rag_security"]
-    else:
-        module_names = [m.strip() for m in args.modules.split(",")]
-
-    results: List[ScanResult] = []
-
-    # Initialize and run modules
-    for module_name in module_names:
-        logger.info(f"Running module: {module_name}")
-
-        if module_name == "misconfigurations":
-            module = MisconfigurationsModule(config.modules.misconfigurations)
-        elif module_name == "prompt_injection":
-            module = PromptInjectionModule(config.modules.prompt_injection)
-        elif module_name == "tool_boundaries":
-            module = ToolBoundariesModule(config.modules.tool_boundaries)
-        elif module_name == "rag_security":
-            module = RAGSecurityModule(config.modules.rag_security)
-        else:
-            logger.warning(f"Unknown module: {module_name}, skipping")
-            continue
-
-        # Run scan
-        result = module.scan(args.target, timeout=args.timeout)
-        results.append(result)
-
-        logger.info(f"Module {module_name} complete: {len(result.findings)} findings")
-
-    return results
+    engine = ScanEngine(config)
+    return engine.run(args.target, modules=modules, timeout=args.timeout)
 
 
 def generate_reports(results: List[ScanResult], args: argparse.Namespace) -> None:
