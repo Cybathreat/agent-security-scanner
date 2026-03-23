@@ -1,0 +1,75 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "agent-security-scanner"
+version = "0.1.0"
+description = "Security auditing tool for LLM agents, RAG pipelines, and agent frameworks"
+readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [
+    { name = "Ahmed Chiboub", email = "ahmed.chiboub@cyberian-defenses.com" }
+]
+keywords = [
+    "security", "llm", "ai", "agent", "rag", "prompt-injection",
+    "pentest", "audit", "owasp", "mitre"
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Information Technology",
+    "Intended Audience :: System Administrators",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Security",
+    "Topic :: Software Development :: Testing",
+    "Typing :: Typed",
+]
+requires-python = ">=3.10"
+dependencies = [
+    "pyyaml>=6.0",
+    "aiohttp>=3.9.0",
+    "loguru>=0.7.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4.0",
+    "pytest-asyncio>=0.21.0",
+    "pytest-cov>=4.1.0",
+    "pytest-mock>=3.12.0",
+    "mypy>=1.8.0",
+    "ruff>=0.1.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/Cybathreat/agent-security-scanner"
+Repository = "https://github.com/Cybathreat/agent-security-scanner"
+Issues = "https://github.com/Cybathreat/agent-security-scanner/issues"
+Changelog = "https://github.com/Cybathreat/agent-security-scanner/blob/main/CHANGELOG.md"
+
+[project.scripts]
+agent-security-scanner = "agent_security_scanner.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["agent_security_scanner*"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.mypy]
+python_version = "3.10"
+strict = false
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
