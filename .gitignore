@@ -127,9 +127,9 @@ dmypy.json
 *.swo
 *~
 
-# Output directories
-output/
-reports/
+# Output directories (scan results, not source code)
+/output/
+/reports/
 
 # Secrets
 *.pem
