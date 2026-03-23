@@ -1,6 +1,6 @@
 # Agent Security Scanner
 
-**MVP v0.1** — AI Security Tool for auditing LLM agents, RAG pipelines, and agent frameworks.
+**v0.1** — Security auditing tool for LLM agents, RAG pipelines, and agent frameworks.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
@@ -16,48 +16,51 @@ This tool helps security teams, developers, and researchers identify potential s
 
 ---
 
-## Features (MVP v0.1)
+## Features
 
-- **Agent Security Misconfiguration Scanning**
-  - Detect insecure default configurations
-  - Identify missing authentication/authorization controls
-  - Check for exposed API endpoints
+- **Security Misconfiguration Scanning**
+  - Missing authentication/authorization controls
+  - CORS misconfigurations
+  - Missing rate limiting
+  - Information disclosure in error responses
+  - Exposed debug endpoints
 
 - **Prompt Injection Detection**
-  - Scan for vulnerable prompt templates
-  - Identify injection points in user input handling
-  - Check for proper input sanitization
+  - Direct prompt injection
+  - System prompt leakage
+  - Obfuscation/homoglyph bypass
+  - Instruction hijacking via context manipulation
 
 - **Tool Calling Boundary Validation**
-  - Audit tool permission boundaries
-  - Detect overly permissive tool access
-  - Validate sandboxing configurations
+  - Overly permissive tool access
+  - Dangerous tool combinations (e.g. read_file + http_request)
+  - Sandbox misconfiguration
+  - Missing allow/deny lists
 
 - **RAG Pipeline Security**
   - Document poisoning detection
   - Data exfiltration risk analysis
   - Vector database security checks
+  - Context window attack surface
+  - Embedding model vulnerabilities
 
 - **Comprehensive Reporting**
-  - JSON structured reports
-  - Markdown human-readable summaries
-  - Framework references (OWASP LLM Top 10, MITRE ATLAS, ANSSI)
+  - JSON structured reports with OWASP/MITRE framework mappings
+  - Markdown human-readable summaries with remediation guidance
+  - Severity-based risk scoring
 
 ---
 
 ## Installation
 
 ```bash
-# Clone the repository
 git clone https://github.com/Cybathreat/agent-security-scanner.git
 cd agent-security-scanner
 
-# Create virtual environment
 python -m venv venv
 source venv/bin/activate  # Linux/macOS
 # or: venv\Scripts\activate  # Windows
 
-# Install dependencies
 pip install -r requirements.txt
 ```
 
@@ -66,87 +69,190 @@ pip install -r requirements.txt
 ## Quick Start
 
 ```bash
-# Run a basic scan
-python -m src.cli scan --target <agent_endpoint> --output output/
+# Run a full scan (all modules)
+python -m src.cli scan --target https://api.example.com/agent --output output/
 
-# Run with specific modules
-python -m src.cli scan --target <agent_endpoint> --modules prompt_injection,rag_security
+# Run specific modules only
+python -m src.cli scan --target https://api.example.com/agent --modules prompt_injection,rag_security
 
-# Generate JSON report
-python -m src.cli scan --target <agent_endpoint> --format json --output report.json
+# JSON report only
+python -m src.cli scan --target https://api.example.com/agent --format json --output output/
 
-# Generate Markdown summary
-python -m src.cli scan --target <agent_endpoint> --format markdown --output summary.md
+# Markdown report only
+python -m src.cli scan --target https://api.example.com/agent --format markdown --output output/
 ```
 
 ---
 
 ## Usage
 
-### Basic Commands
+### Scan Command
 
-```bash
-# Show help
-python -m src.cli --help
+```
+python -m src.cli scan --target <url> [options]
 
-# Scan with verbose output
-python -m src.cli scan --target <target> --verbose
-
-# Scan specific security categories
-python -m src.cli scan --target <target> --categories misconfigurations,prompt_injection
-
-# Set log level
-python -m src.cli scan --target <target> --log-level DEBUG
+Options:
+  --target,  -t   Target URL or API endpoint (required)
+  --modules, -m   Comma-separated modules to run (default: all)
+                  Choices: misconfigurations, prompt_injection, tool_boundaries, rag_security
+  --output,  -o   Output directory for reports (default: output)
+  --format,  -f   Report format: json | markdown | both (default: both)
+  --config,  -c   Path to YAML config file
+  --timeout       Request timeout in seconds (default: 30)
+  --verbose, -v   Enable verbose output (includes evidence in reports)
+  --log-level     DEBUG | INFO | WARNING | ERROR (default: INFO)
+  --dry-run       Load config and modules without executing scan
 ```
 
 ### Configuration
 
-Create a `config.yaml` file in the `config/` directory:
+Generate a default config file:
+
+```bash
+python -m src.cli config --generate
+```
+
+Or create `config/config.yaml` manually:
 
 ```yaml
 scanner:
   timeout: 30
   max_retries: 3
-  rate_limit: 10  # requests per second
+  rate_limit: 10.0   # requests per second
+  verify_ssl: true
 
 modules:
   prompt_injection:
     enabled: true
     sensitivity: high
-  
+    detect_obfuscation: true
+
   rag_security:
     enabled: true
     check_poisoning: true
     check_exfiltration: true
+    vector_db_scan: true
+
+  tool_boundaries:
+    enabled: true
+    check_permissions: true
+    audit_sandbox: true
+
+  misconfigurations:
+    enabled: true
+    check_auth: true
+    check_cors: true
+    check_rate_limiting: true
+    check_info_disclosure: true
+
+output:
+  format: both
+  output_dir: output
+  verbose: false
+
+logging:
+  level: INFO
+```
+
+### Environment Variable Overrides
+
+Configuration can be overridden via environment variables using the `ASS_` prefix:
+
+```bash
+export ASS_SCANNER_TIMEOUT=60
+export ASS_SCANNER_VERIFY_SSL=false
+export ASS_LOG_LEVEL=DEBUG
+export ASS_OUTPUT_FORMAT=json
 ```
 
 ---
 
-## Module Architecture
+## Architecture
 
 ```
 src/
-├── core/           # Core engine and utilities
-│   ├── engine.py   # Main scanning engine
-│   ├── config.py   # Configuration loader
-│   └── logging.py  # Structured logging
-├── modules/        # Security scanning modules
-│   ├── base.py     # Base module class
+├── core/
+│   ├── engine.py        # Scan orchestration — module selection and lifecycle
+│   ├── config.py        # YAML + environment variable configuration loader
+│   └── logging.py       # Structured logging via loguru
+├── modules/
+│   ├── base.py          # BaseModule ABC, Finding, ScanResult, Severity
 │   ├── misconfigurations.py
 │   ├── prompt_injection.py
 │   ├── tool_boundaries.py
 │   └── rag_security.py
-├── output/         # Reporting modules
-│   ├── json_report.py
-│   └── markdown_report.py
-└── cli.py          # Command-line interface
+├── output/
+│   ├── json_report.py   # Structured JSON reports
+│   └── markdown_report.py  # Human-readable Markdown reports
+└── cli.py               # Command-line interface
+```
+
+### ScanEngine
+
+The `ScanEngine` class in `src/core/engine.py` can be used programmatically:
+
+```python
+from src.core.config import load_config
+from src.core.engine import ScanEngine
+
+config = load_config("config/config.yaml")
+engine = ScanEngine(config)
+
+results = engine.run(
+    target="https://api.example.com/agent",
+    modules=["prompt_injection", "misconfigurations"],
+    timeout=30,
+)
 ```
 
 ---
 
-## Security Frameworks Referenced
+## Output Examples
 
-This tool references the following security frameworks:
+### JSON Report
+
+```json
+{
+  "$schema": "https://github.com/Cybathreat/agent-security-scanner/schema/report/v1",
+  "report_id": "uuid",
+  "generated_at": "2026-03-23T10:00:00Z",
+  "scanner": { "name": "Agent Security Scanner", "version": "0.1.0" },
+  "target": "https://api.example.com/agent",
+  "summary": {
+    "total": 5,
+    "critical": 1,
+    "high": 2,
+    "medium": 1,
+    "low": 1,
+    "risk_score": 42
+  },
+  "findings": [
+    {
+      "id": "FIND-promptinjection-a1b2c3d4",
+      "severity": "HIGH",
+      "category": "promptinjection",
+      "title": "Direct Prompt Injection Vulnerability",
+      "description": "...",
+      "cwe": "CWE-94",
+      "owasp_ref": "OWASP LLM01:2024 - Prompt Injection",
+      "mitre_ref": "MITRE ATLAS - TA0045 LLM Attack",
+      "recommendation": "..."
+    }
+  ],
+  "frameworks": {
+    "owasp_llm_top_10": { "OWASP LLM01:2024 - Prompt Injection": ["FIND-..."] },
+    "mitre_atlas": { "MITRE ATLAS - TA0045 LLM Attack": ["FIND-..."] }
+  }
+}
+```
+
+### Markdown Report
+
+Reports include an executive summary, findings overview table, detailed findings with remediation guidance, and a module status summary. Pass `--verbose` to include raw evidence per finding.
+
+---
+
+## Security Frameworks Referenced
 
 - **OWASP LLM Top 10** — Large Language Model security risks
 - **MITRE ATLAS** — Adversarial Threat Landscape for AI Systems
@@ -159,62 +265,29 @@ This tool references the following security frameworks:
 ### Running Tests
 
 ```bash
-# Run unit tests
-pytest tests/unit/ -v --cov=src --cov-report=html
+# Run all tests with coverage
+pytest tests/ -v --cov=src --cov-report=html
 
-# Run integration tests
+# Unit tests only
+pytest tests/unit/ -v
+
+# Integration tests only
 pytest tests/integration/ -v
-
-# Check code style
-ruff check src/
-mypy src/
 ```
 
 ### Adding New Modules
 
-1. Create a new module class in `src/modules/`
-2. Inherit from `BaseModule`
-3. Implement `scan()` method
-4. Register in module registry
-5. Add unit tests
-
----
-
-## Output Examples
-
-### JSON Report
-
-```json
-{
-  "scan_id": "uuid",
-  "timestamp": "2026-03-21T06:00:00Z",
-  "target": "https://api.example.com/agent",
-  "findings": [
-    {
-      "id": "FIND-001",
-      "severity": "HIGH",
-      "category": "prompt_injection",
-      "description": "Unsanitized user input in system prompt",
-      "cwe": "CWE-94",
-      "owasp_ref": "LLM01:2024 - Prompt Injection",
-      "recommendation": "Implement input validation and sanitization"
-    }
-  ],
-  "summary": {
-    "total": 5,
-    "critical": 1,
-    "high": 2,
-    "medium": 1,
-    "low": 1
-  }
-}
-```
+1. Create a new class in `src/modules/` inheriting from `BaseModule`
+2. Implement the `scan(target, **kwargs) -> ScanResult` method
+3. Register it in `src/core/engine.py` — add to `ALL_MODULES` and `_build_module()`
+4. Add the config dataclass in `src/core/config.py`
+5. Add unit and integration tests
 
 ---
 
 ## Disclaimer
 
-This tool is for security research and educational purposes. Use responsibly.
+This tool is for security research and educational purposes. Use responsibly and only against systems you are authorised to test.
 See [DISCLAIMER.md](./DISCLAIMER.md) for complete legal disclaimers.
 
 ---
@@ -237,9 +310,3 @@ MIT License — see [LICENSE](./LICENSE) for details.
 ## Contributing
 
 Contributions welcome! Please read our contributing guidelines and submit PRs.
-
----
-
-## Version
-
-**MVP v0.1** — Initial release
