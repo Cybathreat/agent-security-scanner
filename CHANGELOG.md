@@ -10,7 +10,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
-## [0.1.0] - 2026-03-21
+## [0.1.0] - 2026-03-23
 
 ### Added
 
@@ -34,7 +34,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - `config --generate` command to generate a default `config.yaml`
 
 #### Project
+- `pyproject.toml` — PyPI packaging, entry point (`agent-security-scanner` CLI command), and build configuration
+- Published to PyPI: `pip install agent-security-scanner`
 - MIT License
-- README with usage, architecture, and output examples
+- README with usage, architecture, output examples, and PyPI install instructions
 - Contributing guide
+- Changelog
 - 67 unit and integration tests
