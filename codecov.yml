@@ -1,0 +1,14 @@
+coverage:
+  status:
+    project:
+      default:
+        target: 70%        # minimum acceptable coverage
+        threshold: 2%      # allow up to 2% drop without failing
+    patch:
+      default:
+        target: 60%        # minimum coverage on changed lines in a PR
+
+comment:
+  layout: "reach,diff,flags,files"
+  behavior: default
+  require_changes: true    # only comment if coverage changes

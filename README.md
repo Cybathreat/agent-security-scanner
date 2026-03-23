@@ -3,6 +3,7 @@
 **v0.1** — Security auditing tool for LLM agents, RAG pipelines, and agent frameworks.
 
 [![CI](https://github.com/Cybathreat/agent-security-scanner/actions/workflows/ci.yml/badge.svg)](https://github.com/Cybathreat/agent-security-scanner/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/Cybathreat/agent-security-scanner/branch/main/graph/badge.svg)](https://codecov.io/gh/Cybathreat/agent-security-scanner)
 [![PyPI](https://img.shields.io/pypi/v/agent-security-scanner.svg)](https://pypi.org/project/agent-security-scanner/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
