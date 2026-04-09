@@ -37,6 +37,20 @@ class Severity(Enum):
     INFO = "INFO"
 
 
+class Sensitivity(Enum):
+    """
+    Scan sensitivity levels for controlling scan intensity.
+
+    Used by modules like PromptInjectionScanner to adjust:
+    - Number of test payloads
+    - Depth of analysis
+    - Time allowed for each test
+    """
+    LOW = "low"      # Minimal payloads, fast scan
+    MEDIUM = "medium"  # Standard payloads, balanced scan
+    HIGH = "high"     # Maximum payloads, thorough scan
+
+
 @dataclass
 class Finding:
     """
@@ -331,3 +345,104 @@ class BaseModule(ABC):
             List[str]: Supported target types (url, file, api, etc.)
         """
         return ["url", "api_endpoint", "agent_config"]
+
+    async def _fetch_url(
+        self,
+        url: str,
+        session: aiohttp.ClientSession,
+        method: str = "GET",
+        data: Optional[Dict[str, Any]] = None,
+        headers: Optional[Dict[str, str]] = None,
+        timeout: int = 10,
+    ) -> Optional[Dict[str, Any]]:
+        """
+        Shared HTTP client helper for all scanners.
+
+        Provides consistent request handling with proper error handling,
+        timeout management, and response parsing.
+
+        Args:
+            url: Target URL to fetch
+            session: aiohttp ClientSession (managed by caller)
+            method: HTTP method (GET, POST, etc.)
+            data: Request body data (for POST requests)
+            headers: Additional HTTP headers
+            timeout: Request timeout in seconds
+
+        Returns:
+            Dict with keys: url, status, headers, body, json (if applicable)
+            None if request fails
+        """
+        import aiohttp
+
+        try:
+            async with session.request(
+                method=method,
+                url=url,
+                json=data,
+                headers=headers,
+                timeout=timeout,
+            ) as response:
+                body = await response.text()
+                result = {
+                    "url": url,
+                    "status": response.status,
+                    "headers": dict(response.headers),
+                    "body": body,
+                    "ok": response.ok,
+                }
+                # Try to parse JSON if response appears to be JSON
+                content_type = response.headers.get("content-type", "").lower()
+                if "application/json" in content_type or "text/json" in content_type:
+                    try:
+                        result["json"] = await response.json()
+                    except (aiohttp.ClientPayloadError, ValueError):
+                        result["json"] = None
+                else:
+                    result["json"] = None
+                return result
+        except asyncio.TimeoutError:
+            self.logger.warning(f"Timeout fetching {url}")
+            return None
+        except aiohttp.ClientError as e:
+            self.logger.warning(f"Error fetching {url}: {e}")
+            return None
+        except Exception as e:
+            self.logger.error(f"Unexpected error fetching {url}: {e}")
+            return None
+
+    def _run_scan_async(self, scan_func, **kwargs: Any) -> ScanResult:
+        """
+        Shared async scan runner for consistent event loop handling.
+
+        Handles both async and sync contexts automatically, creating
+        a new event loop if needed.
+
+        Args:
+            scan_func: Async function to run (takes session, kwargs)
+            **kwargs: Additional arguments passed to scan_func
+
+        Returns:
+            ScanResult: The scan results
+        """
+        import asyncio
+        import aiohttp
+
+        async def run() -> ScanResult:
+            timeout = kwargs.get("timeout", 10)
+            async with aiohttp.ClientSession() as session:
+                return await scan_func(session, **kwargs)
+
+        try:
+            loop = asyncio.get_running_loop()
+            # Running in async context - create new loop
+            new_loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(new_loop)
+            try:
+                return new_loop.run_until_complete(run())
+            finally:
+                new_loop.close()
+                asyncio.set_event_loop(None)
+        except RuntimeError:
+            # No event loop running - safe to use asyncio.run
+            return asyncio.run(run())

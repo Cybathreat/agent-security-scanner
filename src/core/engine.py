@@ -19,6 +19,40 @@ from ..modules.base import BaseModule, ScanResult
 
 ALL_MODULES = ["misconfigurations", "prompt_injection", "tool_boundaries", "rag_security"]
 
+# Submodule registry for granular module control
+ALL_SUBMODULES = {
+    # Misconfigurations submodules
+    "auth_scanner": "src.modules.misconfig_submodules.auth_scanner",
+    "cors_scanner": "src.modules.misconfig_submodules.cors_scanner",
+    "rate_limit_scanner": "src.modules.misconfig_submodules.rate_limit_scanner",
+    "info_disclosure_scanner": "src.modules.misconfig_submodules.info_disclosure_scanner",
+    # Prompt injection submodules
+    "direct_injection": "src.modules.prompt_injection_submodules.direct_injection",
+    "obfuscation": "src.modules.prompt_injection_submodules.obfuscation",
+    "multi_turn": "src.modules.prompt_injection_submodules.multi_turn",
+    "adaptive_generator": "src.modules.prompt_injection_submodules.adaptive_generator",
+    # Tool boundaries submodules
+    "permission_scanner": "src.modules.tool_boundaries_submodules.permission_scanner",
+    "sandbox_scanner": "src.modules.tool_boundaries_submodules.sandbox_scanner",
+    "tool_chains_scanner": "src.modules.tool_boundaries_submodules.tool_chains",
+    "mcp_scanner": "src.modules.tool_boundaries_submodules.mcp_scanner",
+    # RAG security submodules
+    "document_poisoning": "src.modules.rag_security_submodules.document_poisoning",
+    "exfiltration": "src.modules.rag_security_submodules.exfiltration",
+    "vector_db_scanner": "src.modules.rag_security_submodules.vector_db",
+    "embedding_attacks": "src.modules.rag_security_submodules.embedding_attacks",
+    "multi_tenant": "src.modules.rag_security_submodules.multi_tenant",
+    # Agent submodules
+    "tool_hijacking": "src.modules.agent.tool_hijacking",
+    "recursive_agents": "src.modules.agent.recursive_agents",
+    "memory_poisoning": "src.modules.agent.memory_poisoning",
+    "planning_attacks": "src.modules.agent.planning_attacks",
+    # Infrastructure submodules
+    "secret_scanner": "src.modules.infrastructure.secret_scanner",
+    "dependency_audit": "src.modules.infrastructure.dependency_audit",
+    "plugin_security": "src.modules.infrastructure.plugin_security",
+}
+
 
 class ScanEngine:
     """
@@ -120,3 +154,69 @@ class ScanEngine:
 
         module_class, module_config = registry[name]
         return module_class(module_config)
+
+    def _build_submodule(self, name: str) -> Optional[BaseModule]:
+        """
+        Instantiate a submodule with its configuration.
+
+        Loads submodule modules dynamically to support the expanded scanner set.
+
+        Args:
+            name: Submodule name (e.g., 'auth_scanner', 'direct_injection').
+
+        Returns:
+            BaseModule instance, or None if the name is unknown.
+        """
+        # Import submodule registry
+        submodule_paths = {
+            # Misconfigurations submodules
+            "auth_scanner": ("src.modules.misconfig_submodules.auth_scanner", "AuthScanner"),
+            "cors_scanner": ("src.modules.misconfig_submodules.cors_scanner", "CORSScanner"),
+            "rate_limit_scanner": ("src.modules.misconfig_submodules.rate_limit_scanner", "RateLimitScanner"),
+            "info_disclosure_scanner": ("src.modules.misconfig_submodules.info_disclosure_scanner", "InfoDisclosureScanner"),
+            # Prompt injection submodules
+            "direct_injection": ("src.modules.prompt_injection_submodules.direct_injection", "DirectInjectionScanner"),
+            "obfuscation": ("src.modules.prompt_injection_submodules.obfuscation", "ObfuscationScanner"),
+            "multi_turn": ("src.modules.prompt_injection_submodules.multi_turn", "MultiTurnScanner"),
+            "adaptive_generator": ("src.modules.prompt_injection_submodules.adaptive_generator", "AdaptiveGeneratorScanner"),
+            # Tool boundaries submodules
+            "permission_scanner": ("src.modules.tool_boundaries_submodules.permission_scanner", "PermissionScanner"),
+            "sandbox_scanner": ("src.modules.tool_boundaries_submodules.sandbox_scanner", "SandboxScanner"),
+            "tool_chains": ("src.modules.tool_boundaries_submodules.tool_chains", "ToolChainsScanner"),
+            "mcp_scanner": ("src.modules.tool_boundaries_submodules.mcp_scanner", "MCPScanner"),
+            # RAG security submodules
+            "document_poisoning": ("src.modules.rag_security_submodules.document_poisoning", "DocumentPoisoningScanner"),
+            "exfiltration": ("src.modules.rag_security_submodules.exfiltration", "ExfiltrationScanner"),
+            "vector_db": ("src.modules.rag_security_submodules.vector_db", "VectorDBScanner"),
+            "embedding_attacks": ("src.modules.rag_security_submodules.embedding_attacks", "EmbeddingAttacksScanner"),
+            "multi_tenant": ("src.modules.rag_security_submodules.multi_tenant", "MultiTenantScanner"),
+            # Agent submodules
+            "tool_hijacking": ("src.modules.agent.tool_hijacking", "ToolHijackingScanner"),
+            "recursive_agents": ("src.modules.agent.recursive_agents", "RecursiveAgentsScanner"),
+            "memory_poisoning": ("src.modules.agent.memory_poisoning", "MemoryPoisoningScanner"),
+            "planning_attacks": ("src.modules.agent.planning_attacks", "PlanningAttacksScanner"),
+            # Infrastructure submodules
+            "secret_scanner": ("src.modules.infrastructure.secret_scanner", "SecretScanner"),
+            "dependency_audit": ("src.modules.infrastructure.dependency_audit", "DependencyAuditScanner"),
+            "plugin_security": ("src.modules.infrastructure.plugin_security", "PluginSecurityScanner"),
+        }
+
+        if name not in submodule_paths:
+            logger.warning(f"Unknown submodule '{name}', skipping")
+            return None
+
+        module_path, class_name = submodule_paths[name]
+        try:
+            # Lazy import
+            import importlib
+            module = importlib.import_module(module_path)
+            class_obj = getattr(module, class_name)
+
+            # Get config for this submodule
+            config_key = name.replace("_scanner", "").replace("_", ".")
+            module_config = getattr(self.config.modules, f"{config_key}_config", None)
+
+            return class_obj(module_config)
+        except (ImportError, AttributeError) as e:
+            logger.error(f"Failed to load submodule '{name}': {e}")
+            return None

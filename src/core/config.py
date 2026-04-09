@@ -38,6 +38,7 @@ class PromptInjectionConfig:
     sensitivity: str = "high"  # low, medium, high
     max_payload_size: int = 10000
     detect_obfuscation: bool = True
+    detect_leakage: bool = True
     test_payloads: List[str] = field(default_factory=list)
 
 
@@ -549,6 +550,144 @@ class Config:
                     "check_cors": self.modules.misconfigurations.check_cors,
                     "check_rate_limiting": self.modules.misconfigurations.check_rate_limiting,
                     "check_info_disclosure": self.modules.misconfigurations.check_info_disclosure,
+                },
+                # Submodule configurations
+                "auth_scanner": {
+                    "enabled": self.modules.auth_scanner.enabled,
+                    "check_basic_auth": self.modules.auth_scanner.check_basic_auth,
+                    "check_api_keys": self.modules.auth_scanner.check_api_keys,
+                    "check_session_fixation": self.modules.auth_scanner.check_session_fixation,
+                    "check_mfa": self.modules.auth_scanner.check_mfa,
+                    "check_token_leakage": self.modules.auth_scanner.check_token_leakage,
+                    "test_unauthenticated": self.modules.auth_scanner.test_unauthenticated,
+                },
+                "cors_scanner": {
+                    "enabled": self.modules.cors_scanner.enabled,
+                    "check_wildcard_origin": self.modules.cors_scanner.check_wildcard_origin,
+                    "check_credentials_with_wildcard": self.modules.cors_scanner.check_credentials_with_wildcard,
+                    "check_preflight": self.modules.cors_scanner.check_preflight,
+                    "check_allowed_methods": self.modules.cors_scanner.check_allowed_methods,
+                    "check_allowed_headers": self.modules.cors_scanner.check_allowed_headers,
+                    "test_custom_origins": self.modules.cors_scanner.test_custom_origins,
+                },
+                "rate_limit_scanner": {
+                    "enabled": self.modules.rate_limit_scanner.enabled,
+                    "check_rate_limiting_headers": self.modules.rate_limit_scanner.check_rate_limiting_headers,
+                    "check_429_responses": self.modules.rate_limit_scanner.check_429_responses,
+                    "test_rate_limit_bypass": self.modules.rate_limit_scanner.test_rate_limit_bypass,
+                    "custom_headers": self.modules.rate_limit_scanner.custom_headers,
+                },
+                "info_disclosure_scanner": {
+                    "enabled": self.modules.info_disclosure_scanner.enabled,
+                    "check_stack_traces": self.modules.info_disclosure_scanner.check_stack_traces,
+                    "check_debug_mode": self.modules.info_disclosure_scanner.check_debug_mode,
+                    "check_version_info": self.modules.info_disclosure_scanner.check_version_info,
+                    "check_internal_paths": self.modules.info_disclosure_scanner.check_internal_paths,
+                    "check_server_banner": self.modules.info_disclosure_scanner.check_server_banner,
+                    "check_error_messages": self.modules.info_disclosure_scanner.check_error_messages,
+                },
+                "permission_scanner": {
+                    "enabled": self.modules.permission_scanner.enabled,
+                    "check_admin_mode": self.modules.permission_scanner.check_admin_mode,
+                    "check_unrestricted": self.modules.permission_scanner.check_unrestricted,
+                    "check_trust_all": self.modules.permission_scanner.check_trust_all,
+                    "check_no_validation": self.modules.permission_scanner.check_no_validation,
+                },
+                "sandbox_scanner": {
+                    "enabled": self.modules.sandbox_scanner.enabled,
+                    "check_no_sandbox": self.modules.sandbox_scanner.check_no_sandbox,
+                    "check_root_access": self.modules.sandbox_scanner.check_root_access,
+                    "check_resource_limits": self.modules.sandbox_scanner.check_resource_limits,
+                    "check_network_isolation": self.modules.sandbox_scanner.check_network_isolation,
+                },
+                "tool_chains_scanner": {
+                    "enabled": self.modules.tool_chains_scanner.enabled,
+                    "check_exfiltration": self.modules.tool_chains_scanner.check_exfiltration,
+                    "check_code_deployment": self.modules.tool_chains_scanner.check_code_deployment,
+                    "check_database_exfil": self.modules.tool_chains_scanner.check_database_exfil,
+                    "check_privilege_escalation": self.modules.tool_chains_scanner.check_privilege_escalation,
+                },
+                "mcp_scanner": {
+                    "enabled": self.modules.mcp_scanner.enabled,
+                    "check_server_identity": self.modules.mcp_scanner.check_server_identity,
+                    "check_token_verification": self.modules.mcp_scanner.check_token_verification,
+                    "check_auth_headers": self.modules.mcp_scanner.check_auth_headers,
+                },
+                "document_poisoning_scanner": {
+                    "enabled": self.modules.document_poisoning_scanner.enabled,
+                    "check_poisoning_patterns": self.modules.document_poisoning_scanner.check_poisoning_patterns,
+                    "check_validation": self.modules.document_poisoning_scanner.check_validation,
+                    "check_sanitization": self.modules.document_poisoning_scanner.check_sanitization,
+                    "check_ingestion_security": self.modules.document_poisoning_scanner.check_ingestion_security,
+                },
+                "exfiltration_scanner": {
+                    "enabled": self.modules.exfiltration_scanner.enabled,
+                    "check_exfil_indicators": self.modules.exfiltration_scanner.check_exfil_indicators,
+                    "check_egress_controls": self.modules.exfiltration_scanner.check_egress_controls,
+                    "check_response_filtering": self.modules.exfiltration_scanner.check_response_filtering,
+                    "check_query_monitoring": self.modules.exfiltration_scanner.check_query_monitoring,
+                },
+                "vector_db_scanner": {
+                    "enabled": self.modules.vector_db_scanner.enabled,
+                    "check_no_auth": self.modules.vector_db_scanner.check_no_auth,
+                    "check_plaintext": self.modules.vector_db_scanner.check_plaintext,
+                    "check_public_access": self.modules.vector_db_scanner.check_public_access,
+                    "check_injection": self.modules.vector_db_scanner.check_injection,
+                },
+                "embedding_attacks_scanner": {
+                    "enabled": self.modules.embedding_attacks_scanner.enabled,
+                    "check_adversarial": self.modules.embedding_attacks_scanner.check_adversarial,
+                    "check_inversion": self.modules.embedding_attacks_scanner.check_inversion,
+                    "check_collision": self.modules.embedding_attacks_scanner.check_collision,
+                    "check_fine_tune": self.modules.embedding_attacks_scanner.check_fine_tune,
+                },
+                "multi_tenant_scanner": {
+                    "enabled": self.modules.multi_tenant_scanner.enabled,
+                    "check_tenant_isolation": self.modules.multi_tenant_scanner.check_tenant_isolation,
+                    "check_query_filtering": self.modules.multi_tenant_scanner.check_query_filtering,
+                    "check_tenant_awareness": self.modules.multi_tenant_scanner.check_tenant_awareness,
+                },
+                "tool_hijacking_scanner": {
+                    "enabled": self.modules.tool_hijacking_scanner.enabled,
+                    "check_argument_injection": self.modules.tool_hijacking_scanner.check_argument_injection,
+                    "check_parameter_manipulation": self.modules.tool_hijacking_scanner.check_parameter_manipulation,
+                    "check_tool_validation": self.modules.tool_hijacking_scanner.check_tool_validation,
+                },
+                "recursive_agents_scanner": {
+                    "enabled": self.modules.recursive_agents_scanner.enabled,
+                    "check_shared_context": self.modules.recursive_agents_scanner.check_shared_context,
+                    "check_agent_validation": self.modules.recursive_agents_scanner.check_agent_validation,
+                    "check_context_poisoning": self.modules.recursive_agents_scanner.check_context_poisoning,
+                },
+                "memory_poisoning_scanner": {
+                    "enabled": self.modules.memory_poisoning_scanner.enabled,
+                    "check_memory_validation": self.modules.memory_poisoning_scanner.check_memory_validation,
+                    "check_session_integrity": self.modules.memory_poisoning_scanner.check_session_integrity,
+                    "check_history_poisoning": self.modules.memory_poisoning_scanner.check_history_poisoning,
+                },
+                "planning_attacks_scanner": {
+                    "enabled": self.modules.planning_attacks_scanner.enabled,
+                    "check_plan_validation": self.modules.planning_attacks_scanner.check_plan_validation,
+                    "check_step_injection": self.modules.planning_attacks_scanner.check_step_injection,
+                    "check_goal_manipulation": self.modules.planning_attacks_scanner.check_goal_manipulation,
+                },
+                "secret_scanner": {
+                    "enabled": self.modules.secret_scanner.enabled,
+                    "check_prompts": self.modules.secret_scanner.check_prompts,
+                    "check_responses": self.modules.secret_scanner.check_responses,
+                    "check_headers": self.modules.secret_scanner.check_headers,
+                },
+                "dependency_audit_scanner": {
+                    "enabled": self.modules.dependency_audit_scanner.enabled,
+                    "check_cve": self.modules.dependency_audit_scanner.check_cve,
+                    "check_malicious": self.modules.dependency_audit_scanner.check_malicious,
+                    "check_outdated": self.modules.dependency_audit_scanner.check_outdated,
+                },
+                "plugin_security_scanner": {
+                    "enabled": self.modules.plugin_security_scanner.enabled,
+                    "check_manifest": self.modules.plugin_security_scanner.check_manifest,
+                    "check_permissions": self.modules.plugin_security_scanner.check_permissions,
+                    "check_unsigned_plugins": self.modules.plugin_security_scanner.check_unsigned_plugins,
                 },
             },
             "output": {
