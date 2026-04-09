@@ -318,6 +318,12 @@ MIT License — see [LICENSE](./LICENSE) for details.
 
 ---
 
+## Roadmap
+
+See [ROADMAP.md](./ROADMAP.md) for planned enhancements across detection, infrastructure attacks, web dashboard, and autonomous red-teaming.
+
+---
+
 ## Contributing
 
 Contributions welcome! Please read our contributing guidelines and submit PRs.
