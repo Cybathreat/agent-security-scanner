@@ -24,25 +24,8 @@ from typing import Any, Dict, List, Optional
 import aiohttp
 from loguru import logger
 
-from ..base import BaseModule, Finding, ScanResult, Severity
-
-
-class PromptInjectionConfig:
-    """Configuration for prompt injection scanning."""
-
-    def __init__(
-        self,
-        enabled: bool = True,
-        sensitivity: str = "high",  # low, medium, high
-        detect_obfuscation: bool = True,
-        detect_leakage: bool = True,
-        max_payload_size: int = 10000,
-    ) -> None:
-        self.enabled = enabled
-        self.sensitivity = sensitivity
-        self.detect_obfuscation = detect_obfuscation
-        self.detect_leakage = detect_leakage
-        self.max_payload_size = max_payload_size
+from ..base import BaseModule, Finding, ScanResult, Severity, Sensitivity
+from ...core.config import PromptInjectionConfig
 
 
 class DirectInjectionScanner(BaseModule):
@@ -111,25 +94,13 @@ class DirectInjectionScanner(BaseModule):
         timeout: int = 10,
     ) -> Optional[Dict[str, Any]]:
         """Send injection payload to target and get response."""
-        try:
-            async with session.post(
-                url,
-                json={"prompt": payload, "messages": [{"role": "user", "content": payload}]},
-                timeout=timeout,
-            ) as response:
-                body = await response.text()
-                return {
-                    "url": url,
-                    "status": response.status,
-                    "body": body,
-                    "payload": payload,
-                }
-        except asyncio.TimeoutError:
-            self.logger.warning(f"Timeout sending payload to {url}")
-            return None
-        except aiohttp.ClientError as e:
-            self.logger.warning(f"Error sending payload: {e}")
-            return None
+        return await self._fetch_url(
+            url=url,
+            session=session,
+            method="POST",
+            data={"prompt": payload, "messages": [{"role": "user", "content": payload}]},
+            timeout=timeout,
+        )
 
     async def _test_direct_injection(
         self,
@@ -141,11 +112,14 @@ class DirectInjectionScanner(BaseModule):
         self.logger.info(f"Testing direct injection: {url}")
 
         # Limit test based on sensitivity
-        max_payloads = {
-            "low": 2,
-            "medium": 5,
-            "high": len(self.INJECTION_PAYLOADS),
-        }.get(self.config.sensitivity, 5)
+        sensitivity_map = {
+            Sensitivity.LOW: 2,
+            Sensitivity.MEDIUM: 5,
+            Sensitivity.HIGH: len(self.INJECTION_PAYLOADS),
+        }
+        max_payloads = sensitivity_map.get(
+            Sensitivity(self.config.sensitivity), 5
+        )
 
         for payload in self.INJECTION_PAYLOADS[:max_payloads]:
             response = await self._send_payload(url, payload, session)
@@ -271,23 +245,14 @@ class DirectInjectionScanner(BaseModule):
             },
         )
 
-        async def run_tests() -> None:
-            timeout = kwargs.get("timeout", 10)
+        async def run_tests(session: aiohttp.ClientSession, **scan_kwargs: Any) -> None:
+            timeout = scan_kwargs.get("timeout", 10)
+            await asyncio.gather(
+                self._test_direct_injection(target, session, result),
+                self._test_prompt_leakage(target, session, result),
+            )
 
-            async with aiohttp.ClientSession() as session:
-                await asyncio.gather(
-                    self._test_direct_injection(target, session, result),
-                    self._test_prompt_leakage(target, session, result),
-                )
-
-        try:
-            asyncio.get_running_loop()
-            new_loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(new_loop)
-            new_loop.run_until_complete(run_tests())
-            new_loop.close()
-        except RuntimeError:
-            asyncio.run(run_tests())
+        self._run_scan_async(run_tests, **kwargs)
 
         result.finalize()
         self.post_scan(result)
