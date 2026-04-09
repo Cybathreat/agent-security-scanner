@@ -75,13 +75,261 @@ class MisconfigurationsConfig:
 
 
 @dataclass
+class AuthScannerConfig:
+    """Authentication scanner configuration."""
+
+    enabled: bool = True
+    check_basic_auth: bool = True
+    check_api_keys: bool = True
+    check_session_fixation: bool = True
+    check_mfa: bool = True
+    check_token_leakage: bool = True
+    test_unauthenticated: bool = True
+
+
+@dataclass
+class CORSScannerConfig:
+    """CORS scanner configuration."""
+
+    enabled: bool = True
+    check_wildcard_origin: bool = True
+    check_credentials_with_wildcard: bool = True
+    check_preflight: bool = True
+    check_allowed_methods: bool = True
+    check_allowed_headers: bool = True
+    test_custom_origins: List[str] = field(default_factory=list)
+
+
+@dataclass
+class RateLimitScannerConfig:
+    """Rate limit scanner configuration."""
+
+    enabled: bool = True
+    check_rate_limiting_headers: bool = True
+    check_429_responses: bool = True
+    test_rate_limit_bypass: bool = True
+    custom_headers: List[str] = field(default_factory=list)
+
+
+@dataclass
+class InfoDisclosureScannerConfig:
+    """Information disclosure scanner configuration."""
+
+    enabled: bool = True
+    check_stack_traces: bool = True
+    check_debug_mode: bool = True
+    check_version_info: bool = True
+    check_internal_paths: bool = True
+    check_server_banner: bool = True
+    check_error_messages: bool = True
+
+
+@dataclass
+class PermissionScannerConfig:
+    """Permission scanner configuration."""
+
+    enabled: bool = True
+    check_admin_mode: bool = True
+    check_unrestricted: bool = True
+    check_trust_all: bool = True
+    check_no_validation: bool = True
+
+
+@dataclass
+class SandboxScannerConfig:
+    """Sandbox scanner configuration."""
+
+    enabled: bool = True
+    check_no_sandbox: bool = True
+    check_root_access: bool = True
+    check_resource_limits: bool = True
+    check_network_isolation: bool = True
+
+
+@dataclass
+class ToolChainsScannerConfig:
+    """Tool chains scanner configuration."""
+
+    enabled: bool = True
+    check_exfiltration: bool = True
+    check_code_deployment: bool = True
+    check_database_exfil: bool = True
+    check_privilege_escalation: bool = True
+
+
+@dataclass
+class MCPScannerConfig:
+    """MCP scanner configuration."""
+
+    enabled: bool = True
+    check_server_identity: bool = True
+    check_token_verification: bool = True
+    check_auth_headers: bool = True
+
+
+@dataclass
+class DocumentPoisoningScannerConfig:
+    """Document poisoning scanner configuration."""
+
+    enabled: bool = True
+    check_poisoning_patterns: bool = True
+    check_validation: bool = True
+    check_sanitization: bool = True
+    check_ingestion_security: bool = True
+
+
+@dataclass
+class ExfiltrationScannerConfig:
+    """Exfiltration scanner configuration."""
+
+    enabled: bool = True
+    check_exfil_indicators: bool = True
+    check_egress_controls: bool = True
+    check_response_filtering: bool = True
+    check_query_monitoring: bool = True
+
+
+@dataclass
+class VectorDBScannerConfig:
+    """Vector DB scanner configuration."""
+
+    enabled: bool = True
+    check_no_auth: bool = True
+    check_plaintext: bool = True
+    check_public_access: bool = True
+    check_injection: bool = True
+
+
+@dataclass
+class EmbeddingAttacksScannerConfig:
+    """Embedding attacks scanner configuration."""
+
+    enabled: bool = True
+    check_adversarial: bool = True
+    check_inversion: bool = True
+    check_collision: bool = True
+    check_fine_tune: bool = True
+
+
+@dataclass
+class MultiTenantScannerConfig:
+    """Multi-tenant scanner configuration."""
+
+    enabled: bool = True
+    check_tenant_isolation: bool = True
+    check_query_filtering: bool = True
+    check_tenant_awareness: bool = True
+
+
+@dataclass
+class ToolHijackingScannerConfig:
+    """Tool hijacking scanner configuration."""
+
+    enabled: bool = True
+    check_argument_injection: bool = True
+    check_parameter_manipulation: bool = True
+    check_tool_validation: bool = True
+
+
+@dataclass
+class RecursiveAgentsScannerConfig:
+    """Recursive agents scanner configuration."""
+
+    enabled: bool = True
+    check_shared_context: bool = True
+    check_agent_validation: bool = True
+    check_context_poisoning: bool = True
+
+
+@dataclass
+class MemoryPoisoningScannerConfig:
+    """Memory poisoning scanner configuration."""
+
+    enabled: bool = True
+    check_memory_validation: bool = True
+    check_session_integrity: bool = True
+    check_history_poisoning: bool = True
+
+
+@dataclass
+class PlanningAttacksScannerConfig:
+    """Planning attacks scanner configuration."""
+
+    enabled: bool = True
+    check_plan_validation: bool = True
+    check_step_injection: bool = True
+    check_goal_manipulation: bool = True
+
+
+@dataclass
+class SecretScannerConfig:
+    """Secret scanner configuration."""
+
+    enabled: bool = True
+    check_prompts: bool = True
+    check_responses: bool = True
+    check_headers: bool = True
+
+
+@dataclass
+class DependencyAuditScannerConfig:
+    """Dependency audit scanner configuration."""
+
+    enabled: bool = True
+    check_cve: bool = True
+    check_malicious: bool = True
+    check_outdated: bool = True
+
+
+@dataclass
+class PluginSecurityScannerConfig:
+    """Plugin security scanner configuration."""
+
+    enabled: bool = True
+    check_manifest: bool = True
+    check_permissions: bool = True
+    check_unsigned_plugins: bool = True
+
+
+@dataclass
 class ModulesConfig:
     """All module configurations grouped together."""
 
+    # Original modules
     prompt_injection: PromptInjectionConfig = field(default_factory=PromptInjectionConfig)
     rag_security: RAGSecurityConfig = field(default_factory=RAGSecurityConfig)
     tool_boundaries: ToolBoundariesConfig = field(default_factory=ToolBoundariesConfig)
     misconfigurations: MisconfigurationsConfig = field(default_factory=MisconfigurationsConfig)
+
+    # New misconfigurations submodules
+    auth_scanner: AuthScannerConfig = field(default_factory=AuthScannerConfig)
+    cors_scanner: CORSScannerConfig = field(default_factory=CORSScannerConfig)
+    rate_limit_scanner: RateLimitScannerConfig = field(default_factory=RateLimitScannerConfig)
+    info_disclosure_scanner: InfoDisclosureScannerConfig = field(default_factory=InfoDisclosureScannerConfig)
+
+    # New tool_boundaries submodules
+    permission_scanner: PermissionScannerConfig = field(default_factory=PermissionScannerConfig)
+    sandbox_scanner: SandboxScannerConfig = field(default_factory=SandboxScannerConfig)
+    tool_chains_scanner: ToolChainsScannerConfig = field(default_factory=ToolChainsScannerConfig)
+    mcp_scanner: MCPScannerConfig = field(default_factory=MCPScannerConfig)
+
+    # New rag_security submodules
+    document_poisoning_scanner: DocumentPoisoningScannerConfig = field(default_factory=DocumentPoisoningScannerConfig)
+    exfiltration_scanner: ExfiltrationScannerConfig = field(default_factory=ExfiltrationScannerConfig)
+    vector_db_scanner: VectorDBScannerConfig = field(default_factory=VectorDBScannerConfig)
+    embedding_attacks_scanner: EmbeddingAttacksScannerConfig = field(default_factory=EmbeddingAttacksScannerConfig)
+    multi_tenant_scanner: MultiTenantScannerConfig = field(default_factory=MultiTenantScannerConfig)
+
+    # New agent submodules
+    tool_hijacking_scanner: ToolHijackingScannerConfig = field(default_factory=ToolHijackingScannerConfig)
+    recursive_agents_scanner: RecursiveAgentsScannerConfig = field(default_factory=RecursiveAgentsScannerConfig)
+    memory_poisoning_scanner: MemoryPoisoningScannerConfig = field(default_factory=MemoryPoisoningScannerConfig)
+    planning_attacks_scanner: PlanningAttacksScannerConfig = field(default_factory=PlanningAttacksScannerConfig)
+
+    # New infrastructure submodules
+    secret_scanner: SecretScannerConfig = field(default_factory=SecretScannerConfig)
+    dependency_audit_scanner: DependencyAuditScannerConfig = field(default_factory=DependencyAuditScannerConfig)
+    plugin_security_scanner: PluginSecurityScannerConfig = field(default_factory=PluginSecurityScannerConfig)
 
 
 @dataclass
