@@ -404,12 +404,12 @@ class MisconfigurationsModule(BaseModule):
         self.logger.info(f"Checking debug endpoints: {url}")
 
         # Extract base URL (scheme://host[:port])
-        parsed = url.split("?")[0]
+        url_without_query = url.split("?")[0]
         # Remove trailing path segments to get base
         # For https://example.com/path -> https://example.com
         from urllib.parse import urlparse
-        parsed = urlparse(parsed)
-        base_url = f"{parsed.scheme}://{parsed.netloc}"
+        parsed_url = urlparse(url_without_query)
+        base_url = f"{parsed_url.scheme}://{parsed_url.netloc}"
 
         debug_paths = ["/debug", "/health", "/metrics", "/.env", "/config", "/.git"]
 

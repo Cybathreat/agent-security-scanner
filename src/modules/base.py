@@ -9,6 +9,7 @@ Type hints everywhere for IDE support and static analysis.
 
 from __future__ import annotations
 
+import asyncio
 import uuid
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
@@ -16,6 +17,7 @@ from datetime import datetime
 from enum import Enum
 from typing import Any, Dict, List, Optional
 
+import aiohttp
 from loguru import logger
 
 
