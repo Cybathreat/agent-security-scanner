@@ -47,8 +47,8 @@ class MisconfigurationsModule(BaseModule[MisconfigurationsConfig]):
         Args:
             config: Configuration for misconfiguration checks.
         """
-        super().__init__()
         self.config = config or MisconfigurationsConfig()
+        super().__init__()
 
     async def _fetch_url(
         self,

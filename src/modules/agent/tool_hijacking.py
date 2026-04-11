@@ -67,8 +67,8 @@ class ToolHijackingScanner(BaseModule):
         self,
         config: Optional[ToolHijackingScannerConfig] = None,
     ) -> None:
-        super().__init__()
         self.config = config or ToolHijackingScannerConfig()
+        super().__init__()
 
     async def _fetch_config(
         self,

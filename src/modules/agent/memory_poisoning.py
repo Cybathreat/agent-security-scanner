@@ -55,8 +55,8 @@ class MemoryPoisoningScanner(BaseModule):
         self,
         config: Optional[MemoryPoisoningScannerConfig] = None,
     ) -> None:
-        super().__init__()
         self.config = config or MemoryPoisoningScannerConfig()
+        super().__init__()
 
     async def _fetch_config(
         self,

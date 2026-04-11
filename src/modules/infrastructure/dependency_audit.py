@@ -55,8 +55,8 @@ class DependencyAuditScanner(BaseModule):
         self,
         config: Optional[DependencyAuditScannerConfig] = None,
     ) -> None:
-        super().__init__()
         self.config = config or DependencyAuditScannerConfig()
+        super().__init__()
 
     async def _fetch_config(
         self,

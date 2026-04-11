@@ -242,14 +242,9 @@ class BaseModule(ABC, Generic[ConfigT]):
         Args:
             config: Module-specific configuration dataclass.
 
-        Note: Child classes should set self.config before calling super().__init__()
-              if they want to use a typed config object instead of dict.
+        Note: Child classes should set self.config BEFORE calling super().__init__().
+              The base class will NOT set self.config - each child must set it.
         """
-        # Only set config if child class hasn't already set it
-        if not hasattr(self, 'config'):
-            # Config is typed by the Generic parameter
-            self.config = config  # type: ignore[assignment]
-
         # Derive module name from class name
         # Handles both "*Module" (MisconfigurationsModule) and
         # "*Scanner" (ToolHijackingScanner, SecretScanner, etc.)

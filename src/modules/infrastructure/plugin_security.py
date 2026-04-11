@@ -55,8 +55,8 @@ class PluginSecurityScanner(BaseModule):
         self,
         config: Optional[PluginSecurityScannerConfig] = None,
     ) -> None:
-        super().__init__()
         self.config = config or PluginSecurityScannerConfig()
+        super().__init__()
 
     async def _fetch_config(
         self,

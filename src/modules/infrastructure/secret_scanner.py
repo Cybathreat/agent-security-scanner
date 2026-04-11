@@ -67,8 +67,8 @@ class SecretScanner(BaseModule):
         self,
         config: Optional[SecretScannerConfig] = None,
     ) -> None:
-        super().__init__()
         self.config = config or SecretScannerConfig()
+        super().__init__()
 
     async def _fetch_url(
         self,

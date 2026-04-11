@@ -220,6 +220,10 @@ class TestScanResult:
 class ConcreteTestModule(BaseModule):
     """Concrete implementation of BaseModule for testing."""
 
+    def __init__(self, config=None):
+        self.config = config
+        super().__init__()
+
     def scan(self, target: str, **kwargs):
         """Dummy scan implementation."""
         result = ScanResult(module_name=self.module_name, target=target)

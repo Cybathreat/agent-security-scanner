@@ -75,8 +75,8 @@ class ToolBoundariesModule(BaseModule[ToolBoundariesConfig]):
         Args:
             config: Configuration for tool boundary checks.
         """
-        super().__init__()
         self.config = config or ToolBoundariesConfig()
+        super().__init__()
 
     async def _fetch_tool_config(
         self,

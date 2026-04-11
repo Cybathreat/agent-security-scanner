@@ -97,8 +97,8 @@ class PromptInjectionModule(BaseModule[PromptInjectionConfig]):
         Args:
             config: Configuration for injection tests.
         """
-        super().__init__()
         self.config = config or PromptInjectionConfig()
+        super().__init__()
 
     async def _send_payload(
         self,

@@ -56,8 +56,8 @@ class RecursiveAgentsScanner(BaseModule):
         self,
         config: Optional[RecursiveAgentsScannerConfig] = None,
     ) -> None:
-        super().__init__()
         self.config = config or RecursiveAgentsScannerConfig()
+        super().__init__()
 
     async def _fetch_config(
         self,
