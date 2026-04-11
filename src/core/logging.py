@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import sys
 from pathlib import Path
-from typing import Optional
+from typing import Any, Optional
 
 from loguru import logger
 
@@ -108,7 +108,7 @@ def setup_logger(
     logger.debug(f"Logger initialized: level={level}, log_dir={log_path}")
 
 
-def get_logger(name: Optional[str] = None) -> logger:
+def get_logger(name: Optional[str] = None) -> Any:
     """
     Get a logger instance with optional custom name.
 

@@ -70,12 +70,12 @@ class SecretScanner(BaseModule):
         self.config = config or SecretScannerConfig()
         super().__init__()
 
-    async def _fetch_url(
+    async def _fetch_url(  # type: ignore[override]
         self,
         url: str,
         session: aiohttp.ClientSession,
         timeout: int = 10,
-    ) -> Optional[Dict[str, Any]]:
+    ) -> Optional[Dict[str, Any]]:  # type: ignore[override]
         """Fetch URL and return response details."""
         try:
             async with session.get(url, timeout=timeout) as response:

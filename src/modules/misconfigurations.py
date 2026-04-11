@@ -50,12 +50,12 @@ class MisconfigurationsModule(BaseModule[MisconfigurationsConfig]):
         self.config = config or MisconfigurationsConfig()
         super().__init__()
 
-    async def _fetch_url(
+    async def _fetch_url(  # type: ignore[override]
         self,
         url: str,
         session: aiohttp.ClientSession,
         timeout: int = 10,
-    ) -> Optional[Dict[str, Any]]:
+    ) -> Optional[Dict[str, Any]]:  # type: ignore[override]
         """
         Fetch URL and return response details.
 

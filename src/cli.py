@@ -207,8 +207,8 @@ def generate_reports(results: List[ScanResult], args: argparse.Namespace) -> Non
             include_timestamp=True,
             verbose=args.verbose,
         )
-        report = md_reporter.generate(results, target)
-        md_path = md_reporter.save(report, output_dir)
+        md_report = md_reporter.generate(results, target)
+        md_path = md_reporter.save(md_report, output_dir)
         logger.info(f"Markdown report saved: {md_path}")
 
 

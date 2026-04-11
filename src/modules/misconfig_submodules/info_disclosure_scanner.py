@@ -105,13 +105,13 @@ class InfoDisclosureScanner(BaseModule):
         super().__init__()
         self.config = config or InfoDisclosureScannerConfig()
 
-    async def _fetch_url(
+    async def _fetch_url(  # type: ignore[override]
         self,
         url: str,
         session: aiohttp.ClientSession,
         headers: Optional[Dict[str, str]] = None,
         timeout: int = 10,
-    ) -> Optional[Dict[str, Any]]:
+    ) -> Optional[Dict[str, Any]]:  # type: ignore[override]
         """Fetch URL and return response details."""
         try:
             async with session.get(url, headers=headers, timeout=timeout) as response:

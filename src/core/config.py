@@ -14,7 +14,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-import yaml
+import yaml  # type: ignore[import-untyped]
 from loguru import logger
 
 
@@ -480,30 +480,34 @@ class Config:
         """
         # Scanner overrides
         if os.getenv("ASS_SCANNER_TIMEOUT"):
-            config.scanner.timeout = int(os.getenv("ASS_SCANNER_TIMEOUT"))
+            config.scanner.timeout = int(os.getenv("ASS_SCANNER_TIMEOUT") or "30")
 
         if os.getenv("ASS_SCANNER_MAX_RETRIES"):
-            config.scanner.max_retries = int(os.getenv("ASS_SCANNER_MAX_RETRIES"))
+            config.scanner.max_retries = int(os.getenv("ASS_SCANNER_MAX_RETRIES") or "3")
 
         if os.getenv("ASS_SCANNER_RATE_LIMIT"):
-            config.scanner.rate_limit = float(os.getenv("ASS_SCANNER_RATE_LIMIT"))
+            config.scanner.rate_limit = float(os.getenv("ASS_SCANNER_RATE_LIMIT") or "10.0")
 
         if os.getenv("ASS_SCANNER_VERIFY_SSL"):
-            config.scanner.verify_ssl = os.getenv("ASS_SCANNER_VERIFY_SSL").lower() == "true"
+            val = os.getenv("ASS_SCANNER_VERIFY_SSL")
+            if val is not None:
+                config.scanner.verify_ssl = val.lower() == "true"
 
         # Logging overrides
         if os.getenv("ASS_LOG_LEVEL"):
-            config.logging.level = os.getenv("ASS_LOG_LEVEL")
+            config.logging.level = os.getenv("ASS_LOG_LEVEL") or "INFO"
 
         # Output overrides
         if os.getenv("ASS_OUTPUT_FORMAT"):
-            config.output.format = os.getenv("ASS_OUTPUT_FORMAT")
+            config.output.format = os.getenv("ASS_OUTPUT_FORMAT") or "json"
 
         if os.getenv("ASS_OUTPUT_DIR"):
-            config.output.output_dir = os.getenv("ASS_OUTPUT_DIR")
+            config.output.output_dir = os.getenv("ASS_OUTPUT_DIR") or "output"
 
         if os.getenv("ASS_VERBOSE"):
-            config.output.verbose = os.getenv("ASS_VERBOSE").lower() == "true"
+            val = os.getenv("ASS_VERBOSE")
+            if val is not None:
+                config.output.verbose = val.lower() == "true"
 
         return config
 

@@ -299,9 +299,11 @@ class ToolBoundariesModule(BaseModule[ToolBoundariesConfig]):
             return
 
         # Extract available tools
-        tools = []
+        tools: list[str] = []
         if isinstance(config, dict):
-            tools = config.get("tools", config.get("available_tools", []))
+            tools_val = config.get("tools", config.get("available_tools", []))
+            if tools_val:
+                tools = tools_val if isinstance(tools_val, list) else []
 
         if not tools:
             # Try to find tools in nested structure
