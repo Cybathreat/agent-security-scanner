@@ -28,7 +28,7 @@ from ..core.config import PromptInjectionConfig
 from .base import BaseModule, Finding, ScanResult, Severity
 
 
-class PromptInjectionModule(BaseModule):
+class PromptInjectionModule(BaseModule[PromptInjectionConfig]):
     """
     Prompt injection detection module.
 

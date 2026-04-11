@@ -25,7 +25,7 @@ from ..core.config import ToolBoundariesConfig
 from .base import BaseModule, Finding, ScanResult, Severity
 
 
-class ToolBoundariesModule(BaseModule):
+class ToolBoundariesModule(BaseModule[ToolBoundariesConfig]):
     """
     Tool calling boundaries validation module.
 

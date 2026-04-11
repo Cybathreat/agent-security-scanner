@@ -24,7 +24,7 @@ from ..core.config import MisconfigurationsConfig
 from .base import BaseModule, Finding, ScanResult, Severity
 
 
-class MisconfigurationsModule(BaseModule):
+class MisconfigurationsModule(BaseModule[MisconfigurationsConfig]):
     """
     Security misconfiguration detection module.
 

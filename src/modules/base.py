@@ -15,10 +15,13 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Generic, List, Optional, TypeVar
 
 import aiohttp
 from loguru import logger
+
+# Generic config type for BaseModule subclasses
+ConfigT = TypeVar("ConfigT")
 
 
 class Severity(Enum):
@@ -217,7 +220,7 @@ class ScanResult:
         return summary
 
 
-class BaseModule(ABC):
+class BaseModule(ABC, Generic[ConfigT]):
     """
     Abstract base class for all security scanning modules.
 
@@ -232,19 +235,20 @@ class BaseModule(ABC):
         findings = result.findings
     """
 
-    def __init__(self, config: Optional[Dict[str, Any]] = None) -> None:
+    def __init__(self, config: Optional[ConfigT] = None) -> None:
         """
         Initialize the security module.
 
         Args:
-            config: Module-specific configuration dictionary.
-        
+            config: Module-specific configuration dataclass.
+
         Note: Child classes should set self.config before calling super().__init__()
               if they want to use a typed config object instead of dict.
         """
         # Only set config if child class hasn't already set it
         if not hasattr(self, 'config'):
-            self.config = config or {}
+            # Config is typed by the Generic parameter
+            self.config = config  # type: ignore[assignment]
 
         # Derive module name from class name
         # Handles both "*Module" (MisconfigurationsModule) and

@@ -31,7 +31,7 @@ from ..core.config import RAGSecurityConfig
 from .base import BaseModule, Finding, ScanResult, Severity
 
 
-class RAGSecurityModule(BaseModule):
+class RAGSecurityModule(BaseModule[RAGSecurityConfig]):
     """
     RAG pipeline security scanning module.
 
