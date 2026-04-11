@@ -17,7 +17,19 @@ from .config import Config
 from ..modules.base import BaseModule, ScanResult
 
 
-ALL_MODULES = ["misconfigurations", "prompt_injection", "tool_boundaries", "rag_security"]
+ALL_MODULES = [
+    "misconfigurations",
+    "prompt_injection",
+    "tool_boundaries",
+    "rag_security",
+    "tool_hijacking",
+    "recursive_agents",
+    "memory_poisoning",
+    "planning_attacks",
+    "secret_scanner",
+    "dependency_audit",
+    "plugin_security",
+]
 
 # Submodule registry for granular module control
 ALL_SUBMODULES = {
@@ -140,12 +152,26 @@ class ScanEngine:
         from ..modules.prompt_injection import PromptInjectionModule
         from ..modules.rag_security import RAGSecurityModule
         from ..modules.tool_boundaries import ToolBoundariesModule
+        from ..modules.agent.tool_hijacking import ToolHijackingScanner
+        from ..modules.agent.recursive_agents import RecursiveAgentsScanner
+        from ..modules.agent.memory_poisoning import MemoryPoisoningScanner
+        from ..modules.agent.planning_attacks import PlanningAttacksScanner
+        from ..modules.infrastructure.secret_scanner import SecretScanner
+        from ..modules.infrastructure.dependency_audit import DependencyAuditScanner
+        from ..modules.infrastructure.plugin_security import PluginSecurityScanner
 
         registry = {
             "misconfigurations": (MisconfigurationsModule, self.config.modules.misconfigurations),
             "prompt_injection": (PromptInjectionModule, self.config.modules.prompt_injection),
             "tool_boundaries": (ToolBoundariesModule, self.config.modules.tool_boundaries),
             "rag_security": (RAGSecurityModule, self.config.modules.rag_security),
+            "tool_hijacking": (ToolHijackingScanner, self.config.modules.tool_hijacking_scanner),
+            "recursive_agents": (RecursiveAgentsScanner, self.config.modules.recursive_agents_scanner),
+            "memory_poisoning": (MemoryPoisoningScanner, self.config.modules.memory_poisoning_scanner),
+            "planning_attacks": (PlanningAttacksScanner, self.config.modules.planning_attacks_scanner),
+            "secret_scanner": (SecretScanner, self.config.modules.secret_scanner),
+            "dependency_audit": (DependencyAuditScanner, self.config.modules.dependency_audit_scanner),
+            "plugin_security": (PluginSecurityScanner, self.config.modules.plugin_security_scanner),
         }
 
         if name not in registry:

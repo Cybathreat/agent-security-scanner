@@ -243,7 +243,17 @@ class BaseModule(ABC):
         # Only set config if child class hasn't already set it
         if not hasattr(self, 'config'):
             self.config = config or {}
-        self.module_name = self.__class__.__name__.replace("Module", "").lower()
+
+        # Derive module name from class name
+        # Handles both "*Module" (MisconfigurationsModule) and
+        # "*Scanner" (ToolHijackingScanner, SecretScanner, etc.)
+        class_name = self.__class__.__name__
+        name = class_name.replace("Module", "").replace("Scanner", "")
+        # Convert PascalCase to snake_case: RAGSecurity -> rag_security
+        # Handles consecutive capitals: RAGSecurity -> rag_security (not r_a_g_security)
+        import re
+        s1 = re.sub(r'(.)([A-Z][a-z]+)', r'\1_\2', name)
+        self.module_name = re.sub(r'([A-Z]+)([A-Z][a-z])', r'\1_\2', s1).lower()
         self.logger = logger.bind(module=self.module_name)
         self.logger.debug(f"Module initialized: {self.module_name}")
 

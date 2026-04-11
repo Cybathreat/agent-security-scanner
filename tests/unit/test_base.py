@@ -234,14 +234,14 @@ class TestBaseModule:
         """Test module initialization."""
         module = ConcreteTestModule({"test": "config"})
         assert module.config == {"test": "config"}
-        assert module.module_name == "concretetest"
+        assert module.module_name == "concrete_test"
 
     def test_generate_finding_id(self):
         """Test finding ID generation."""
         module = ConcreteTestModule()
         finding_id = module._generate_finding_id()
-        assert finding_id.startswith("FIND-concretetest-")
-        assert len(finding_id) == len("FIND-concretetest-") + 8
+        assert finding_id.startswith("FIND-concrete_test-")
+        assert len(finding_id) == len("FIND-concrete_test-") + 8
 
     def test_create_finding(self):
         """Test convenience method for creating findings."""
@@ -254,9 +254,9 @@ class TestBaseModule:
         )
         assert finding.severity == Severity.HIGH
         assert finding.title == "Test Finding"
-        assert finding.category == "concretetest"  # Default from module_name
+        assert finding.category == "concrete_test"  # Default from module_name
         assert finding.cwe == "CWE-94"
-        assert finding.id.startswith("FIND-concretetest-")
+        assert finding.id.startswith("FIND-concrete_test-")
 
     def test_pre_scan_default(self):
         """Test default pre_scan implementation."""
