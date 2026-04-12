@@ -1,12 +1,16 @@
 # Roadmap
 
-## Current State — v0.1
+## Current State — v0.2
 
 - Security misconfiguration scanning (auth, CORS, rate limiting, info disclosure)
-- Prompt injection detection (17 static payloads — direct injection, system prompt leakage, obfuscation, instruction hijacking)
+- Prompt injection detection (17 static payloads + advanced techniques)
+- **Advanced injection: Crescendo attacks, Many-shot jailbreaking, Skeleton key bypass**
 - Tool calling boundary validation (permissions, dangerous combinations, sandbox, allow/deny lists)
 - RAG pipeline security (document poisoning, exfiltration risk, vector DB checks, context window, embedding models)
 - JSON + Markdown reporting with OWASP/MITRE mappings and risk scoring
+- **SSRF protection** — blocks scanning of internal services, AWS metadata, private IPs
+- **Path traversal protection** — validates output paths in reports and configs
+- Input validation framework (`core/validators.py`)
 
 ---
 
@@ -18,19 +22,19 @@
 
 Replace static payload list with a comprehensive, categorized attack library:
 
-| Technique | Description |
-|-----------|-------------|
-| Multi-turn injection | Spread the attack across multiple conversation turns so no single message triggers filters |
-| Payload splitting | Break malicious instructions across user input + retrieved context so they only assemble inside the model |
-| Crescendo attacks | Gradually escalate from benign to malicious across turns |
-| Tree-of-attacks (TAP) | Use an attacker LLM to iteratively refine jailbreak prompts via tree-of-thought reasoning |
-| Many-shot jailbreaking | Pack hundreds of fake Q&A examples in long-context windows to shift model behavior |
-| Skeleton key attacks | Convince the model to add a "disclaimer" prefix instead of refusing, bypassing alignment |
-| Virtualization / roleplay | Nest the agent inside a fictional scenario to circumvent system-level instructions |
-| Base64 / rot13 / hex encoding | Encode payloads in formats the model can decode but static filters cannot |
-| Multilingual injection | Inject in low-resource languages where safety training is weaker |
-| Token smuggling | Exploit tokenizer quirks (Unicode codepoints that tokenize differently than they render) |
-| Grammar-constrained generation | Force specific output patterns via structured output schemas that bypass refusal |
+| Technique | Status | Module |
+|-----------|--------|--------|
+| Multi-turn injection | ✅ Done | `multi_turn.py` |
+| Payload splitting | ❌ Pending | — |
+| Crescendo attacks | ✅ Done | `crescendo.py` |
+| Tree-of-attacks (TAP) | ❌ Pending | — |
+| Many-shot jailbreaking | ✅ Done | `many_shot.py` |
+| Skeleton key attacks | ✅ Done | `skeleton_key.py` |
+| Virtualization / roleplay | ❌ Pending | — |
+| Base64 / rot13 / hex encoding | ❌ Pending | — |
+| Multilingual injection | ❌ Pending | — |
+| Token smuggling | ❌ Pending | — |
+| Grammar-constrained generation | ❌ Pending | — |
 
 ### 1.2 LLM-Powered Adaptive Payload Generation
 
@@ -144,11 +148,23 @@ Replace static payload list with a comprehensive, categorized attack library:
 
 ## Priority Order
 
-1. LLM-powered adaptive payload generation — biggest leap in detection capability
-2. Multi-turn & crescendo injection tests — most realistic attack simulation
-3. Tool-use hijacking scans — critical gap for agentic systems
-4. Guardrail fingerprinting & evasion — practical offensive value
-5. CI/CD integration — shift-left security adoption driver
-6. Cross-tenant RAG leakage testing — high-impact for enterprise
-7. Autonomous red-teaming agent — the end game
+1. Payload splitting — complete Phase 1 injection techniques
+2. Tree-of-attacks (TAP) — LLM-powered iterative refinement
+3. LLM-powered adaptive payload generation — biggest leap in detection capability
+4. Tool-use hijacking scans — critical gap for agentic systems
+5. Guardrail fingerprinting & evasion — practical offensive value
+6. CI/CD integration — shift-left security adoption driver
+7. Cross-tenant RAG leakage testing — high-impact for enterprise
 8. Web dashboard with real-time visualization — massive UX improvement (final phase)
+
+---
+
+## Security Hardening (Completed)
+
+| Vulnerability | Severity | Fix |
+|---------------|----------|-----|
+| SSRF | CRITICAL | URL validation blocks internal IPs, localhost, AWS metadata |
+| Path Traversal | HIGH | Path validation in CLI and report generators |
+| Missing Input Validation | MEDIUM | New `core/validators.py` framework |
+
+**Confirmed Safe:** No `eval()`, `exec()`, `pickle`, `subprocess`, `yaml.unsafe_load()`, or hardcoded credentials found.

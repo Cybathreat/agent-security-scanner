@@ -25,6 +25,7 @@ import aiohttp
 from loguru import logger
 
 from ..core.config import PromptInjectionConfig
+from ..core.validators import validate_url
 from .base import BaseModule, Finding, ScanResult, Severity
 
 
@@ -119,6 +120,12 @@ class PromptInjectionModule(BaseModule):
         Returns:
             Dict: Response data or None on error.
         """
+        # Validate URL to prevent SSRF attacks
+        is_valid, error_msg = validate_url(url)
+        if not is_valid:
+            self.logger.warning(f"URL validation failed for {url}: {error_msg}")
+            return None
+
         try:
             # Try POST with JSON body (common API format)
             async with session.post(
@@ -428,6 +435,14 @@ class PromptInjectionModule(BaseModule):
                 "config": self.config.to_dict() if hasattr(self.config, "to_dict") else {},
             },
         )
+
+        # Validate target URL to prevent SSRF attacks
+        is_valid, error_msg = validate_url(target)
+        if not is_valid:
+            self.logger.warning(f"Target URL validation failed: {error_msg}")
+            result.add_error(f"Invalid target URL: {error_msg}")
+            result.finalize()
+            return result
 
         if not self.pre_scan(target):
             result.add_error("Pre-scan validation failed")
