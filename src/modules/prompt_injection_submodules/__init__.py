@@ -6,6 +6,8 @@ Provides specialized scanners for prompt injection vulnerabilities:
 - obfuscation: Encoding/unicode bypass tests
 - multi_turn: Multi-turn injection attacks
 - crescendo: Gradual escalation attacks
+- many_shot: Many-shot jailbreaking attacks
+- skeleton_key: Skeleton key bypass attacks
 - adaptive_generator: LLM-powered adaptive payload generation
 """
 
@@ -13,6 +15,8 @@ from .direct_injection import DirectInjectionScanner
 from .obfuscation import ObfuscationScanner
 from .multi_turn import MultiTurnScanner
 from .crescendo import CrescendoAttackScanner
+from .many_shot import ManyShotJailbreakingScanner
+from .skeleton_key import SkeletonKeyAttackScanner
 from .adaptive_generator import AdaptiveGeneratorScanner
 
 __all__ = [
@@ -20,5 +24,7 @@ __all__ = [
     "ObfuscationScanner",
     "MultiTurnScanner",
     "CrescendoAttackScanner",
+    "ManyShotJailbreakingScanner",
+    "SkeletonKeyAttackScanner",
     "AdaptiveGeneratorScanner",
 ]

@@ -41,6 +41,9 @@ class PromptInjectionConfig:
     detect_leakage: bool = True
     test_crescendo: bool = True
     crescendo_max_turns: int = 10
+    test_many_shot: bool = True
+    many_shot_num_shots: int = 200
+    test_skeleton_key: bool = True
     test_payloads: List[str] = field(default_factory=list)
 
 
