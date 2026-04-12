@@ -39,6 +39,8 @@ class PromptInjectionConfig:
     max_payload_size: int = 10000
     detect_obfuscation: bool = True
     detect_leakage: bool = True
+    test_crescendo: bool = True
+    crescendo_max_turns: int = 10
     test_payloads: List[str] = field(default_factory=list)
 
 
