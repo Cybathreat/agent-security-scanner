@@ -94,7 +94,31 @@ Replace static payload list with a comprehensive, categorized attack library:
 
 ---
 
-## Phase 3 — Web Dashboard
+## Phase 3 — Intelligence & Automation
+
+**Goal:** Move from point-in-time scanning to continuous, autonomous security intelligence.
+
+**Stack:** React / Next.js frontend + FastAPI backend, WebSocket for real-time updates.
+
+| View | Features |
+|------|----------|
+| Scan Dashboard | Real-time scan progress with animated attack tree visualization, live finding feed |
+| Attack Surface Map | Interactive graph showing all endpoints, tools, data flows — click to drill into findings |
+| Finding Explorer | Filterable / sortable table with severity, CWE, OWASP mapping, evidence, and remediation |
+| Comparison View | Side-by-side diff of scan results over time — track regression / improvement |
+| Replay Console | Replay any attack payload interactively, modify parameters, re-test in real time |
+| Report Builder | Drag-and-drop report customization, export to PDF / HTML / JSON, executive summary generator |
+| CI/CD Integration Panel | Configure GitHub Actions / GitLab CI hooks, set quality gates (fail build on CRITICAL) |
+
+**Interactive features:**
+- Live attack visualization — watch payloads flow through the system in real time
+- Finding annotation — mark as false positive, add notes, assign to team members
+- Remediation tracking — link findings to fix PRs, track resolution status
+- Dark mode
+
+---
+
+## Phase 4 — Web Dashboard (Final Phase)
 
 **Goal:** Replace CLI-only workflow with an interactive dashboard for teams.
 
@@ -118,29 +142,13 @@ Replace static payload list with a comprehensive, categorized attack library:
 
 ---
 
-## Phase 4 — Intelligence & Automation
-
-**Goal:** Move from point-in-time scanning to continuous, autonomous security intelligence.
-
-| Feature | Description |
-|---------|-------------|
-| Autonomous red-teaming agent | An agent that autonomously explores the attack surface, chains vulnerabilities, and reports attack paths |
-| Baseline behavioral profiling | Profile the agent's normal behavior first, then detect deviations when attacks succeed |
-| Continuous monitoring mode | Deploy as a sidecar that continuously monitors production agent traffic for anomalies |
-| Vulnerability knowledge graph | Build a graph DB of findings, attack paths, and remediations across all scans |
-| Auto-remediation suggestions | Generate code-level fix suggestions with confidence scores |
-| Benchmark scoring | Score the target against a standardized security benchmark |
-| CI/CD integration | Shift-left security — fail builds on CRITICAL findings, track score over time |
-
----
-
 ## Priority Order
 
 1. LLM-powered adaptive payload generation — biggest leap in detection capability
 2. Multi-turn & crescendo injection tests — most realistic attack simulation
 3. Tool-use hijacking scans — critical gap for agentic systems
-4. Web dashboard with real-time visualization — massive UX improvement
-5. Guardrail fingerprinting & evasion — practical offensive value
-6. CI/CD integration — shift-left security adoption driver
-7. Cross-tenant RAG leakage testing — high-impact for enterprise
-8. Autonomous red-teaming agent — the end game
+4. Guardrail fingerprinting & evasion — practical offensive value
+5. CI/CD integration — shift-left security adoption driver
+6. Cross-tenant RAG leakage testing — high-impact for enterprise
+7. Autonomous red-teaming agent — the end game
+8. Web dashboard with real-time visualization — massive UX improvement (final phase)
