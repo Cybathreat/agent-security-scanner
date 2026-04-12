@@ -1,3 +1,0 @@
-- [user_role](user_role.md) - Security researcher performing vulnerability assessment
-- [project_context](project_context.md) - Agent Security Scanner project overview
-- [security_fixes](security_fixes.md) - Vulnerabilities found and fixed in this codebase
