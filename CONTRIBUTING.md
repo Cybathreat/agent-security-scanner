@@ -57,11 +57,16 @@ src/
 ├── core/
 │   ├── engine.py          # Scan orchestration
 │   ├── config.py          # Configuration loader
+│   ├── validators.py      # Input validation (SSRF, path traversal)
 │   └── logging.py         # Structured logging
 ├── modules/
 │   ├── base.py            # BaseModule ABC, Finding, ScanResult, Severity
 │   ├── misconfigurations.py
 │   ├── prompt_injection.py
+│   │   └── submodules/    # Advanced injection techniques
+│   │       ├── crescendo.py
+│   │       ├── many_shot.py
+│   │       └── skeleton_key.py
 │   ├── tool_boundaries.py
 │   └── rag_security.py
 ├── output/

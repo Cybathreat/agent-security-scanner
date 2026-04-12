@@ -10,6 +10,26 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [0.2.0] - 2026-04-12
+
+### Added
+
+#### Advanced Prompt Injection (Phase 1)
+- `CrescendoAttackScanner` — 10-level gradual escalation from benign to malicious requests
+- `ManyShotJailbreakingScanner` — long-context attacks with 200+ demonstration pairs across 3 contexts (harmful, jailbreak, data_extraction)
+- `SkeletonKeyAttackScanner` — 5 bypass modes detecting disclaim-then-comply pattern
+
+#### Security Hardening
+- `core/validators.py` — SSRF protection blocking internal IPs, localhost, AWS metadata endpoints
+- Path traversal protection in CLI and report generators
+- Input validation framework for URLs, paths, and module names
+
+### Changed
+- `PromptInjectionConfig` — added `test_crescendo`, `test_many_shot`, `test_skeleton_key` flags and associated parameters
+- `ROADMAP.md` — Phase 1 progress table with module-level status tracking
+
+---
+
 ## [0.1.0] - 2026-03-23
 
 ### Added

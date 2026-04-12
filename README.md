@@ -1,6 +1,6 @@
 # Agent Security Scanner
 
-**v0.1** — Security auditing tool for LLM agents, RAG pipelines, and agent frameworks.
+**v0.2** — Security auditing tool for LLM agents, RAG pipelines, and agent frameworks.
 
 [![CI](https://github.com/Cybathreat/agent-security-scanner/actions/workflows/ci.yml/badge.svg)](https://github.com/Cybathreat/agent-security-scanner/actions/workflows/ci.yml)
 [![codecov](https://codecov.io/gh/Cybathreat/agent-security-scanner/branch/main/graph/badge.svg)](https://codecov.io/gh/Cybathreat/agent-security-scanner)
@@ -33,6 +33,9 @@ This tool helps security teams, developers, and researchers identify potential s
   - System prompt leakage
   - Obfuscation/homoglyph bypass
   - Instruction hijacking via context manipulation
+  - Crescendo attacks (gradual escalation)
+  - Many-shot jailbreaking (long-context manipulation)
+  - Skeleton key bypass (disclaim-then-comply)
 
 - **Tool Calling Boundary Validation**
   - Overly permissive tool access
@@ -185,17 +188,22 @@ src/
 ├── core/
 │   ├── engine.py        # Scan orchestration — module selection and lifecycle
 │   ├── config.py        # YAML + environment variable configuration loader
+│   ├── validators.py    # Input validation (SSRF, path traversal protection)
 │   └── logging.py       # Structured logging via loguru
 ├── modules/
-│   ├── base.py          # BaseModule ABC, Finding, ScanResult, Severity
+│   ├── base.py              # BaseModule ABC, Finding, ScanResult, Severity
 │   ├── misconfigurations.py
 │   ├── prompt_injection.py
+│   │   └── submodules/      # Advanced injection techniques
+│   │       ├── crescendo.py
+│   │       ├── many_shot.py
+│   │       └── skeleton_key.py
 │   ├── tool_boundaries.py
 │   └── rag_security.py
 ├── output/
-│   ├── json_report.py   # Structured JSON reports
-│   └── markdown_report.py  # Human-readable Markdown reports
-└── cli.py               # Command-line interface
+│   ├── json_report.py       # Structured JSON reports
+│   └── markdown_report.py    # Human-readable Markdown reports
+└── cli.py                   # Command-line interface
 ```
 
 ### ScanEngine
