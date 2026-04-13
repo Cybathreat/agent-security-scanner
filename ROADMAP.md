@@ -27,7 +27,7 @@ Replace static payload list with a comprehensive, categorized attack library:
 | Multi-turn injection | ✅ Done | `multi_turn.py` |
 | Payload splitting | ❌ Pending | — |
 | Crescendo attacks | ✅ Done | `crescendo.py` |
-| Tree-of-attacks (TAP) | ❌ Pending | — |
+| Tree-of-attacks (TAP) | ✅ Done | `tap.py` |
 | Many-shot jailbreaking | ✅ Done | `many_shot.py` |
 | Skeleton key attacks | ✅ Done | `skeleton_key.py` |
 | Virtualization / roleplay | ❌ Pending | — |
@@ -149,7 +149,7 @@ Replace static payload list with a comprehensive, categorized attack library:
 ## Priority Order
 
 1. Payload splitting — complete Phase 1 injection techniques
-2. Tree-of-attacks (TAP) — LLM-powered iterative refinement
+2. ~~Tree-of-attacks (TAP)~~ — ✅ Done (static + LLM-powered modes, pruning, 3 attack goals)
 3. LLM-powered adaptive payload generation — biggest leap in detection capability
 4. Tool-use hijacking scans — critical gap for agentic systems
 5. Guardrail fingerprinting & evasion — practical offensive value

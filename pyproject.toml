@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "agent-security-scanner"
-version = "0.1.0"
+version = "0.2.0"
 description = "Security auditing tool for LLM agents, RAG pipelines, and agent frameworks"
 readme = "README.md"
 license = "MIT"

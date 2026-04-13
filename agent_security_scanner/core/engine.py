@@ -43,6 +43,7 @@ ALL_SUBMODULES = {
     "obfuscation": "agent_security_scanner.modules.prompt_injection_submodules.obfuscation",
     "multi_turn": "agent_security_scanner.modules.prompt_injection_submodules.multi_turn",
     "adaptive_generator": "agent_security_scanner.modules.prompt_injection_submodules.adaptive_generator",
+    "tap": "agent_security_scanner.modules.prompt_injection_submodules.tap",
     # Tool boundaries submodules
     "permission_scanner": "agent_security_scanner.modules.tool_boundaries_submodules.permission_scanner",
     "sandbox_scanner": "agent_security_scanner.modules.tool_boundaries_submodules.sandbox_scanner",
@@ -205,6 +206,7 @@ class ScanEngine:
             "obfuscation": ("agent_security_scanner.modules.prompt_injection_submodules.obfuscation", "ObfuscationScanner"),
             "multi_turn": ("agent_security_scanner.modules.prompt_injection_submodules.multi_turn", "MultiTurnScanner"),
             "adaptive_generator": ("agent_security_scanner.modules.prompt_injection_submodules.adaptive_generator", "AdaptiveGeneratorScanner"),
+            "tap": ("agent_security_scanner.modules.prompt_injection_submodules.tap", "TAPAttackScanner"),
             # Tool boundaries submodules
             "permission_scanner": ("agent_security_scanner.modules.tool_boundaries_submodules.permission_scanner", "PermissionScanner"),
             "sandbox_scanner": ("agent_security_scanner.modules.tool_boundaries_submodules.sandbox_scanner", "SandboxScanner"),

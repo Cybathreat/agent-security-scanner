@@ -298,6 +298,25 @@ class PluginSecurityScannerConfig:
 
 
 @dataclass
+class TAPScannerConfig:
+    """TAP (Tree-of-Attacks with Pruning) scanner configuration."""
+
+    enabled: bool = True
+    test_tap: bool = True
+    max_depth: int = 5
+    branching_factor: int = 3
+    pruning_threshold: float = 0.3
+    compliance_threshold: float = 0.7
+    request_delay: float = 0.5
+    attacker_llm_endpoint: Optional[str] = None
+    attacker_llm_model: Optional[str] = None
+    attacker_llm_api_key: Optional[str] = None
+    judge_llm_endpoint: Optional[str] = None
+    judge_llm_model: Optional[str] = None
+    judge_llm_api_key: Optional[str] = None
+
+
+@dataclass
 class ModulesConfig:
     """All module configurations grouped together."""
 
@@ -336,6 +355,9 @@ class ModulesConfig:
     secret_scanner: SecretScannerConfig = field(default_factory=SecretScannerConfig)
     dependency_audit_scanner: DependencyAuditScannerConfig = field(default_factory=DependencyAuditScannerConfig)
     plugin_security_scanner: PluginSecurityScannerConfig = field(default_factory=PluginSecurityScannerConfig)
+
+    # Prompt injection submodules
+    tap_scanner: TAPScannerConfig = field(default_factory=TAPScannerConfig)
 
 
 @dataclass
@@ -513,6 +535,20 @@ class Config:
             val = os.getenv("ASS_VERBOSE")
             if val is not None:
                 config.output.verbose = val.lower() == "true"
+
+        # TAP scanner overrides
+        if os.getenv("ASS_TAP_ATTACKER_LLM_ENDPOINT"):
+            config.modules.tap_scanner.attacker_llm_endpoint = os.getenv("ASS_TAP_ATTACKER_LLM_ENDPOINT")
+        if os.getenv("ASS_TAP_ATTACKER_LLM_MODEL"):
+            config.modules.tap_scanner.attacker_llm_model = os.getenv("ASS_TAP_ATTACKER_LLM_MODEL")
+        if os.getenv("ASS_TAP_ATTACKER_LLM_API_KEY"):
+            config.modules.tap_scanner.attacker_llm_api_key = os.getenv("ASS_TAP_ATTACKER_LLM_API_KEY")
+        if os.getenv("ASS_TAP_JUDGE_LLM_ENDPOINT"):
+            config.modules.tap_scanner.judge_llm_endpoint = os.getenv("ASS_TAP_JUDGE_LLM_ENDPOINT")
+        if os.getenv("ASS_TAP_JUDGE_LLM_MODEL"):
+            config.modules.tap_scanner.judge_llm_model = os.getenv("ASS_TAP_JUDGE_LLM_MODEL")
+        if os.getenv("ASS_TAP_JUDGE_LLM_API_KEY"):
+            config.modules.tap_scanner.judge_llm_api_key = os.getenv("ASS_TAP_JUDGE_LLM_API_KEY")
 
         return config
 
@@ -697,6 +733,21 @@ class Config:
                     "check_manifest": self.modules.plugin_security_scanner.check_manifest,
                     "check_permissions": self.modules.plugin_security_scanner.check_permissions,
                     "check_unsigned_plugins": self.modules.plugin_security_scanner.check_unsigned_plugins,
+                },
+                "tap_scanner": {
+                    "enabled": self.modules.tap_scanner.enabled,
+                    "test_tap": self.modules.tap_scanner.test_tap,
+                    "max_depth": self.modules.tap_scanner.max_depth,
+                    "branching_factor": self.modules.tap_scanner.branching_factor,
+                    "pruning_threshold": self.modules.tap_scanner.pruning_threshold,
+                    "compliance_threshold": self.modules.tap_scanner.compliance_threshold,
+                    "request_delay": self.modules.tap_scanner.request_delay,
+                    "attacker_llm_endpoint": self.modules.tap_scanner.attacker_llm_endpoint,
+                    "attacker_llm_model": self.modules.tap_scanner.attacker_llm_model,
+                    "attacker_llm_api_key": "***REDACTED***" if self.modules.tap_scanner.attacker_llm_api_key else None,
+                    "judge_llm_endpoint": self.modules.tap_scanner.judge_llm_endpoint,
+                    "judge_llm_model": self.modules.tap_scanner.judge_llm_model,
+                    "judge_llm_api_key": "***REDACTED***" if self.modules.tap_scanner.judge_llm_api_key else None,
                 },
             },
             "output": {
