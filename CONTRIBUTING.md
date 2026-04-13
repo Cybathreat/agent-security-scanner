@@ -53,7 +53,7 @@ pytest tests/ -v
 ## Project Structure
 
 ```
-src/
+agent_security_scanner/
 ├── core/
 │   ├── engine.py          # Scan orchestration
 │   ├── config.py          # Configuration loader
@@ -118,7 +118,7 @@ New security modules must follow the existing pattern:
 ### 1. Create the module class
 
 ```python
-# src/modules/your_module.py
+# agent_security_scanner/modules/your_module.py
 from .base import BaseModule, ScanResult, Severity
 
 class YourModule(BaseModule):
@@ -140,7 +140,7 @@ class YourModule(BaseModule):
 ### 2. Add a config dataclass
 
 ```python
-# src/core/config.py
+# agent_security_scanner/core/config.py
 @dataclass
 class YourModuleConfig:
     enabled: bool = True
@@ -152,7 +152,7 @@ Add it to `ModulesConfig` and `Config.to_dict()`.
 ### 3. Register in the engine
 
 ```python
-# src/core/engine.py
+# agent_security_scanner/core/engine.py
 ALL_MODULES = [..., "your_module"]
 
 # in _build_module():
@@ -163,7 +163,7 @@ registry["your_module"] = (YourModule, self.config.modules.your_module)
 ### 4. Export from the modules package
 
 ```python
-# src/modules/__init__.py
+# agent_security_scanner/modules/__init__.py
 from .your_module import YourModule
 ```
 
@@ -184,8 +184,8 @@ from .your_module import YourModule
 Lint and type check before submitting:
 
 ```bash
-ruff check src/
-mypy src/
+ruff check agent_security_scanner/
+mypy agent_security_scanner/
 ```
 
 ---

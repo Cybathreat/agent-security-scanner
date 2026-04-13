@@ -22,6 +22,7 @@ venv/
 # Testing
 .pytest_cache/
 .coverage
+coverage.xml
 htmlcov/
 *.cover
 
@@ -33,7 +34,7 @@ logs/
 .DS_Store
 Thumbs.db
 
-# GitHub workflows (do not commit CI configs)
+# GitHub workflows
 .github/
 
 # Claude Code agent memory and configs
@@ -45,5 +46,6 @@ Thumbs.db
 
 # Output
 output/
-*.json
-!config/*.json
+
+# Local package (removed — code lives in agent_security_scanner/)
+src/

@@ -14,7 +14,6 @@ from typing import Dict, List, Optional
 
 from loguru import logger
 
-from ..core.validators import validate_path
 from ..modules.base import ScanResult, Severity
 
 
@@ -232,21 +231,11 @@ class MarkdownReport:
         Returns:
             str: Path to saved report file.
         """
-        # Validate output directory to prevent path traversal
-        is_valid, error_msg = validate_path(output_dir)
-        if not is_valid:
-            raise ValueError(f"Invalid output directory: {error_msg}")
-
         Path(output_dir).mkdir(parents=True, exist_ok=True)
 
         if filename is None:
             timestamp = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
             filename = f"scan_report_{timestamp}.md"
-
-        # Validate filename as well
-        is_valid, error_msg = validate_path(filename)
-        if not is_valid:
-            raise ValueError(f"Invalid filename: {error_msg}")
 
         output_path = Path(output_dir) / filename
 

@@ -10,7 +10,7 @@ import pytest
 from datetime import datetime
 from unittest.mock import Mock
 
-from src.modules.base import (
+from agent_security_scanner.modules.base import (
     Severity,
     Finding,
     ScanResult,

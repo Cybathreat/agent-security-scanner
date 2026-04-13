@@ -33,6 +33,8 @@ This tool helps security teams, developers, and researchers identify potential s
   - System prompt leakage
   - Obfuscation/homoglyph bypass
   - Instruction hijacking via context manipulation
+  - Multi-turn injection
+  - Adaptive payload generation
   - Crescendo attacks (gradual escalation)
   - Many-shot jailbreaking (long-context manipulation)
   - Skeleton key bypass (disclaim-then-comply)
@@ -41,14 +43,27 @@ This tool helps security teams, developers, and researchers identify potential s
   - Overly permissive tool access
   - Dangerous tool combinations (e.g. read_file + http_request)
   - Sandbox misconfiguration
+  - MCP server security
   - Missing allow/deny lists
 
 - **RAG Pipeline Security**
   - Document poisoning detection
   - Data exfiltration risk analysis
   - Vector database security checks
-  - Context window attack surface
   - Embedding model vulnerabilities
+  - Multi-tenant isolation
+  - Context window attack surface
+
+- **Agent Attack Scanning**
+  - Tool-use hijacking (argument injection, parameter manipulation)
+  - Recursive agent exploitation (shared context poisoning)
+  - Memory poisoning (persistent false memories across sessions)
+  - Planning manipulation (chain-of-thought redirection)
+
+- **Infrastructure Security**
+  - Secret scanning (credentials in prompts, responses, headers)
+  - Dependency audit (CVE, malicious packages, outdated deps)
+  - Plugin/extension security (manifest, permissions, unsigned plugins)
 
 - **Comprehensive Reporting**
   - JSON structured reports with OWASP/MITRE framework mappings
@@ -84,16 +99,16 @@ pip install -r requirements.txt
 
 ```bash
 # Run a full scan (all modules)
-python -m src.cli scan --target https://api.example.com/agent --output output/
+python -m agent_security_scanner.cli scan --target https://api.example.com/agent --output output/
 
 # Run specific modules only
-python -m src.cli scan --target https://api.example.com/agent --modules prompt_injection,rag_security
+python -m agent_security_scanner.cli scan --target https://api.example.com/agent --modules prompt_injection,rag_security
 
 # JSON report only
-python -m src.cli scan --target https://api.example.com/agent --format json --output output/
+python -m agent_security_scanner.cli scan --target https://api.example.com/agent --format json --output output/
 
 # Markdown report only
-python -m src.cli scan --target https://api.example.com/agent --format markdown --output output/
+python -m agent_security_scanner.cli scan --target https://api.example.com/agent --format markdown --output output/
 ```
 
 ---
@@ -103,12 +118,15 @@ python -m src.cli scan --target https://api.example.com/agent --format markdown 
 ### Scan Command
 
 ```
-python -m src.cli scan --target <url> [options]
+python -m agent_security_scanner.cli scan --target <url> [options]
 
 Options:
   --target,  -t   Target URL or API endpoint (required)
   --modules, -m   Comma-separated modules to run (default: all)
-                  Choices: misconfigurations, prompt_injection, tool_boundaries, rag_security
+                  Choices: misconfigurations, prompt_injection, tool_boundaries,
+                           rag_security, tool_hijacking, recursive_agents,
+                           memory_poisoning, planning_attacks, secret_scanner,
+                           dependency_audit, plugin_security
   --output,  -o   Output directory for reports (default: output)
   --format,  -f   Report format: json | markdown | both (default: both)
   --config,  -c   Path to YAML config file
@@ -123,7 +141,7 @@ Options:
 Generate a default config file:
 
 ```bash
-python -m src.cli config --generate
+python -m agent_security_scanner.cli config --generate
 ```
 
 Or create `config/config.yaml` manually:
@@ -184,35 +202,45 @@ export ASS_OUTPUT_FORMAT=json
 ## Architecture
 
 ```
-src/
+agent_security_scanner/
 ├── core/
-│   ├── engine.py        # Scan orchestration — module selection and lifecycle
-│   ├── config.py        # YAML + environment variable configuration loader
-│   ├── validators.py    # Input validation (SSRF, path traversal protection)
-│   └── logging.py       # Structured logging via loguru
+│   ├── engine.py                          # Scan orchestration — module selection and lifecycle
+│   ├── config.py                          # YAML + environment variable configuration loader
+│   ├── validators.py                      # Input validation (SSRF, path traversal protection)
+│   └── logging.py                         # Structured logging via loguru
 ├── modules/
-│   ├── base.py              # BaseModule ABC, Finding, ScanResult, Severity
-│   ├── misconfigurations.py
-│   ├── prompt_injection.py
-│   │   └── submodules/      # Advanced injection techniques
-│   │       ├── crescendo.py
-│   │       ├── many_shot.py
-│   │       └── skeleton_key.py
-│   ├── tool_boundaries.py
-│   └── rag_security.py
+│   ├── base.py                            # BaseModule ABC, Finding, ScanResult, Severity
+│   ├── misconfigurations.py               # → misconfig_submodules/
+│   │   └── misconfig_submodules/          # auth_scanner, cors_scanner, rate_limit_scanner, info_disclosure_scanner
+│   ├── prompt_injection.py                # → prompt_injection_submodules/
+│   │   └── prompt_injection_submodules/   # direct_injection, obfuscation, multi_turn, adaptive_generator,
+│   │                                       # crescendo, many_shot, skeleton_key
+│   ├── tool_boundaries.py                 # → tool_boundaries_submodules/
+│   │   └── tool_boundaries_submodules/    # permission_scanner, sandbox_scanner, tool_chains, mcp_scanner
+│   ├── rag_security.py                    # → rag_security_submodules/
+│   │   └── rag_security_submodules/       # document_poisoning, exfiltration, vector_db, embedding_attacks, multi_tenant
+│   ├── agent/                             # Agent-specific attack modules
+│   │   ├── tool_hijacking.py
+│   │   ├── recursive_agents.py
+│   │   ├── memory_poisoning.py
+│   │   └── planning_attacks.py
+│   └── infrastructure/                    # Infrastructure security modules
+│       ├── secret_scanner.py
+│       ├── dependency_audit.py
+│       └── plugin_security.py
 ├── output/
-│   ├── json_report.py       # Structured JSON reports
-│   └── markdown_report.py    # Human-readable Markdown reports
-└── cli.py                   # Command-line interface
+│   ├── json_report.py                     # Structured JSON reports
+│   └── markdown_report.py                 # Human-readable Markdown reports
+└── cli.py                                 # Command-line interface
 ```
 
 ### ScanEngine
 
-The `ScanEngine` class in `src/core/engine.py` can be used programmatically:
+The `ScanEngine` class in `agent_security_scanner/core/engine.py` can be used programmatically:
 
 ```python
-from src.core.config import load_config
-from src.core.engine import ScanEngine
+from agent_security_scanner.core.config import load_config
+from agent_security_scanner.core.engine import ScanEngine
 
 config = load_config("config/config.yaml")
 engine = ScanEngine(config)
@@ -235,7 +263,7 @@ results = engine.run(
   "$schema": "https://github.com/Cybathreat/agent-security-scanner/schema/report/v1",
   "report_id": "uuid",
   "generated_at": "2026-03-23T10:00:00Z",
-  "scanner": { "name": "Agent Security Scanner", "version": "0.1.0" },
+  "scanner": { "name": "Agent Security Scanner", "version": "0.2.0" },
   "target": "https://api.example.com/agent",
   "summary": {
     "total": 5,
@@ -247,9 +275,9 @@ results = engine.run(
   },
   "findings": [
     {
-      "id": "FIND-promptinjection-a1b2c3d4",
+      "id": "FIND-prompt_injection-a1b2c3d4",
       "severity": "HIGH",
-      "category": "promptinjection",
+      "category": "prompt_injection",
       "title": "Direct Prompt Injection Vulnerability",
       "description": "...",
       "cwe": "CWE-94",
@@ -285,7 +313,7 @@ Reports include an executive summary, findings overview table, detailed findings
 
 ```bash
 # Run all tests with coverage
-pytest tests/ -v --cov=src --cov-report=html
+pytest tests/ -v --cov=agent_security_scanner --cov-report=html
 
 # Unit tests only
 pytest tests/unit/ -v
@@ -296,10 +324,10 @@ pytest tests/integration/ -v
 
 ### Adding New Modules
 
-1. Create a new class in `src/modules/` inheriting from `BaseModule`
+1. Create a new class in `agent_security_scanner/modules/` inheriting from `BaseModule`
 2. Implement the `scan(target, **kwargs) -> ScanResult` method
-3. Register it in `src/core/engine.py` — add to `ALL_MODULES` and `_build_module()`
-4. Add the config dataclass in `src/core/config.py`
+3. Register it in `agent_security_scanner/core/engine.py` — add to `ALL_MODULES` and `_build_module()`
+4. Add the config dataclass in `agent_security_scanner/core/config.py`
 5. Add unit and integration tests
 
 ---
@@ -334,4 +362,4 @@ See [ROADMAP.md](./ROADMAP.md) for planned enhancements across detection, infras
 
 ## Contributing
 
-Contributions welcome! Please read our contributing guidelines and submit PRs.
+Contributions welcome! Please read [CONTRIBUTING.md](./CONTRIBUTING.md) for guidelines.

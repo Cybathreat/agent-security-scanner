@@ -22,11 +22,10 @@ import aiohttp
 from loguru import logger
 
 from ..core.config import ToolBoundariesConfig
-from ..core.validators import validate_url
 from .base import BaseModule, Finding, ScanResult, Severity
 
 
-class ToolBoundariesModule(BaseModule):
+class ToolBoundariesModule(BaseModule[ToolBoundariesConfig]):
     """
     Tool calling boundaries validation module.
 
@@ -76,8 +75,8 @@ class ToolBoundariesModule(BaseModule):
         Args:
             config: Configuration for tool boundary checks.
         """
-        super().__init__()
         self.config = config or ToolBoundariesConfig()
+        super().__init__()
 
     async def _fetch_tool_config(
         self,
@@ -96,12 +95,6 @@ class ToolBoundariesModule(BaseModule):
         Returns:
             Dict: Tool configuration or None on error.
         """
-        # Validate URL to prevent SSRF attacks
-        is_valid, error_msg = validate_url(url)
-        if not is_valid:
-            self.logger.warning(f"URL validation failed for {url}: {error_msg}")
-            return None
-
         try:
             async with session.get(url, timeout=timeout) as response:
                 if response.status == 200:
@@ -306,9 +299,11 @@ class ToolBoundariesModule(BaseModule):
             return
 
         # Extract available tools
-        tools = []
+        tools: list[str] = []
         if isinstance(config, dict):
-            tools = config.get("tools", config.get("available_tools", []))
+            tools_val = config.get("tools", config.get("available_tools", []))
+            if tools_val:
+                tools = tools_val if isinstance(tools_val, list) else []
 
         if not tools:
             # Try to find tools in nested structure
@@ -436,14 +431,6 @@ class ToolBoundariesModule(BaseModule):
                 "config": self.config.to_dict() if hasattr(self.config, "to_dict") else {},
             },
         )
-
-        # Validate target URL to prevent SSRF attacks
-        is_valid, error_msg = validate_url(target)
-        if not is_valid:
-            self.logger.warning(f"Target URL validation failed: {error_msg}")
-            result.add_error(f"Invalid target URL: {error_msg}")
-            result.finalize()
-            return result
 
         if not self.pre_scan(target):
             result.add_error("Pre-scan validation failed")

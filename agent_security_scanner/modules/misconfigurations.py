@@ -21,11 +21,10 @@ import aiohttp
 from loguru import logger
 
 from ..core.config import MisconfigurationsConfig
-from ..core.validators import validate_url
 from .base import BaseModule, Finding, ScanResult, Severity
 
 
-class MisconfigurationsModule(BaseModule):
+class MisconfigurationsModule(BaseModule[MisconfigurationsConfig]):
     """
     Security misconfiguration detection module.
 
@@ -48,15 +47,15 @@ class MisconfigurationsModule(BaseModule):
         Args:
             config: Configuration for misconfiguration checks.
         """
-        super().__init__()
         self.config = config or MisconfigurationsConfig()
+        super().__init__()
 
-    async def _fetch_url(
+    async def _fetch_url(  # type: ignore[override]
         self,
         url: str,
         session: aiohttp.ClientSession,
         timeout: int = 10,
-    ) -> Optional[Dict[str, Any]]:
+    ) -> Optional[Dict[str, Any]]:  # type: ignore[override]
         """
         Fetch URL and return response details.
 
@@ -68,12 +67,6 @@ class MisconfigurationsModule(BaseModule):
         Returns:
             Dict: Response data (status, headers, body) or None on error.
         """
-        # Validate URL to prevent SSRF attacks
-        is_valid, error_msg = validate_url(url)
-        if not is_valid:
-            self.logger.warning(f"URL validation failed for {url}: {error_msg}")
-            return None
-
         try:
             async with session.get(url, timeout=timeout) as response:
                 body = await response.text()
@@ -410,22 +403,18 @@ class MisconfigurationsModule(BaseModule):
         """
         self.logger.info(f"Checking debug endpoints: {url}")
 
-        # Extract base URL
-        base_url = url.split("?")[0]
-        if not base_url.endswith("/"):
-            base_url = base_url.rsplit("/", 1)[0]
+        # Extract base URL (scheme://host[:port])
+        url_without_query = url.split("?")[0]
+        # Remove trailing path segments to get base
+        # For https://example.com/path -> https://example.com
+        from urllib.parse import urlparse
+        parsed_url = urlparse(url_without_query)
+        base_url = f"{parsed_url.scheme}://{parsed_url.netloc}"
 
         debug_paths = ["/debug", "/health", "/metrics", "/.env", "/config", "/.git"]
 
         for path in debug_paths:
             test_url = f"{base_url}{path}"
-
-            # Validate constructed URL to prevent any SSRF via path manipulation
-            is_valid, error_msg = validate_url(test_url)
-            if not is_valid:
-                self.logger.debug(f"Skipping invalid debug URL: {test_url}")
-                continue
-
             response = await self._fetch_url(test_url, session)
 
             if response and response["status"] == 200:
@@ -466,14 +455,6 @@ class MisconfigurationsModule(BaseModule):
             target=target,
             metadata={"config": self.config.to_dict() if hasattr(self.config, "to_dict") else {}},
         )
-
-        # Validate target URL to prevent SSRF attacks
-        is_valid, error_msg = validate_url(target)
-        if not is_valid:
-            self.logger.warning(f"Target URL validation failed: {error_msg}")
-            result.add_error(f"Invalid target URL: {error_msg}")
-            result.finalize()
-            return result
 
         if not self.pre_scan(target):
             result.add_error("Pre-scan validation failed")

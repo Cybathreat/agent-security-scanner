@@ -13,7 +13,7 @@ from pathlib import Path
 
 import yaml
 
-from src.core.config import (
+from agent_security_scanner.core.config import (
     Config,
     ScannerConfig,
     PromptInjectionConfig,

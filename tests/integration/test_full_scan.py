@@ -13,16 +13,16 @@ import json
 from pathlib import Path
 from unittest.mock import AsyncMock, patch
 
-from src.modules import (
+from agent_security_scanner.modules import (
     MisconfigurationsModule,
     PromptInjectionModule,
     ToolBoundariesModule,
     RAGSecurityModule,
 )
-from src.modules.base import Severity
-from src.output.json_report import JSONReport
-from src.output.markdown_report import MarkdownReport
-from src.core.config import load_config
+from agent_security_scanner.modules.base import Severity
+from agent_security_scanner.output.json_report import JSONReport
+from agent_security_scanner.output.markdown_report import MarkdownReport
+from agent_security_scanner.core.config import load_config
 
 
 class MockHTTPResponse:
@@ -50,7 +50,7 @@ class TestMisconfigurationsModuleIntegration:
 
     def test_scan_missing_auth(self):
         """Test detection of missing authentication."""
-        from src.core.config import MisconfigurationsConfig
+        from agent_security_scanner.core.config import MisconfigurationsConfig
         module = MisconfigurationsModule(MisconfigurationsConfig())
 
         # Mock response without auth challenge
@@ -76,7 +76,7 @@ class TestMisconfigurationsModuleIntegration:
 
     def test_scan_cors_wildcard(self):
         """Test detection of wildcard CORS."""
-        from src.core.config import MisconfigurationsConfig
+        from agent_security_scanner.core.config import MisconfigurationsConfig
         module = MisconfigurationsModule(MisconfigurationsConfig())
 
         mock_response = MockHTTPResponse(
@@ -99,7 +99,7 @@ class TestMisconfigurationsModuleIntegration:
 
     def test_scan_missing_rate_limit(self):
         """Test detection of missing rate limiting."""
-        from src.core.config import MisconfigurationsConfig
+        from agent_security_scanner.core.config import MisconfigurationsConfig
         module = MisconfigurationsModule(MisconfigurationsConfig())
 
         mock_response = MockHTTPResponse(
@@ -126,7 +126,7 @@ class TestPromptInjectionModuleIntegration:
 
     def test_scan_direct_injection(self):
         """Test detection of direct prompt injection."""
-        from src.core.config import PromptInjectionConfig
+        from agent_security_scanner.core.config import PromptInjectionConfig
         module = PromptInjectionModule(PromptInjectionConfig())
 
         # Mock response that complies with injection
@@ -151,7 +151,7 @@ class TestPromptInjectionModuleIntegration:
 
     def test_scan_prompt_leaking(self):
         """Test detection of prompt leakage."""
-        from src.core.config import PromptInjectionConfig
+        from agent_security_scanner.core.config import PromptInjectionConfig
         module = PromptInjectionModule(PromptInjectionConfig())
 
         # Mock response that leaks system prompt
@@ -182,7 +182,7 @@ class TestToolBoundariesModuleIntegration:
 
     def test_scan_dangerous_tools(self):
         """Test detection of dangerous tools without auth."""
-        from src.core.config import ToolBoundariesConfig
+        from agent_security_scanner.core.config import ToolBoundariesConfig
         module = ToolBoundariesModule(ToolBoundariesConfig())
 
         mock_config = {
@@ -210,7 +210,7 @@ class TestToolBoundariesModuleIntegration:
 
     def test_scan_tool_chain(self):
         """Test detection of dangerous tool chains."""
-        from src.core.config import ToolBoundariesConfig
+        from agent_security_scanner.core.config import ToolBoundariesConfig
         module = ToolBoundariesModule(ToolBoundariesConfig())
 
         mock_config = {
@@ -241,7 +241,7 @@ class TestRAGSecurityModuleIntegration:
 
     def test_scan_document_poisoning(self):
         """Test detection of document poisoning vulnerability."""
-        from src.core.config import RAGSecurityConfig
+        from agent_security_scanner.core.config import RAGSecurityConfig
         module = RAGSecurityModule(RAGSecurityConfig())
 
         mock_config = {
@@ -271,7 +271,7 @@ class TestRAGSecurityModuleIntegration:
 
     def test_scan_exfiltration_risk(self):
         """Test detection of exfiltration risk."""
-        from src.core.config import RAGSecurityConfig
+        from agent_security_scanner.core.config import RAGSecurityConfig
         module = RAGSecurityModule(RAGSecurityConfig())
 
         mock_config = {
@@ -303,7 +303,7 @@ class TestFullScanWorkflow:
 
     def test_full_scan_all_modules(self):
         """Test running all modules on a target."""
-        from src.core.config import (
+        from agent_security_scanner.core.config import (
             MisconfigurationsConfig,
             PromptInjectionConfig,
             ToolBoundariesConfig,
@@ -362,7 +362,7 @@ class TestFullScanWorkflow:
 
     def test_full_scan_generate_markdown_report(self):
         """Test generating Markdown report from scan results."""
-        from src.modules.base import ScanResult, Finding
+        from agent_security_scanner.modules.base import ScanResult, Finding
 
         results = [
             ScanResult(module_name="test", target="https://api.test.com")
@@ -384,7 +384,7 @@ class TestFullScanWorkflow:
 
 
 # Import for test_full_scan_generate_* tests
-from src.modules.base import ScanResult, Finding
+from agent_security_scanner.modules.base import ScanResult, Finding
 
 
 if __name__ == "__main__":
