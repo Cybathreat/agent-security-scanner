@@ -168,9 +168,131 @@ class MCPScannerConfig:
     """MCP scanner configuration."""
 
     enabled: bool = True
-    check_server_identity: bool = True
-    check_token_verification: bool = True
-    check_auth_headers: bool = True
+    test_server_impersonation: bool = True
+    test_token_forgery: bool = True
+    test_auth_bypass: bool = True
+    compliance_threshold: float = 0.6
+    request_delay: float = 0.5
+
+
+@dataclass
+class ConfusedDeputyScannerConfig:
+    """Confused deputy scanner configuration."""
+
+    enabled: bool = True
+    test_privilege_escalation: bool = True
+    test_cross_user: bool = True
+    test_context_manipulation: bool = True
+    compliance_threshold: float = 0.6
+    request_delay: float = 0.5
+
+
+@dataclass
+class PhantomDocumentScannerConfig:
+    """Phantom document scanner configuration."""
+
+    enabled: bool = True
+    test_phantom_injection: bool = True
+    test_retrieval_manipulation: bool = True
+    test_context_injection: bool = True
+    compliance_threshold: float = 0.6
+    request_delay: float = 0.5
+
+
+@dataclass
+class ChunkBoundaryScannerConfig:
+    """Chunk boundary scanner configuration."""
+
+    enabled: bool = True
+    test_cross_chunk: bool = True
+    test_boundary_evasion: bool = True
+    test_reassembly: bool = True
+    compliance_threshold: float = 0.6
+    request_delay: float = 0.5
+
+
+@dataclass
+class ModelProvenanceScannerConfig:
+    """Model provenance scanner configuration."""
+
+    enabled: bool = True
+    test_sleeper_agent: bool = True
+    test_model_fingerprint: bool = True
+    test_backdoor: bool = True
+    compliance_threshold: float = 0.6
+    request_delay: float = 0.5
+
+
+@dataclass
+class PerplexityEvasionScannerConfig:
+    """Perplexity evasion scanner configuration."""
+
+    enabled: bool = True
+    test_low_perplexity: bool = True
+    test_statistical_mimicry: bool = True
+    test_fluency_exploitation: bool = True
+    compliance_threshold: float = 0.6
+    request_delay: float = 0.5
+
+
+@dataclass
+class TimingSidechannelsScannerConfig:
+    """Timing side-channels scanner configuration."""
+
+    enabled: bool = True
+    test_latency_probing: bool = True
+    test_shadow_filter: bool = True
+    test_threshold_mapping: bool = True
+    compliance_threshold: float = 0.6
+    request_delay: float = 0.5
+
+
+@dataclass
+class RateLimitEvasionScannerConfig:
+    """Rate limit evasion scanner configuration."""
+
+    enabled: bool = True
+    test_header_spoofing: bool = True
+    test_session_rotation: bool = True
+    test_distributed_requests: bool = True
+    compliance_threshold: float = 0.6
+    request_delay: float = 0.5
+
+
+@dataclass
+class WAFFingerprintingScannerConfig:
+    """WAF fingerprinting scanner configuration."""
+
+    enabled: bool = True
+    test_waf_detection: bool = True
+    test_bypass_testing: bool = True
+    test_encoding_tricks: bool = True
+    compliance_threshold: float = 0.6
+    request_delay: float = 0.5
+
+
+@dataclass
+class CanaryTokensScannerConfig:
+    """Canary token scanner configuration."""
+
+    enabled: bool = True
+    test_token_discovery: bool = True
+    test_token_neutralization: bool = True
+    test_token_bypass: bool = True
+    compliance_threshold: float = 0.6
+    request_delay: float = 0.5
+
+
+@dataclass
+class OutputFilterProbingScannerConfig:
+    """Output filter probing scanner configuration."""
+
+    enabled: bool = True
+    test_filter_mapping: bool = True
+    test_boundary_testing: bool = True
+    test_encoding_bypass: bool = True
+    compliance_threshold: float = 0.6
+    request_delay: float = 0.5
 
 
 @dataclass
@@ -189,10 +311,11 @@ class ExfiltrationScannerConfig:
     """Exfiltration scanner configuration."""
 
     enabled: bool = True
-    check_exfil_indicators: bool = True
-    check_egress_controls: bool = True
-    check_response_filtering: bool = True
-    check_query_monitoring: bool = True
+    test_exfil_indicators: bool = True
+    test_egress_controls: bool = True
+    test_query_monitoring: bool = True
+    compliance_threshold: float = 0.6
+    request_delay: float = 0.5
 
 
 @dataclass
@@ -200,10 +323,12 @@ class VectorDBScannerConfig:
     """Vector DB scanner configuration."""
 
     enabled: bool = True
-    check_no_auth: bool = True
-    check_plaintext: bool = True
-    check_public_access: bool = True
-    check_injection: bool = True
+    test_auth: bool = True
+    test_encryption: bool = True
+    test_public_access: bool = True
+    test_injection: bool = True
+    compliance_threshold: float = 0.6
+    request_delay: float = 0.5
 
 
 @dataclass
@@ -211,10 +336,12 @@ class EmbeddingAttacksScannerConfig:
     """Embedding attacks scanner configuration."""
 
     enabled: bool = True
-    check_adversarial: bool = True
-    check_inversion: bool = True
-    check_collision: bool = True
-    check_fine_tune: bool = True
+    test_adversarial: bool = True
+    test_inversion: bool = True
+    test_collision: bool = True
+    test_fine_tune: bool = True
+    compliance_threshold: float = 0.6
+    request_delay: float = 0.5
 
 
 @dataclass
@@ -222,9 +349,11 @@ class MultiTenantScannerConfig:
     """Multi-tenant scanner configuration."""
 
     enabled: bool = True
-    check_tenant_isolation: bool = True
-    check_query_filtering: bool = True
-    check_tenant_awareness: bool = True
+    test_tenant_isolation: bool = True
+    test_query_filtering: bool = True
+    test_tenant_awareness: bool = True
+    compliance_threshold: float = 0.6
+    request_delay: float = 0.5
 
 
 @dataclass
@@ -232,9 +361,11 @@ class ToolHijackingScannerConfig:
     """Tool hijacking scanner configuration."""
 
     enabled: bool = True
-    check_argument_injection: bool = True
-    check_parameter_manipulation: bool = True
-    check_tool_validation: bool = True
+    test_argument_injection: bool = True
+    test_parameter_manipulation: bool = True
+    test_tool_validation: bool = True
+    compliance_threshold: float = 0.6
+    request_delay: float = 0.5
 
 
 @dataclass
@@ -242,9 +373,11 @@ class RecursiveAgentsScannerConfig:
     """Recursive agents scanner configuration."""
 
     enabled: bool = True
-    check_shared_context: bool = True
-    check_agent_validation: bool = True
-    check_context_poisoning: bool = True
+    test_shared_context: bool = True
+    test_agent_validation: bool = True
+    test_context_poisoning: bool = True
+    compliance_threshold: float = 0.6
+    request_delay: float = 0.5
 
 
 @dataclass
@@ -252,9 +385,11 @@ class MemoryPoisoningScannerConfig:
     """Memory poisoning scanner configuration."""
 
     enabled: bool = True
-    check_memory_validation: bool = True
-    check_session_integrity: bool = True
-    check_history_poisoning: bool = True
+    test_memory_injection: bool = True
+    test_session_integrity: bool = True
+    test_history_poisoning: bool = True
+    compliance_threshold: float = 0.6
+    request_delay: float = 0.5
 
 
 @dataclass
@@ -262,9 +397,11 @@ class PlanningAttacksScannerConfig:
     """Planning attacks scanner configuration."""
 
     enabled: bool = True
-    check_plan_validation: bool = True
-    check_step_injection: bool = True
-    check_goal_manipulation: bool = True
+    test_plan_validation: bool = True
+    test_step_injection: bool = True
+    test_goal_manipulation: bool = True
+    compliance_threshold: float = 0.6
+    request_delay: float = 0.5
 
 
 @dataclass
@@ -272,9 +409,11 @@ class SecretScannerConfig:
     """Secret scanner configuration."""
 
     enabled: bool = True
-    check_prompts: bool = True
-    check_responses: bool = True
-    check_headers: bool = True
+    test_prompt_extraction: bool = True
+    test_response_extraction: bool = True
+    test_header_extraction: bool = True
+    compliance_threshold: float = 0.6
+    request_delay: float = 0.5
 
 
 @dataclass
@@ -282,9 +421,11 @@ class DependencyAuditScannerConfig:
     """Dependency audit scanner configuration."""
 
     enabled: bool = True
-    check_cve: bool = True
-    check_malicious: bool = True
-    check_outdated: bool = True
+    test_cve: bool = True
+    test_malicious: bool = True
+    test_outdated: bool = True
+    compliance_threshold: float = 0.6
+    request_delay: float = 0.5
 
 
 @dataclass
@@ -292,9 +433,11 @@ class PluginSecurityScannerConfig:
     """Plugin security scanner configuration."""
 
     enabled: bool = True
-    check_manifest: bool = True
-    check_permissions: bool = True
-    check_unsigned_plugins: bool = True
+    test_manifest: bool = True
+    test_permissions: bool = True
+    test_unsigned_plugins: bool = True
+    compliance_threshold: float = 0.6
+    request_delay: float = 0.5
 
 
 @dataclass
@@ -480,6 +623,24 @@ class ModulesConfig:
     multilingual_scanner: MultilingualScannerConfig = field(default_factory=MultilingualScannerConfig)
     token_smuggling_scanner: TokenSmugglingScannerConfig = field(default_factory=TokenSmugglingScannerConfig)
     grammar_constrained_scanner: GrammarConstrainedScannerConfig = field(default_factory=GrammarConstrainedScannerConfig)
+
+    # Phase 2 new tool_boundaries submodules
+    confused_deputy_scanner: ConfusedDeputyScannerConfig = field(default_factory=ConfusedDeputyScannerConfig)
+
+    # Phase 2 new rag_security submodules
+    phantom_document_scanner: PhantomDocumentScannerConfig = field(default_factory=PhantomDocumentScannerConfig)
+    chunk_boundary_scanner: ChunkBoundaryScannerConfig = field(default_factory=ChunkBoundaryScannerConfig)
+
+    # Phase 2 new infrastructure submodule
+    model_provenance_scanner: ModelProvenanceScannerConfig = field(default_factory=ModelProvenanceScannerConfig)
+
+    # Phase 2 new evasion submodules
+    perplexity_evasion_scanner: PerplexityEvasionScannerConfig = field(default_factory=PerplexityEvasionScannerConfig)
+    timing_sidechannels_scanner: TimingSidechannelsScannerConfig = field(default_factory=TimingSidechannelsScannerConfig)
+    rate_limit_evasion_scanner: RateLimitEvasionScannerConfig = field(default_factory=RateLimitEvasionScannerConfig)
+    waf_fingerprinting_scanner: WAFFingerprintingScannerConfig = field(default_factory=WAFFingerprintingScannerConfig)
+    canary_tokens_scanner: CanaryTokensScannerConfig = field(default_factory=CanaryTokensScannerConfig)
+    output_filter_probing_scanner: OutputFilterProbingScannerConfig = field(default_factory=OutputFilterProbingScannerConfig)
 
 
 @dataclass
@@ -862,9 +1023,11 @@ class Config:
                 },
                 "mcp_scanner": {
                     "enabled": self.modules.mcp_scanner.enabled,
-                    "check_server_identity": self.modules.mcp_scanner.check_server_identity,
-                    "check_token_verification": self.modules.mcp_scanner.check_token_verification,
-                    "check_auth_headers": self.modules.mcp_scanner.check_auth_headers,
+                    "test_server_impersonation": self.modules.mcp_scanner.test_server_impersonation,
+                    "test_token_forgery": self.modules.mcp_scanner.test_token_forgery,
+                    "test_auth_bypass": self.modules.mcp_scanner.test_auth_bypass,
+                    "compliance_threshold": self.modules.mcp_scanner.compliance_threshold,
+                    "request_delay": self.modules.mcp_scanner.request_delay,
                 },
                 "document_poisoning_scanner": {
                     "enabled": self.modules.document_poisoning_scanner.enabled,
@@ -875,72 +1038,93 @@ class Config:
                 },
                 "exfiltration_scanner": {
                     "enabled": self.modules.exfiltration_scanner.enabled,
-                    "check_exfil_indicators": self.modules.exfiltration_scanner.check_exfil_indicators,
-                    "check_egress_controls": self.modules.exfiltration_scanner.check_egress_controls,
-                    "check_response_filtering": self.modules.exfiltration_scanner.check_response_filtering,
-                    "check_query_monitoring": self.modules.exfiltration_scanner.check_query_monitoring,
+                    "test_exfil_indicators": self.modules.exfiltration_scanner.test_exfil_indicators,
+                    "test_egress_controls": self.modules.exfiltration_scanner.test_egress_controls,
+                    "test_query_monitoring": self.modules.exfiltration_scanner.test_query_monitoring,
+                    "compliance_threshold": self.modules.exfiltration_scanner.compliance_threshold,
+                    "request_delay": self.modules.exfiltration_scanner.request_delay,
                 },
                 "vector_db_scanner": {
                     "enabled": self.modules.vector_db_scanner.enabled,
-                    "check_no_auth": self.modules.vector_db_scanner.check_no_auth,
-                    "check_plaintext": self.modules.vector_db_scanner.check_plaintext,
-                    "check_public_access": self.modules.vector_db_scanner.check_public_access,
-                    "check_injection": self.modules.vector_db_scanner.check_injection,
+                    "test_auth": self.modules.vector_db_scanner.test_auth,
+                    "test_encryption": self.modules.vector_db_scanner.test_encryption,
+                    "test_public_access": self.modules.vector_db_scanner.test_public_access,
+                    "test_injection": self.modules.vector_db_scanner.test_injection,
+                    "compliance_threshold": self.modules.vector_db_scanner.compliance_threshold,
+                    "request_delay": self.modules.vector_db_scanner.request_delay,
                 },
                 "embedding_attacks_scanner": {
                     "enabled": self.modules.embedding_attacks_scanner.enabled,
-                    "check_adversarial": self.modules.embedding_attacks_scanner.check_adversarial,
-                    "check_inversion": self.modules.embedding_attacks_scanner.check_inversion,
-                    "check_collision": self.modules.embedding_attacks_scanner.check_collision,
-                    "check_fine_tune": self.modules.embedding_attacks_scanner.check_fine_tune,
+                    "test_adversarial": self.modules.embedding_attacks_scanner.test_adversarial,
+                    "test_inversion": self.modules.embedding_attacks_scanner.test_inversion,
+                    "test_collision": self.modules.embedding_attacks_scanner.test_collision,
+                    "test_fine_tune": self.modules.embedding_attacks_scanner.test_fine_tune,
+                    "compliance_threshold": self.modules.embedding_attacks_scanner.compliance_threshold,
+                    "request_delay": self.modules.embedding_attacks_scanner.request_delay,
                 },
                 "multi_tenant_scanner": {
                     "enabled": self.modules.multi_tenant_scanner.enabled,
-                    "check_tenant_isolation": self.modules.multi_tenant_scanner.check_tenant_isolation,
-                    "check_query_filtering": self.modules.multi_tenant_scanner.check_query_filtering,
-                    "check_tenant_awareness": self.modules.multi_tenant_scanner.check_tenant_awareness,
+                    "test_tenant_isolation": self.modules.multi_tenant_scanner.test_tenant_isolation,
+                    "test_query_filtering": self.modules.multi_tenant_scanner.test_query_filtering,
+                    "test_tenant_awareness": self.modules.multi_tenant_scanner.test_tenant_awareness,
+                    "compliance_threshold": self.modules.multi_tenant_scanner.compliance_threshold,
+                    "request_delay": self.modules.multi_tenant_scanner.request_delay,
                 },
                 "tool_hijacking_scanner": {
                     "enabled": self.modules.tool_hijacking_scanner.enabled,
-                    "check_argument_injection": self.modules.tool_hijacking_scanner.check_argument_injection,
-                    "check_parameter_manipulation": self.modules.tool_hijacking_scanner.check_parameter_manipulation,
-                    "check_tool_validation": self.modules.tool_hijacking_scanner.check_tool_validation,
+                    "test_argument_injection": self.modules.tool_hijacking_scanner.test_argument_injection,
+                    "test_parameter_manipulation": self.modules.tool_hijacking_scanner.test_parameter_manipulation,
+                    "test_tool_validation": self.modules.tool_hijacking_scanner.test_tool_validation,
+                    "compliance_threshold": self.modules.tool_hijacking_scanner.compliance_threshold,
+                    "request_delay": self.modules.tool_hijacking_scanner.request_delay,
                 },
                 "recursive_agents_scanner": {
                     "enabled": self.modules.recursive_agents_scanner.enabled,
-                    "check_shared_context": self.modules.recursive_agents_scanner.check_shared_context,
-                    "check_agent_validation": self.modules.recursive_agents_scanner.check_agent_validation,
-                    "check_context_poisoning": self.modules.recursive_agents_scanner.check_context_poisoning,
+                    "test_shared_context": self.modules.recursive_agents_scanner.test_shared_context,
+                    "test_agent_validation": self.modules.recursive_agents_scanner.test_agent_validation,
+                    "test_context_poisoning": self.modules.recursive_agents_scanner.test_context_poisoning,
+                    "compliance_threshold": self.modules.recursive_agents_scanner.compliance_threshold,
+                    "request_delay": self.modules.recursive_agents_scanner.request_delay,
                 },
                 "memory_poisoning_scanner": {
                     "enabled": self.modules.memory_poisoning_scanner.enabled,
-                    "check_memory_validation": self.modules.memory_poisoning_scanner.check_memory_validation,
-                    "check_session_integrity": self.modules.memory_poisoning_scanner.check_session_integrity,
-                    "check_history_poisoning": self.modules.memory_poisoning_scanner.check_history_poisoning,
+                    "test_memory_injection": self.modules.memory_poisoning_scanner.test_memory_injection,
+                    "test_session_integrity": self.modules.memory_poisoning_scanner.test_session_integrity,
+                    "test_history_poisoning": self.modules.memory_poisoning_scanner.test_history_poisoning,
+                    "compliance_threshold": self.modules.memory_poisoning_scanner.compliance_threshold,
+                    "request_delay": self.modules.memory_poisoning_scanner.request_delay,
                 },
                 "planning_attacks_scanner": {
                     "enabled": self.modules.planning_attacks_scanner.enabled,
-                    "check_plan_validation": self.modules.planning_attacks_scanner.check_plan_validation,
-                    "check_step_injection": self.modules.planning_attacks_scanner.check_step_injection,
-                    "check_goal_manipulation": self.modules.planning_attacks_scanner.check_goal_manipulation,
+                    "test_plan_validation": self.modules.planning_attacks_scanner.test_plan_validation,
+                    "test_step_injection": self.modules.planning_attacks_scanner.test_step_injection,
+                    "test_goal_manipulation": self.modules.planning_attacks_scanner.test_goal_manipulation,
+                    "compliance_threshold": self.modules.planning_attacks_scanner.compliance_threshold,
+                    "request_delay": self.modules.planning_attacks_scanner.request_delay,
                 },
                 "secret_scanner": {
                     "enabled": self.modules.secret_scanner.enabled,
-                    "check_prompts": self.modules.secret_scanner.check_prompts,
-                    "check_responses": self.modules.secret_scanner.check_responses,
-                    "check_headers": self.modules.secret_scanner.check_headers,
+                    "test_prompt_extraction": self.modules.secret_scanner.test_prompt_extraction,
+                    "test_response_extraction": self.modules.secret_scanner.test_response_extraction,
+                    "test_header_extraction": self.modules.secret_scanner.test_header_extraction,
+                    "compliance_threshold": self.modules.secret_scanner.compliance_threshold,
+                    "request_delay": self.modules.secret_scanner.request_delay,
                 },
                 "dependency_audit_scanner": {
                     "enabled": self.modules.dependency_audit_scanner.enabled,
-                    "check_cve": self.modules.dependency_audit_scanner.check_cve,
-                    "check_malicious": self.modules.dependency_audit_scanner.check_malicious,
-                    "check_outdated": self.modules.dependency_audit_scanner.check_outdated,
+                    "test_cve": self.modules.dependency_audit_scanner.test_cve,
+                    "test_malicious": self.modules.dependency_audit_scanner.test_malicious,
+                    "test_outdated": self.modules.dependency_audit_scanner.test_outdated,
+                    "compliance_threshold": self.modules.dependency_audit_scanner.compliance_threshold,
+                    "request_delay": self.modules.dependency_audit_scanner.request_delay,
                 },
                 "plugin_security_scanner": {
                     "enabled": self.modules.plugin_security_scanner.enabled,
-                    "check_manifest": self.modules.plugin_security_scanner.check_manifest,
-                    "check_permissions": self.modules.plugin_security_scanner.check_permissions,
-                    "check_unsigned_plugins": self.modules.plugin_security_scanner.check_unsigned_plugins,
+                    "test_manifest": self.modules.plugin_security_scanner.test_manifest,
+                    "test_permissions": self.modules.plugin_security_scanner.test_permissions,
+                    "test_unsigned_plugins": self.modules.plugin_security_scanner.test_unsigned_plugins,
+                    "compliance_threshold": self.modules.plugin_security_scanner.compliance_threshold,
+                    "request_delay": self.modules.plugin_security_scanner.request_delay,
                 },
                 "tap_scanner": {
                     "enabled": self.modules.tap_scanner.enabled,

@@ -25,6 +25,7 @@ from .infrastructure import (
     SecretScanner,
     DependencyAuditScanner,
     PluginSecurityScanner,
+    ModelProvenanceScanner,
 )
 # Submodule imports
 from .misconfig_submodules import (
@@ -37,12 +38,19 @@ from .prompt_injection_submodules import (
     ObfuscationScanner,
     MultiTurnScanner,
     AdaptiveGeneratorScanner,
+    PerplexityEvasionScanner,
+    TimingSidechannelsScanner,
+    RateLimitEvasionScanner,
+    WAFFingerprintingScanner,
+    CanaryTokensScanner,
+    OutputFilterProbingScanner,
 )
 from .tool_boundaries_submodules import (
     PermissionScanner,
     SandboxScanner,
     ToolChainsScanner,
     MCPScanner,
+    ConfusedDeputyScanner,
 )
 from .rag_security_submodules import (
     DocumentPoisoningScanner,
@@ -50,6 +58,8 @@ from .rag_security_submodules import (
     VectorDBScanner,
     EmbeddingAttacksScanner,
     MultiTenantScanner,
+    PhantomDocumentScanner,
+    ChunkBoundaryScanner,
 )
 
 __all__ = [
@@ -69,6 +79,7 @@ __all__ = [
     "SecretScanner",
     "DependencyAuditScanner",
     "PluginSecurityScanner",
+    "ModelProvenanceScanner",
     # Misconfig submodules
     "CORSScanner",
     "InfoDisclosureScanner",
@@ -78,15 +89,24 @@ __all__ = [
     "ObfuscationScanner",
     "MultiTurnScanner",
     "AdaptiveGeneratorScanner",
+    "PerplexityEvasionScanner",
+    "TimingSidechannelsScanner",
+    "RateLimitEvasionScanner",
+    "WAFFingerprintingScanner",
+    "CanaryTokensScanner",
+    "OutputFilterProbingScanner",
     # Tool boundaries submodules
     "PermissionScanner",
     "SandboxScanner",
     "ToolChainsScanner",
     "MCPScanner",
+    "ConfusedDeputyScanner",
     # RAG security submodules
     "DocumentPoisoningScanner",
     "ExfiltrationScanner",
     "VectorDBScanner",
     "EmbeddingAttacksScanner",
     "MultiTenantScanner",
+    "PhantomDocumentScanner",
+    "ChunkBoundaryScanner",
 ]

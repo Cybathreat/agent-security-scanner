@@ -51,17 +51,26 @@ ALL_SUBMODULES = {
     "multilingual": "agent_security_scanner.modules.prompt_injection_submodules.multilingual",
     "token_smuggling": "agent_security_scanner.modules.prompt_injection_submodules.token_smuggling",
     "grammar_constrained": "agent_security_scanner.modules.prompt_injection_submodules.grammar_constrained",
+    "perplexity_evasion": "agent_security_scanner.modules.prompt_injection_submodules.perplexity_evasion",
+    "timing_sidechannels": "agent_security_scanner.modules.prompt_injection_submodules.timing_sidechannels",
+    "rate_limit_evasion": "agent_security_scanner.modules.prompt_injection_submodules.rate_limit_evasion",
+    "waf_fingerprinting": "agent_security_scanner.modules.prompt_injection_submodules.waf_fingerprinting",
+    "canary_tokens": "agent_security_scanner.modules.prompt_injection_submodules.canary_tokens",
+    "output_filter_probing": "agent_security_scanner.modules.prompt_injection_submodules.output_filter_probing",
     # Tool boundaries submodules
     "permission_scanner": "agent_security_scanner.modules.tool_boundaries_submodules.permission_scanner",
     "sandbox_scanner": "agent_security_scanner.modules.tool_boundaries_submodules.sandbox_scanner",
     "tool_chains_scanner": "agent_security_scanner.modules.tool_boundaries_submodules.tool_chains",
     "mcp_scanner": "agent_security_scanner.modules.tool_boundaries_submodules.mcp_scanner",
+    "confused_deputy": "agent_security_scanner.modules.tool_boundaries_submodules.confused_deputy",
     # RAG security submodules
     "document_poisoning": "agent_security_scanner.modules.rag_security_submodules.document_poisoning",
     "exfiltration": "agent_security_scanner.modules.rag_security_submodules.exfiltration",
     "vector_db_scanner": "agent_security_scanner.modules.rag_security_submodules.vector_db",
     "embedding_attacks": "agent_security_scanner.modules.rag_security_submodules.embedding_attacks",
     "multi_tenant": "agent_security_scanner.modules.rag_security_submodules.multi_tenant",
+    "phantom_document": "agent_security_scanner.modules.rag_security_submodules.phantom_document",
+    "chunk_boundary": "agent_security_scanner.modules.rag_security_submodules.chunk_boundary",
     # Agent submodules
     "tool_hijacking": "agent_security_scanner.modules.agent.tool_hijacking",
     "recursive_agents": "agent_security_scanner.modules.agent.recursive_agents",
@@ -71,6 +80,7 @@ ALL_SUBMODULES = {
     "secret_scanner": "agent_security_scanner.modules.infrastructure.secret_scanner",
     "dependency_audit": "agent_security_scanner.modules.infrastructure.dependency_audit",
     "plugin_security": "agent_security_scanner.modules.infrastructure.plugin_security",
+    "model_provenance": "agent_security_scanner.modules.infrastructure.model_provenance",
 }
 
 
@@ -221,17 +231,26 @@ class ScanEngine:
             "multilingual": ("agent_security_scanner.modules.prompt_injection_submodules.multilingual", "MultilingualScanner"),
             "token_smuggling": ("agent_security_scanner.modules.prompt_injection_submodules.token_smuggling", "TokenSmugglingScanner"),
             "grammar_constrained": ("agent_security_scanner.modules.prompt_injection_submodules.grammar_constrained", "GrammarConstrainedScanner"),
+            "perplexity_evasion": ("agent_security_scanner.modules.prompt_injection_submodules.perplexity_evasion", "PerplexityEvasionScanner"),
+            "timing_sidechannels": ("agent_security_scanner.modules.prompt_injection_submodules.timing_sidechannels", "TimingSidechannelsScanner"),
+            "rate_limit_evasion": ("agent_security_scanner.modules.prompt_injection_submodules.rate_limit_evasion", "RateLimitEvasionScanner"),
+            "waf_fingerprinting": ("agent_security_scanner.modules.prompt_injection_submodules.waf_fingerprinting", "WAFFingerprintingScanner"),
+            "canary_tokens": ("agent_security_scanner.modules.prompt_injection_submodules.canary_tokens", "CanaryTokensScanner"),
+            "output_filter_probing": ("agent_security_scanner.modules.prompt_injection_submodules.output_filter_probing", "OutputFilterProbingScanner"),
             # Tool boundaries submodules
             "permission_scanner": ("agent_security_scanner.modules.tool_boundaries_submodules.permission_scanner", "PermissionScanner"),
             "sandbox_scanner": ("agent_security_scanner.modules.tool_boundaries_submodules.sandbox_scanner", "SandboxScanner"),
             "tool_chains": ("agent_security_scanner.modules.tool_boundaries_submodules.tool_chains", "ToolChainsScanner"),
             "mcp_scanner": ("agent_security_scanner.modules.tool_boundaries_submodules.mcp_scanner", "MCPScanner"),
+            "confused_deputy": ("agent_security_scanner.modules.tool_boundaries_submodules.confused_deputy", "ConfusedDeputyScanner"),
             # RAG security submodules
             "document_poisoning": ("agent_security_scanner.modules.rag_security_submodules.document_poisoning", "DocumentPoisoningScanner"),
             "exfiltration": ("agent_security_scanner.modules.rag_security_submodules.exfiltration", "ExfiltrationScanner"),
             "vector_db": ("agent_security_scanner.modules.rag_security_submodules.vector_db", "VectorDBScanner"),
             "embedding_attacks": ("agent_security_scanner.modules.rag_security_submodules.embedding_attacks", "EmbeddingAttacksScanner"),
             "multi_tenant": ("agent_security_scanner.modules.rag_security_submodules.multi_tenant", "MultiTenantScanner"),
+            "phantom_document": ("agent_security_scanner.modules.rag_security_submodules.phantom_document", "PhantomDocumentScanner"),
+            "chunk_boundary": ("agent_security_scanner.modules.rag_security_submodules.chunk_boundary", "ChunkBoundaryScanner"),
             # Agent submodules
             "tool_hijacking": ("agent_security_scanner.modules.agent.tool_hijacking", "ToolHijackingScanner"),
             "recursive_agents": ("agent_security_scanner.modules.agent.recursive_agents", "RecursiveAgentsScanner"),
@@ -241,6 +260,7 @@ class ScanEngine:
             "secret_scanner": ("agent_security_scanner.modules.infrastructure.secret_scanner", "SecretScanner"),
             "dependency_audit": ("agent_security_scanner.modules.infrastructure.dependency_audit", "DependencyAuditScanner"),
             "plugin_security": ("agent_security_scanner.modules.infrastructure.plugin_security", "PluginSecurityScanner"),
+            "model_provenance": ("agent_security_scanner.modules.infrastructure.model_provenance", "ModelProvenanceScanner"),
         }
 
         if name not in submodule_paths:

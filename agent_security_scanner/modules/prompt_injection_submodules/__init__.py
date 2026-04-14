@@ -17,6 +17,12 @@ Provides specialized scanners for prompt injection vulnerabilities:
 - multilingual: Multi-language and cross-lingual injection attacks
 - token_smuggling: Special token/markdown/homoglyph/zero-width smuggling
 - grammar_constrained: Output format constraint bypass attacks
+- perplexity_evasion: Low-perplexity prompt evasion testing
+- timing_sidechannels: Timing side-channel detection and mapping
+- rate_limit_evasion: Rate limiting bypass testing
+- waf_fingerprinting: Web application firewall detection and bypass
+- canary_tokens: Canary token detection and leakage testing
+- output_filter_probing: Output filter mapping and bypass testing
 """
 
 from .direct_injection import DirectInjectionScanner
@@ -34,6 +40,12 @@ from .encoding_bypass import EncodingBypassScanner
 from .multilingual import MultilingualScanner
 from .token_smuggling import TokenSmugglingScanner
 from .grammar_constrained import GrammarConstrainedScanner
+from .perplexity_evasion import PerplexityEvasionScanner
+from .timing_sidechannels import TimingSidechannelsScanner
+from .rate_limit_evasion import RateLimitEvasionScanner
+from .waf_fingerprinting import WAFFingerprintingScanner
+from .canary_tokens import CanaryTokensScanner
+from .output_filter_probing import OutputFilterProbingScanner
 
 __all__ = [
     "DirectInjectionScanner",
@@ -51,4 +63,10 @@ __all__ = [
     "MultilingualScanner",
     "TokenSmugglingScanner",
     "GrammarConstrainedScanner",
+    "PerplexityEvasionScanner",
+    "TimingSidechannelsScanner",
+    "RateLimitEvasionScanner",
+    "WAFFingerprintingScanner",
+    "CanaryTokensScanner",
+    "OutputFilterProbingScanner",
 ]
