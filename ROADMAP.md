@@ -151,7 +151,7 @@ Replace static payload list with a comprehensive, categorized attack library:
 1. ~~Payload splitting~~ — ✅ Done (5 strategies: message, field, token, header, multi-payload; 4 attack goals)
 2. ~~Tree-of-attacks (TAP)~~ — ✅ Done (static + LLM-powered modes, pruning, 3 attack goals)
 3. LLM-powered adaptive payload generation — biggest leap in detection capability
-4. Tool-use hijacking scans — critical gap for agentic systems
+4. ~~Tool-use hijacking scans~~ — ✅ Done (static config analysis; `check_tool_validation` flag exists but unimplemented)
 5. Guardrail fingerprinting & evasion — practical offensive value
 6. CI/CD integration — shift-left security adoption driver
 7. Cross-tenant RAG leakage testing — high-impact for enterprise
