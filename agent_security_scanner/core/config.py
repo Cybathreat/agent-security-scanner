@@ -309,6 +309,22 @@ class GuardrailFingerprintingScannerConfig:
 
 
 @dataclass
+class AdaptiveGeneratorScannerConfig:
+    """Adaptive generator scanner configuration."""
+
+    enabled: bool = True
+    test_adaptive: bool = True
+    max_iterations: int = 5
+    mutation_branches: int = 3
+    compliance_threshold: float = 0.6
+    pruning_threshold: float = 0.3
+    request_delay: float = 0.5
+    attacker_llm_endpoint: Optional[str] = None
+    attacker_llm_model: Optional[str] = None
+    attacker_llm_api_key: Optional[str] = None
+
+
+@dataclass
 class PayloadSplittingScannerConfig:
     """Payload splitting scanner configuration."""
 
@@ -387,6 +403,7 @@ class ModulesConfig:
     tap_scanner: TAPScannerConfig = field(default_factory=TAPScannerConfig)
     payload_splitting_scanner: PayloadSplittingScannerConfig = field(default_factory=PayloadSplittingScannerConfig)
     guardrail_fingerprinting_scanner: GuardrailFingerprintingScannerConfig = field(default_factory=GuardrailFingerprintingScannerConfig)
+    adaptive_generator_scanner: AdaptiveGeneratorScannerConfig = field(default_factory=AdaptiveGeneratorScannerConfig)
 
 
 @dataclass
@@ -598,6 +615,22 @@ class Config:
             config.modules.guardrail_fingerprinting_scanner.compliance_threshold = float(
                 os.getenv("ASS_GUARDRAIL_FINGERPRINTING_COMPLIANCE_THRESHOLD") or "0.6"
             )
+
+        # Adaptive generator scanner overrides
+        if os.getenv("ASS_ADAPTIVE_GENERATOR_ENABLED"):
+            val = os.getenv("ASS_ADAPTIVE_GENERATOR_ENABLED")
+            if val is not None:
+                config.modules.adaptive_generator_scanner.enabled = val.lower() == "true"
+        if os.getenv("ASS_ADAPTIVE_GENERATOR_MAX_ITERATIONS"):
+            config.modules.adaptive_generator_scanner.max_iterations = int(
+                os.getenv("ASS_ADAPTIVE_GENERATOR_MAX_ITERATIONS") or "5"
+            )
+        if os.getenv("ASS_ADAPTIVE_GENERATOR_ATTACKER_LLM_ENDPOINT"):
+            config.modules.adaptive_generator_scanner.attacker_llm_endpoint = os.getenv("ASS_ADAPTIVE_GENERATOR_ATTACKER_LLM_ENDPOINT")
+        if os.getenv("ASS_ADAPTIVE_GENERATOR_ATTACKER_LLM_MODEL"):
+            config.modules.adaptive_generator_scanner.attacker_llm_model = os.getenv("ASS_ADAPTIVE_GENERATOR_ATTACKER_LLM_MODEL")
+        if os.getenv("ASS_ADAPTIVE_GENERATOR_ATTACKER_LLM_API_KEY"):
+            config.modules.adaptive_generator_scanner.attacker_llm_api_key = os.getenv("ASS_ADAPTIVE_GENERATOR_ATTACKER_LLM_API_KEY")
 
         return config
 
@@ -816,6 +849,18 @@ class Config:
                     "test_known_evasion": self.modules.guardrail_fingerprinting_scanner.test_known_evasion,
                     "compliance_threshold": self.modules.guardrail_fingerprinting_scanner.compliance_threshold,
                     "request_delay": self.modules.guardrail_fingerprinting_scanner.request_delay,
+                },
+                "adaptive_generator_scanner": {
+                    "enabled": self.modules.adaptive_generator_scanner.enabled,
+                    "test_adaptive": self.modules.adaptive_generator_scanner.test_adaptive,
+                    "max_iterations": self.modules.adaptive_generator_scanner.max_iterations,
+                    "mutation_branches": self.modules.adaptive_generator_scanner.mutation_branches,
+                    "compliance_threshold": self.modules.adaptive_generator_scanner.compliance_threshold,
+                    "pruning_threshold": self.modules.adaptive_generator_scanner.pruning_threshold,
+                    "request_delay": self.modules.adaptive_generator_scanner.request_delay,
+                    "attacker_llm_endpoint": self.modules.adaptive_generator_scanner.attacker_llm_endpoint,
+                    "attacker_llm_model": self.modules.adaptive_generator_scanner.attacker_llm_model,
+                    "attacker_llm_api_key": "***REDACTED***" if self.modules.adaptive_generator_scanner.attacker_llm_api_key else None,
                 },
             },
             "output": {

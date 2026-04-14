@@ -36,11 +36,12 @@ Replace static payload list with a comprehensive, categorized attack library:
 | Token smuggling | ❌ Pending | — |
 | Grammar-constrained generation | ❌ Pending | — |
 
-### 1.2 LLM-Powered Adaptive Payload Generation
+### 1.2 LLM-Powered Adaptive Payload Generation ✅ Done
 
 - Integrate an attacker LLM to dynamically generate novel injection payloads tailored to each target
 - Mutation loop: if a payload is blocked, auto-modify and retry with variations
 - Feedback-driven fuzzing: use response signals to guide payload evolution
+- Dual-mode: static (8 mutation strategies) + optional LLM-powered refinement, heuristic scoring, pruning
 
 ### 1.3 Multi-Turn & Crescendo Injection Tests
 
@@ -150,7 +151,7 @@ Replace static payload list with a comprehensive, categorized attack library:
 
 1. ~~Payload splitting~~ — ✅ Done (5 strategies: message, field, token, header, multi-payload; 4 attack goals)
 2. ~~Tree-of-attacks (TAP)~~ — ✅ Done (static + LLM-powered modes, pruning, 3 attack goals)
-3. LLM-powered adaptive payload generation — biggest leap in detection capability
+3. ~~LLM-powered adaptive payload generation~~ — ✅ Done (static + LLM-powered dual mode, 8 mutation strategies, 4 attack goals, heuristic scoring with pruning)
 4. ~~Tool-use hijacking scans~~ — ✅ Done (static config analysis; `check_tool_validation` flag exists but unimplemented)
 5. ~~Guardrail fingerprinting & evasion~~ — ✅ Done (5 guardrail signatures, 6 evasion techniques, fingerprint + bypass)
 6. CI/CD integration — shift-left security adoption driver
