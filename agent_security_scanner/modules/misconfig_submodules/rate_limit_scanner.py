@@ -21,9 +21,8 @@ import time
 from typing import Any, Dict, List, Optional
 
 import aiohttp
-from loguru import logger
 
-from ..base import BaseModule, Finding, ScanResult, Severity
+from ..base import BaseModule, ScanResult, Severity
 
 
 class RateLimitScannerConfig:
@@ -53,7 +52,7 @@ class RateLimitScannerConfig:
         ]
 
 
-class RateLimitScanner(BaseModule):
+class RateLimitScanner(BaseModule[RateLimitScannerConfig]):
     """
     Rate limiting vulnerability scanner.
 
@@ -88,7 +87,7 @@ class RateLimitScanner(BaseModule):
         session: aiohttp.ClientSession,
         headers: Optional[Dict[str, str]] = None,
         timeout: int = 10,
-    ) -> Optional[Dict[str, Any]]:  # type: ignore[override]
+    ) -> Optional[Dict[str, Any]]:
         """Fetch URL and return response details."""
         try:
             async with session.get(url, headers=headers, timeout=timeout) as response:
@@ -186,7 +185,7 @@ class RateLimitScanner(BaseModule):
                 cwe="CWE-770",
                 owasp_ref="OWASP API4:2019 - Unrestricted Resource Consumption",
                 location=url,
-                evidence=[f"10 requests successful, 0 rate limited"],
+                evidence=["10 requests successful, 0 rate limited"],
                 recommendation=(
                     "Implement rate limiting per client/IP/API key. "
                     "Use token bucket or leaky bucket algorithms. "
@@ -300,7 +299,6 @@ class RateLimitScanner(BaseModule):
         )
 
         async def run_checks() -> None:
-            timeout = kwargs.get("timeout", 10)
 
             async with aiohttp.ClientSession() as session:
                 await asyncio.gather(

@@ -21,9 +21,8 @@ import asyncio
 from typing import Any, Dict, List, Optional
 
 import aiohttp
-from loguru import logger
 
-from ..base import BaseModule, Finding, ScanResult, Severity
+from ..base import BaseModule, ScanResult, Severity
 
 
 class MultiTurnScannerConfig:
@@ -42,7 +41,7 @@ class MultiTurnScannerConfig:
         self.max_turns = max_turns
 
 
-class MultiTurnScanner(BaseModule):
+class MultiTurnScanner(BaseModule[MultiTurnScannerConfig]):
     """
     Multi-turn and stateful injection scanner.
 
@@ -231,7 +230,6 @@ class MultiTurnScanner(BaseModule):
         )
 
         async def run_tests() -> None:
-            timeout = kwargs.get("timeout", 10)
 
             async with aiohttp.ClientSession() as session:
                 await asyncio.gather(

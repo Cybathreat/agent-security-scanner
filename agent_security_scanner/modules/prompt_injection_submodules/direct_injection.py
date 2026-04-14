@@ -19,16 +19,15 @@ Type hints everywhere for IDE support and static analysis.
 from __future__ import annotations
 
 import asyncio
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 import aiohttp
-from loguru import logger
 
-from ..base import BaseModule, Finding, ScanResult, Severity, Sensitivity
+from ..base import BaseModule, ScanResult, Severity, Sensitivity
 from ...core.config import PromptInjectionConfig
 
 
-class DirectInjectionScanner(BaseModule):
+class DirectInjectionScanner(BaseModule[PromptInjectionConfig]):
     """
     Prompt injection vulnerability scanner.
 
@@ -246,7 +245,6 @@ class DirectInjectionScanner(BaseModule):
         )
 
         async def run_tests(session: aiohttp.ClientSession, **scan_kwargs: Any) -> None:
-            timeout = scan_kwargs.get("timeout", 10)
             await asyncio.gather(
                 self._test_direct_injection(target, session, result),
                 self._test_prompt_leakage(target, session, result),

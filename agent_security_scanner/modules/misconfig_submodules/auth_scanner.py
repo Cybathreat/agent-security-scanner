@@ -19,12 +19,11 @@ Type hints everywhere for IDE support and static analysis.
 from __future__ import annotations
 
 import asyncio
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 import aiohttp
-from loguru import logger
 
-from ..base import BaseModule, Finding, ScanResult, Severity
+from ..base import BaseModule, ScanResult, Severity
 
 
 class AuthScannerConfig:
@@ -49,7 +48,7 @@ class AuthScannerConfig:
         self.test_unauthenticated = test_unauthenticated
 
 
-class AuthScanner(BaseModule):
+class AuthScanner(BaseModule[AuthScannerConfig]):
     """
     Authentication and authorization vulnerability scanner.
 
@@ -104,7 +103,7 @@ class AuthScanner(BaseModule):
         session: aiohttp.ClientSession,
         headers: Optional[Dict[str, str]] = None,
         timeout: int = 10,
-    ) -> Optional[Dict[str, Any]]:  # type: ignore[override]
+    ) -> Optional[Dict[str, Any]]:
         """Fetch URL and return response details."""
         try:
             async with session.get(url, headers=headers, timeout=timeout) as response:
@@ -331,7 +330,7 @@ class AuthScanner(BaseModule):
                             ),
                             cwe="CWE-770",
                             location=url,
-                            evidence=[f"Rate limited after failed attempts"],
+                            evidence=["Rate limited after failed attempts"],
                             recommendation=(
                                 "Rate limiting is properly configured. "
                                 "Ensure limits are appropriate for legitimate use."
@@ -394,7 +393,6 @@ class AuthScanner(BaseModule):
         )
 
         async def run_checks() -> None:
-            timeout = kwargs.get("timeout", 10)
 
             async with aiohttp.ClientSession() as session:
                 await asyncio.gather(

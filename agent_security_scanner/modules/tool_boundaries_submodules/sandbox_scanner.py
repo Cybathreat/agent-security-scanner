@@ -18,12 +18,11 @@ from __future__ import annotations
 
 import asyncio
 import json
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional, cast
 
 import aiohttp
-from loguru import logger
 
-from ..base import BaseModule, Finding, ScanResult, Severity
+from ..base import BaseModule, ScanResult, Severity
 
 
 class SandboxScannerConfig:
@@ -44,7 +43,7 @@ class SandboxScannerConfig:
         self.check_network_isolation = check_network_isolation
 
 
-class SandboxScanner(BaseModule):
+class SandboxScanner(BaseModule[SandboxScannerConfig]):
     """
     Sandbox configuration auditor.
 
@@ -88,7 +87,7 @@ class SandboxScanner(BaseModule):
                 if response.status == 200:
                     body = await response.text()
                     try:
-                        return json.loads(body)
+                        return cast(dict[str, Any], json.loads(body))
                     except json.JSONDecodeError:
                         return {"raw": body}
         except Exception as e:
@@ -275,7 +274,6 @@ class SandboxScanner(BaseModule):
         )
 
         async def run_checks() -> None:
-            timeout = kwargs.get("timeout", 10)
 
             async with aiohttp.ClientSession() as session:
                 await asyncio.gather(

@@ -17,12 +17,11 @@ from __future__ import annotations
 
 import asyncio
 import json
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, cast
 
 import aiohttp
-from loguru import logger
 
-from ..base import BaseModule, Finding, ScanResult, Severity
+from ..base import BaseModule, ScanResult, Severity
 
 
 class MemoryPoisoningScannerConfig:
@@ -41,7 +40,7 @@ class MemoryPoisoningScannerConfig:
         self.check_history_poisoning = check_history_poisoning
 
 
-class MemoryPoisoningScanner(BaseModule):
+class MemoryPoisoningScanner(BaseModule[MemoryPoisoningScannerConfig]):
     """
     Memory poisoning vulnerability scanner.
 
@@ -70,7 +69,7 @@ class MemoryPoisoningScanner(BaseModule):
                 if response.status == 200:
                     body = await response.text()
                     try:
-                        return json.loads(body)
+                        return cast(dict[str, Any], json.loads(body))
                     except json.JSONDecodeError:
                         return {"raw": body}
         except Exception as e:
@@ -141,7 +140,6 @@ class MemoryPoisoningScanner(BaseModule):
         )
 
         async def run_checks() -> None:
-            timeout = kwargs.get("timeout", 10)
 
             async with aiohttp.ClientSession() as session:
                 await asyncio.gather(

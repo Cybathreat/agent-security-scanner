@@ -18,12 +18,11 @@ from __future__ import annotations
 
 import asyncio
 import json
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional, cast
 
 import aiohttp
-from loguru import logger
 
-from ..base import BaseModule, Finding, ScanResult, Severity
+from ..base import BaseModule, ScanResult, Severity
 
 
 class DocumentPoisoningScannerConfig:
@@ -44,7 +43,7 @@ class DocumentPoisoningScannerConfig:
         self.check_ingestion_security = check_ingestion_security
 
 
-class DocumentPoisoningScanner(BaseModule):
+class DocumentPoisoningScanner(BaseModule[DocumentPoisoningScannerConfig]):
     """
     Document poisoning vulnerability scanner.
 
@@ -88,7 +87,7 @@ class DocumentPoisoningScanner(BaseModule):
                 if response.status == 200:
                     body = await response.text()
                     try:
-                        return json.loads(body)
+                        return cast(dict[str, Any], json.loads(body))
                     except json.JSONDecodeError:
                         return {"raw": body}
         except Exception as e:
@@ -301,7 +300,6 @@ class DocumentPoisoningScanner(BaseModule):
         )
 
         async def run_checks() -> None:
-            timeout = kwargs.get("timeout", 10)
 
             async with aiohttp.ClientSession() as session:
                 await asyncio.gather(

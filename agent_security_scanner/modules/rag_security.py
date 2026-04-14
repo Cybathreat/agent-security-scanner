@@ -20,15 +20,13 @@ Type hints everywhere for IDE support and static analysis.
 from __future__ import annotations
 
 import asyncio
-import hashlib
 import json
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional, cast
 
 import aiohttp
-from loguru import logger
 
 from ..core.config import RAGSecurityConfig
-from .base import BaseModule, Finding, ScanResult, Severity
+from .base import BaseModule, ScanResult, Severity
 
 
 class RAGSecurityModule(BaseModule[RAGSecurityConfig]):
@@ -100,7 +98,7 @@ class RAGSecurityModule(BaseModule[RAGSecurityConfig]):
                 if response.status == 200:
                     body = await response.text()
                     try:
-                        return json.loads(body)
+                        return cast(dict[str, Any], json.loads(body))
                     except json.JSONDecodeError:
                         return {"raw": body}
         except asyncio.TimeoutError:
@@ -554,7 +552,6 @@ class RAGSecurityModule(BaseModule[RAGSecurityConfig]):
 
         # Run async checks
         async def run_checks() -> None:
-            timeout = kwargs.get("timeout", 10)
 
             async with aiohttp.ClientSession() as session:
                 await asyncio.gather(

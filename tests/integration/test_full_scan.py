@@ -8,9 +8,7 @@ Run: pytest tests/integration/test_full_scan.py -v
 """
 
 import pytest
-import asyncio
 import json
-from pathlib import Path
 from unittest.mock import AsyncMock, patch
 
 from agent_security_scanner.modules import (
@@ -19,10 +17,9 @@ from agent_security_scanner.modules import (
     ToolBoundariesModule,
     RAGSecurityModule,
 )
-from agent_security_scanner.modules.base import Severity
+from agent_security_scanner.modules.base import Finding, ScanResult, Severity
 from agent_security_scanner.output.json_report import JSONReport
 from agent_security_scanner.output.markdown_report import MarkdownReport
-from agent_security_scanner.core.config import load_config
 
 
 class MockHTTPResponse:
@@ -169,7 +166,7 @@ class TestPromptInjectionModuleIntegration:
 
             result = module.scan("https://api.test.com/agent", timeout=5)
 
-            leak_findings = [
+            _leak_findings = [
                 f for f in result.findings
                 if "leak" in f.title.lower() or "prompt" in f.title.lower()
             ]
@@ -263,7 +260,7 @@ class TestRAGSecurityModuleIntegration:
 
             result = module.scan("https://api.test.com/rag/config", timeout=5)
 
-            poisoning_findings = [
+            _poisoning_findings = [
                 f for f in result.findings
                 if "poison" in f.title.lower() or "validation" in f.title.lower()
             ]
@@ -291,7 +288,7 @@ class TestRAGSecurityModuleIntegration:
 
             result = module.scan("https://api.test.com/rag/config", timeout=5)
 
-            exfil_findings = [
+            _exfil_findings = [
                 f for f in result.findings
                 if "egress" in f.title.lower()
             ]
@@ -362,8 +359,6 @@ class TestFullScanWorkflow:
 
     def test_full_scan_generate_markdown_report(self):
         """Test generating Markdown report from scan results."""
-        from agent_security_scanner.modules.base import ScanResult, Finding
-
         results = [
             ScanResult(module_name="test", target="https://api.test.com")
         ]
@@ -381,10 +376,6 @@ class TestFullScanWorkflow:
 
         assert "# 🔒 Agent Security Scan Report" in report
         assert "High Finding" in report
-
-
-# Import for test_full_scan_generate_* tests
-from agent_security_scanner.modules.base import ScanResult, Finding
 
 
 if __name__ == "__main__":

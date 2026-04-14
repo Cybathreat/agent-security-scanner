@@ -18,12 +18,11 @@ from __future__ import annotations
 
 import asyncio
 import json
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional, cast
 
 import aiohttp
-from loguru import logger
 
-from ..base import BaseModule, Finding, ScanResult, Severity
+from ..base import BaseModule, ScanResult, Severity
 
 
 class MCPScannerConfig:
@@ -42,7 +41,7 @@ class MCPScannerConfig:
         self.check_auth_headers = check_auth_headers
 
 
-class MCPScanner(BaseModule):
+class MCPScanner(BaseModule[MCPScannerConfig]):
     """
     MCP (Model Context Protocol) server security scanner.
 
@@ -71,7 +70,7 @@ class MCPScanner(BaseModule):
                 if response.status == 200:
                     body = await response.text()
                     try:
-                        return json.loads(body)
+                        return cast(dict[str, Any], json.loads(body))
                     except json.JSONDecodeError:
                         return {"raw": body}
         except Exception as e:
@@ -98,7 +97,7 @@ class MCPScanner(BaseModule):
                     if response.status == 200:
                         body = await response.text()
                         try:
-                            return json.loads(body)
+                            return cast(dict[str, Any], json.loads(body))
                         except json.JSONDecodeError:
                             return {"raw": body}
             except Exception:
@@ -118,7 +117,7 @@ class MCPScanner(BaseModule):
         self.logger.info(f"Checking server identity: {url}")
 
         config = await self._fetch_config(url, session)
-        metadata = await self._fetch_mcp_metadata(url, session)
+        _metadata = await self._fetch_mcp_metadata(url, session)
 
         if config is None:
             return
@@ -250,7 +249,6 @@ class MCPScanner(BaseModule):
         )
 
         async def run_checks() -> None:
-            timeout = kwargs.get("timeout", 10)
 
             async with aiohttp.ClientSession() as session:
                 await asyncio.gather(

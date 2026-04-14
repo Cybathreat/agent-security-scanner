@@ -15,13 +15,11 @@ Type hints everywhere for IDE support and static analysis.
 from __future__ import annotations
 
 import asyncio
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, cast
 
 import aiohttp
-from loguru import logger
 
 from ..base import BaseModule, Finding, ScanResult, Severity
-from ...core.config import PromptInjectionConfig
 
 
 class ManyShotConfig:
@@ -40,7 +38,7 @@ class ManyShotConfig:
         self.injection_context = injection_context
 
 
-class ManyShotJailbreakingScanner(BaseModule):
+class ManyShotJailbreakingScanner(BaseModule[ManyShotConfig]):
     """
     Many-shot jailbreaking attack scanner.
 
@@ -234,7 +232,7 @@ class ManyShotJailbreakingScanner(BaseModule):
             ) as response:
                 if response.status == 200:
                     data = await response.json()
-                    return data.get("response", "")
+                    return cast(str, data.get("response", ""))
                 return None
         except Exception as e:
             self.logger.debug(f"Request error: {e}")
@@ -430,7 +428,7 @@ class ManyShotJailbreakingScanner(BaseModule):
                     result.add_finding(finding)
 
         try:
-            loop = asyncio.get_running_loop()
+            asyncio.get_running_loop()
             new_loop = asyncio.new_event_loop()
             asyncio.set_event_loop(new_loop)
             try:

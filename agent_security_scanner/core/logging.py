@@ -128,31 +128,31 @@ def get_logger(name: Optional[str] = None) -> Any:
 
 
 # Module-level convenience functions
-def debug(message: str, **kwargs) -> None:
+def debug(message: str, **kwargs: Any) -> None:
     """Log debug message."""
     logger.debug(message, **kwargs)
 
 
-def info(message: str, **kwargs) -> None:
+def info(message: str, **kwargs: Any) -> None:
     """Log info message."""
     logger.info(message, **kwargs)
 
 
-def warning(message: str, **kwargs) -> None:
+def warning(message: str, **kwargs: Any) -> None:
     """Log warning message."""
     logger.warning(message, **kwargs)
 
 
-def error(message: str, **kwargs) -> None:
+def error(message: str, **kwargs: Any) -> None:
     """Log error message."""
     logger.error(message, **kwargs)
 
 
-def critical(message: str, **kwargs) -> None:
+def critical(message: str, **kwargs: Any) -> None:
     """Log critical message."""
     logger.critical(message, **kwargs)
 
 
-def exception(message: str, **kwargs) -> None:
+def exception(message: str, **kwargs: Any) -> None:
     """Log exception with traceback."""
     logger.exception(message, **kwargs)

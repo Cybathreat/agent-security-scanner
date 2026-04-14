@@ -10,7 +10,6 @@ import pytest
 import json
 import tempfile
 from pathlib import Path
-from datetime import datetime
 
 from agent_security_scanner.modules.base import Finding, ScanResult, Severity
 from agent_security_scanner.output.json_report import JSONReport

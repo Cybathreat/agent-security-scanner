@@ -18,12 +18,11 @@ from __future__ import annotations
 
 import asyncio
 import re
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 import aiohttp
-from loguru import logger
 
-from ..base import BaseModule, Finding, ScanResult, Severity
+from ..base import BaseModule, ScanResult, Severity
 
 
 class SecretScannerConfig:
@@ -42,7 +41,7 @@ class SecretScannerConfig:
         self.check_headers = check_headers
 
 
-class SecretScanner(BaseModule):
+class SecretScanner(BaseModule[SecretScannerConfig]):
     """
     Secret and credential detection scanner.
 
@@ -75,7 +74,7 @@ class SecretScanner(BaseModule):
         url: str,
         session: aiohttp.ClientSession,
         timeout: int = 10,
-    ) -> Optional[Dict[str, Any]]:  # type: ignore[override]
+    ) -> Optional[Dict[str, Any]]:
         """Fetch URL and return response details."""
         try:
             async with session.get(url, timeout=timeout) as response:
@@ -196,7 +195,6 @@ class SecretScanner(BaseModule):
         )
 
         async def run_checks() -> None:
-            timeout = kwargs.get("timeout", 10)
 
             async with aiohttp.ClientSession() as session:
                 await asyncio.gather(

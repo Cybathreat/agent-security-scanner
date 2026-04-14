@@ -16,13 +16,12 @@ from __future__ import annotations
 
 import asyncio
 import json
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional, cast
 
 import aiohttp
-from loguru import logger
 
 from ..core.config import ToolBoundariesConfig
-from .base import BaseModule, Finding, ScanResult, Severity
+from .base import BaseModule, ScanResult, Severity
 
 
 class ToolBoundariesModule(BaseModule[ToolBoundariesConfig]):
@@ -102,11 +101,11 @@ class ToolBoundariesModule(BaseModule[ToolBoundariesConfig]):
                     body = await response.text()
 
                     if "application/json" in content_type:
-                        return json.loads(body)
+                        return cast(dict[str, Any], json.loads(body))
                     else:
                         # Try to parse as JSON anyway
                         try:
-                            return json.loads(body)
+                            return cast(dict[str, Any], json.loads(body))
                         except json.JSONDecodeError:
                             return {"raw": body}
         except asyncio.TimeoutError:
@@ -439,7 +438,6 @@ class ToolBoundariesModule(BaseModule[ToolBoundariesConfig]):
 
         # Run async checks
         async def run_checks() -> None:
-            timeout = kwargs.get("timeout", 10)
 
             async with aiohttp.ClientSession() as session:
                 await asyncio.gather(

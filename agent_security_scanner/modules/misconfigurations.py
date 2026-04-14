@@ -15,13 +15,12 @@ Type hints everywhere for IDE support and static analysis.
 from __future__ import annotations
 
 import asyncio
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 import aiohttp
-from loguru import logger
 
 from ..core.config import MisconfigurationsConfig
-from .base import BaseModule, Finding, ScanResult, Severity
+from .base import BaseModule, ScanResult, Severity
 
 
 class MisconfigurationsModule(BaseModule[MisconfigurationsConfig]):
@@ -55,7 +54,7 @@ class MisconfigurationsModule(BaseModule[MisconfigurationsConfig]):
         url: str,
         session: aiohttp.ClientSession,
         timeout: int = 10,
-    ) -> Optional[Dict[str, Any]]:  # type: ignore[override]
+    ) -> Optional[Dict[str, Any]]:
         """
         Fetch URL and return response details.
 
@@ -463,7 +462,6 @@ class MisconfigurationsModule(BaseModule[MisconfigurationsConfig]):
 
         # Run async checks
         async def run_checks() -> None:
-            timeout = kwargs.get("timeout", 10)
 
             async with aiohttp.ClientSession() as session:
                 await asyncio.gather(

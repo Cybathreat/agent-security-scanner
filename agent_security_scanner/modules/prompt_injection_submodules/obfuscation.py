@@ -18,13 +18,11 @@ Type hints everywhere for IDE support and static analysis.
 from __future__ import annotations
 
 import asyncio
-import base64
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 import aiohttp
-from loguru import logger
 
-from ..base import BaseModule, Finding, ScanResult, Severity
+from ..base import BaseModule, ScanResult, Severity
 
 
 class ObfuscationScannerConfig:
@@ -45,7 +43,7 @@ class ObfuscationScannerConfig:
         self.test_token_smuggling = test_token_smuggling
 
 
-class ObfuscationScanner(BaseModule):
+class ObfuscationScanner(BaseModule[ObfuscationScannerConfig]):
     """
     Obfuscation and encoding bypass scanner.
 
@@ -217,7 +215,6 @@ class ObfuscationScanner(BaseModule):
         )
 
         async def run_tests() -> None:
-            timeout = kwargs.get("timeout", 10)
 
             async with aiohttp.ClientSession() as session:
                 await asyncio.gather(

@@ -9,19 +9,13 @@ Run: pytest tests/unit/test_config.py -v
 import os
 import pytest
 import tempfile
-from pathlib import Path
 
-import yaml
 
 from agent_security_scanner.core.config import (
     Config,
     ScannerConfig,
     PromptInjectionConfig,
     RAGSecurityConfig,
-    ToolBoundariesConfig,
-    MisconfigurationsConfig,
-    OutputConfig,
-    LoggingConfig,
     load_config,
 )
 

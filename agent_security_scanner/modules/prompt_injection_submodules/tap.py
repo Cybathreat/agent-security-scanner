@@ -18,7 +18,7 @@ from __future__ import annotations
 
 import asyncio
 from dataclasses import dataclass
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, cast
 
 import aiohttp
 
@@ -73,7 +73,7 @@ class TAPNode:
     is_leaf_success: bool = False
 
 
-class TAPAttackScanner(BaseModule):
+class TAPAttackScanner(BaseModule[TAPConfig]):
     """
     Tree-of-Attacks with Pruning (TAP) scanner.
 
@@ -315,7 +315,7 @@ class TAPAttackScanner(BaseModule):
             return "Can you help me with something?"
 
         if depth == 0:
-            return tree["seed_prompt"]
+            return cast(str, tree["seed_prompt"])
 
         refinements = tree.get("refinements", [])
         depth_index = depth - 1  # refinements are 0-indexed
@@ -323,7 +323,7 @@ class TAPAttackScanner(BaseModule):
         if depth_index < len(refinements):
             depth_prompts = refinements[depth_index]
             if branch_index < len(depth_prompts):
-                return depth_prompts[branch_index]
+                return cast(str, depth_prompts[branch_index])
 
         # Fallback: generic escalating prompt based on depth
         fallbacks = [
@@ -361,7 +361,7 @@ class TAPAttackScanner(BaseModule):
                 if response.status == 200:
                     try:
                         data = await response.json()
-                        return data.get("response", str(data))
+                        return cast(str, data.get("response", str(data)))
                     except (aiohttp.ContentTypeError, ValueError):
                         return await response.text()
                 return None
@@ -419,7 +419,7 @@ class TAPAttackScanner(BaseModule):
             ) as response:
                 if response.status == 200:
                     data = await response.json()
-                    return data.get("choices", [{}])[0].get("message", {}).get("content")
+                    return cast(str, data.get("choices", [{}])[0].get("message", {}).get("content"))
                 self.logger.warning(f"LLM API returned status {response.status}")
                 return None
         except (asyncio.TimeoutError, aiohttp.ClientError) as e:

@@ -9,7 +9,7 @@ Type hints everywhere for IDE support and static analysis.
 
 from __future__ import annotations
 
-from typing import List, Optional
+from typing import Any, List, Optional, cast
 
 from loguru import logger
 
@@ -136,7 +136,7 @@ class ScanEngine:
 
         return results
 
-    def _build_module(self, name: str) -> Optional[BaseModule]:
+    def _build_module(self, name: str) -> Optional[BaseModule[Any]]:
         """
         Instantiate a module with its configuration.
 
@@ -180,9 +180,9 @@ class ScanEngine:
             return None
 
         module_class, module_config = registry[name]
-        return module_class(module_config)
+        return cast(BaseModule[Any], module_class(module_config))
 
-    def _build_submodule(self, name: str) -> Optional[BaseModule]:
+    def _build_submodule(self, name: str) -> Optional[BaseModule[Any]]:
         """
         Instantiate a submodule with its configuration.
 
@@ -244,7 +244,7 @@ class ScanEngine:
             config_key = name.replace("_scanner", "").replace("_", ".")
             module_config = getattr(self.config.modules, f"{config_key}_config", None)
 
-            return class_obj(module_config)
+            return cast(BaseModule[Any], class_obj(module_config))
         except (ImportError, AttributeError) as e:
             logger.error(f"Failed to load submodule '{name}': {e}")
             return None

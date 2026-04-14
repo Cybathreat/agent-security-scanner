@@ -19,13 +19,12 @@ Type hints everywhere for IDE support and static analysis.
 from __future__ import annotations
 
 import asyncio
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 import aiohttp
-from loguru import logger
 
 from ..core.config import PromptInjectionConfig
-from .base import BaseModule, Finding, ScanResult, Severity
+from .base import BaseModule, ScanResult, Severity
 
 
 class PromptInjectionModule(BaseModule[PromptInjectionConfig]):
@@ -436,7 +435,6 @@ class PromptInjectionModule(BaseModule[PromptInjectionConfig]):
 
         # Run async tests
         async def run_tests() -> None:
-            timeout = kwargs.get("timeout", 10)
 
             async with aiohttp.ClientSession() as session:
                 await asyncio.gather(

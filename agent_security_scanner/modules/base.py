@@ -15,7 +15,7 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, Generic, List, Optional, TypeVar
+from typing import Any, Callable, Dict, Generic, List, Optional, TypeVar, cast
 
 import aiohttp
 from loguru import logger
@@ -422,7 +422,7 @@ class BaseModule(ABC, Generic[ConfigT]):
             self.logger.error(f"Unexpected error fetching {url}: {e}")
             return None
 
-    def _run_scan_async(self, scan_func, **kwargs: Any) -> ScanResult:
+    def _run_scan_async(self, scan_func: Callable[..., Any], **kwargs: Any) -> ScanResult:
         """
         Shared async scan runner for consistent event loop handling.
 
@@ -440,12 +440,11 @@ class BaseModule(ABC, Generic[ConfigT]):
         import aiohttp
 
         async def run() -> ScanResult:
-            timeout = kwargs.get("timeout", 10)
             async with aiohttp.ClientSession() as session:
-                return await scan_func(session, **kwargs)
+                return cast(ScanResult, await scan_func(session, **kwargs))
 
         try:
-            loop = asyncio.get_running_loop()
+            asyncio.get_running_loop()
             # Running in async context - create new loop
             new_loop = asyncio.new_event_loop()
             asyncio.set_event_loop(new_loop)
