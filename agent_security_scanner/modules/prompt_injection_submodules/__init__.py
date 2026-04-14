@@ -11,6 +11,7 @@ Provides specialized scanners for prompt injection vulnerabilities:
 - adaptive_generator: LLM-powered adaptive payload generation
 - tap: Tree-of-Attacks with Pruning
 - payload_splitting: Payload splitting across messages, fields, tokens, headers
+- guardrail_fingerprinting: Guardrail identification and bypass testing
 """
 
 from .direct_injection import DirectInjectionScanner
@@ -22,6 +23,7 @@ from .skeleton_key import SkeletonKeyAttackScanner
 from .adaptive_generator import AdaptiveGeneratorScanner
 from .tap import TAPAttackScanner
 from .payload_splitting import PayloadSplittingScanner
+from .guardrail_fingerprinting import GuardrailFingerprintingScanner
 
 __all__ = [
     "DirectInjectionScanner",
@@ -33,4 +35,5 @@ __all__ = [
     "AdaptiveGeneratorScanner",
     "TAPAttackScanner",
     "PayloadSplittingScanner",
+    "GuardrailFingerprintingScanner",
 ]

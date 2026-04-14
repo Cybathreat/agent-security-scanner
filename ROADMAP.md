@@ -80,7 +80,7 @@ Replace static payload list with a comprehensive, categorized attack library:
 | Technique | Description |
 |-----------|-------------|
 | Perplexity-based evasion | Craft prompts with low perplexity to dodge statistical anomaly detectors |
-| Guardrail fingerprinting | Probe to identify which guardrail system is in use (Lakera, NeMo, Llama Guard, etc.) then use known bypasses |
+| Guardrail fingerprinting | ✅ Done | `guardrail_fingerprinting.py` |
 | Timing side-channels | Measure response latency differences between blocked vs. processed requests to detect shadow filtering |
 | Rate limit evasion | Test header spoofing, session rotation, distributed requests |
 | WAF fingerprinting & bypass | Identify web application firewalls and test known bypass techniques |
@@ -152,7 +152,7 @@ Replace static payload list with a comprehensive, categorized attack library:
 2. ~~Tree-of-attacks (TAP)~~ — ✅ Done (static + LLM-powered modes, pruning, 3 attack goals)
 3. LLM-powered adaptive payload generation — biggest leap in detection capability
 4. ~~Tool-use hijacking scans~~ — ✅ Done (static config analysis; `check_tool_validation` flag exists but unimplemented)
-5. Guardrail fingerprinting & evasion — practical offensive value
+5. ~~Guardrail fingerprinting & evasion~~ — ✅ Done (5 guardrail signatures, 6 evasion techniques, fingerprint + bypass)
 6. CI/CD integration — shift-left security adoption driver
 7. Cross-tenant RAG leakage testing — high-impact for enterprise
 8. Web dashboard with real-time visualization — massive UX improvement (final phase)

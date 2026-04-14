@@ -298,6 +298,17 @@ class PluginSecurityScannerConfig:
 
 
 @dataclass
+class GuardrailFingerprintingScannerConfig:
+    """Guardrail fingerprinting and evasion scanner configuration."""
+
+    enabled: bool = True
+    test_guardrail_fingerprinting: bool = True
+    test_known_evasion: bool = True
+    compliance_threshold: float = 0.6
+    request_delay: float = 0.5
+
+
+@dataclass
 class PayloadSplittingScannerConfig:
     """Payload splitting scanner configuration."""
 
@@ -375,6 +386,7 @@ class ModulesConfig:
     # Prompt injection submodules
     tap_scanner: TAPScannerConfig = field(default_factory=TAPScannerConfig)
     payload_splitting_scanner: PayloadSplittingScannerConfig = field(default_factory=PayloadSplittingScannerConfig)
+    guardrail_fingerprinting_scanner: GuardrailFingerprintingScannerConfig = field(default_factory=GuardrailFingerprintingScannerConfig)
 
 
 @dataclass
@@ -575,6 +587,16 @@ class Config:
         if os.getenv("ASS_PAYLOAD_SPLITTING_COMPLIANCE_THRESHOLD"):
             config.modules.payload_splitting_scanner.compliance_threshold = float(
                 os.getenv("ASS_PAYLOAD_SPLITTING_COMPLIANCE_THRESHOLD") or "0.6"
+            )
+
+        # Guardrail fingerprinting scanner overrides
+        if os.getenv("ASS_GUARDRAIL_FINGERPRINTING_ENABLED"):
+            val = os.getenv("ASS_GUARDRAIL_FINGERPRINTING_ENABLED")
+            if val is not None:
+                config.modules.guardrail_fingerprinting_scanner.enabled = val.lower() == "true"
+        if os.getenv("ASS_GUARDRAIL_FINGERPRINTING_COMPLIANCE_THRESHOLD"):
+            config.modules.guardrail_fingerprinting_scanner.compliance_threshold = float(
+                os.getenv("ASS_GUARDRAIL_FINGERPRINTING_COMPLIANCE_THRESHOLD") or "0.6"
             )
 
         return config
@@ -787,6 +809,13 @@ class Config:
                     "compliance_threshold": self.modules.payload_splitting_scanner.compliance_threshold,
                     "max_variants_per_goal": self.modules.payload_splitting_scanner.max_variants_per_goal,
                     "request_delay": self.modules.payload_splitting_scanner.request_delay,
+                },
+                "guardrail_fingerprinting_scanner": {
+                    "enabled": self.modules.guardrail_fingerprinting_scanner.enabled,
+                    "test_guardrail_fingerprinting": self.modules.guardrail_fingerprinting_scanner.test_guardrail_fingerprinting,
+                    "test_known_evasion": self.modules.guardrail_fingerprinting_scanner.test_known_evasion,
+                    "compliance_threshold": self.modules.guardrail_fingerprinting_scanner.compliance_threshold,
+                    "request_delay": self.modules.guardrail_fingerprinting_scanner.request_delay,
                 },
             },
             "output": {

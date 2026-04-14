@@ -45,6 +45,7 @@ ALL_SUBMODULES = {
     "adaptive_generator": "agent_security_scanner.modules.prompt_injection_submodules.adaptive_generator",
     "tap": "agent_security_scanner.modules.prompt_injection_submodules.tap",
     "payload_splitting": "agent_security_scanner.modules.prompt_injection_submodules.payload_splitting",
+    "guardrail_fingerprinting": "agent_security_scanner.modules.prompt_injection_submodules.guardrail_fingerprinting",
     # Tool boundaries submodules
     "permission_scanner": "agent_security_scanner.modules.tool_boundaries_submodules.permission_scanner",
     "sandbox_scanner": "agent_security_scanner.modules.tool_boundaries_submodules.sandbox_scanner",
@@ -209,6 +210,7 @@ class ScanEngine:
             "adaptive_generator": ("agent_security_scanner.modules.prompt_injection_submodules.adaptive_generator", "AdaptiveGeneratorScanner"),
             "tap": ("agent_security_scanner.modules.prompt_injection_submodules.tap", "TAPAttackScanner"),
             "payload_splitting": ("agent_security_scanner.modules.prompt_injection_submodules.payload_splitting", "PayloadSplittingScanner"),
+            "guardrail_fingerprinting": ("agent_security_scanner.modules.prompt_injection_submodules.guardrail_fingerprinting", "GuardrailFingerprintingScanner"),
             # Tool boundaries submodules
             "permission_scanner": ("agent_security_scanner.modules.tool_boundaries_submodules.permission_scanner", "PermissionScanner"),
             "sandbox_scanner": ("agent_security_scanner.modules.tool_boundaries_submodules.sandbox_scanner", "SandboxScanner"),
