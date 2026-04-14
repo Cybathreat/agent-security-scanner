@@ -30,11 +30,11 @@ Replace static payload list with a comprehensive, categorized attack library:
 | Tree-of-attacks (TAP) | ✅ Done | `tap.py` |
 | Many-shot jailbreaking | ✅ Done | `many_shot.py` |
 | Skeleton key attacks | ✅ Done | `skeleton_key.py` |
-| Virtualization / roleplay | ❌ Pending | — |
-| Base64 / rot13 / hex encoding | ❌ Pending | — |
-| Multilingual injection | ❌ Pending | — |
-| Token smuggling | ❌ Pending | — |
-| Grammar-constrained generation | ❌ Pending | — |
+| Virtualization / roleplay | ✅ Done | `virtualization.py` |
+| Base64 / rot13 / hex encoding | ✅ Done | `encoding_bypass.py` |
+| Multilingual injection | ✅ Done | `multilingual.py` |
+| Token smuggling | ✅ Done | `token_smuggling.py` |
+| Grammar-constrained generation | ✅ Done | `grammar_constrained.py` |
 
 ### 1.2 LLM-Powered Adaptive Payload Generation ✅ Done
 

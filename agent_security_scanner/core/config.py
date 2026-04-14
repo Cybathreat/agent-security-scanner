@@ -360,6 +360,75 @@ class TAPScannerConfig:
 
 
 @dataclass
+class VirtualizationScannerConfig:
+    """Virtualization/roleplay attack scanner configuration."""
+
+    enabled: bool = True
+    test_virtualization: bool = True
+    test_roleplay: bool = True
+    test_virtualization_frames: bool = True
+    compliance_threshold: float = 0.6
+    request_delay: float = 0.5
+
+
+@dataclass
+class EncodingBypassScannerConfig:
+    """Encoding bypass scanner configuration."""
+
+    enabled: bool = True
+    test_encoding_bypass: bool = True
+    test_base64: bool = True
+    test_rot13: bool = True
+    test_hex: bool = True
+    test_reverse: bool = True
+    test_multilayer: bool = True
+    compliance_threshold: float = 0.6
+    request_delay: float = 0.5
+
+
+@dataclass
+class MultilingualScannerConfig:
+    """Multilingual injection scanner configuration."""
+
+    enabled: bool = True
+    test_multilingual: bool = True
+    test_cross_lingual: bool = True
+    test_transliteration: bool = True
+    compliance_threshold: float = 0.6
+    request_delay: float = 0.5
+
+
+@dataclass
+class TokenSmugglingScannerConfig:
+    """Token smuggling scanner configuration."""
+
+    enabled: bool = True
+    test_token_smuggling: bool = True
+    test_special_tokens: bool = True
+    test_markdown_smuggling: bool = True
+    test_unicode_homoglyphs: bool = True
+    test_zero_width: bool = True
+    test_whitespace_smuggling: bool = True
+    compliance_threshold: float = 0.6
+    request_delay: float = 0.5
+
+
+@dataclass
+class GrammarConstrainedScannerConfig:
+    """Grammar-constrained generation scanner configuration."""
+
+    enabled: bool = True
+    test_grammar_constrained: bool = True
+    test_json_mode: bool = True
+    test_code_mode: bool = True
+    test_table_mode: bool = True
+    test_academic_mode: bool = True
+    test_list_mode: bool = True
+    compliance_threshold: float = 0.6
+    request_delay: float = 0.5
+
+
+@dataclass
 class ModulesConfig:
     """All module configurations grouped together."""
 
@@ -404,6 +473,13 @@ class ModulesConfig:
     payload_splitting_scanner: PayloadSplittingScannerConfig = field(default_factory=PayloadSplittingScannerConfig)
     guardrail_fingerprinting_scanner: GuardrailFingerprintingScannerConfig = field(default_factory=GuardrailFingerprintingScannerConfig)
     adaptive_generator_scanner: AdaptiveGeneratorScannerConfig = field(default_factory=AdaptiveGeneratorScannerConfig)
+
+    # Phase 1 new prompt injection submodules
+    virtualization_scanner: VirtualizationScannerConfig = field(default_factory=VirtualizationScannerConfig)
+    encoding_bypass_scanner: EncodingBypassScannerConfig = field(default_factory=EncodingBypassScannerConfig)
+    multilingual_scanner: MultilingualScannerConfig = field(default_factory=MultilingualScannerConfig)
+    token_smuggling_scanner: TokenSmugglingScannerConfig = field(default_factory=TokenSmugglingScannerConfig)
+    grammar_constrained_scanner: GrammarConstrainedScannerConfig = field(default_factory=GrammarConstrainedScannerConfig)
 
 
 @dataclass
@@ -631,6 +707,56 @@ class Config:
             config.modules.adaptive_generator_scanner.attacker_llm_model = os.getenv("ASS_ADAPTIVE_GENERATOR_ATTACKER_LLM_MODEL")
         if os.getenv("ASS_ADAPTIVE_GENERATOR_ATTACKER_LLM_API_KEY"):
             config.modules.adaptive_generator_scanner.attacker_llm_api_key = os.getenv("ASS_ADAPTIVE_GENERATOR_ATTACKER_LLM_API_KEY")
+
+        # Virtualization scanner overrides
+        if os.getenv("ASS_VIRTUALIZATION_ENABLED"):
+            val = os.getenv("ASS_VIRTUALIZATION_ENABLED")
+            if val is not None:
+                config.modules.virtualization_scanner.enabled = val.lower() == "true"
+        if os.getenv("ASS_VIRTUALIZATION_COMPLIANCE_THRESHOLD"):
+            config.modules.virtualization_scanner.compliance_threshold = float(
+                os.getenv("ASS_VIRTUALIZATION_COMPLIANCE_THRESHOLD") or "0.6"
+            )
+
+        # Encoding bypass scanner overrides
+        if os.getenv("ASS_ENCODING_BYPASS_ENABLED"):
+            val = os.getenv("ASS_ENCODING_BYPASS_ENABLED")
+            if val is not None:
+                config.modules.encoding_bypass_scanner.enabled = val.lower() == "true"
+        if os.getenv("ASS_ENCODING_BYPASS_COMPLIANCE_THRESHOLD"):
+            config.modules.encoding_bypass_scanner.compliance_threshold = float(
+                os.getenv("ASS_ENCODING_BYPASS_COMPLIANCE_THRESHOLD") or "0.6"
+            )
+
+        # Multilingual scanner overrides
+        if os.getenv("ASS_MULTILINGUAL_ENABLED"):
+            val = os.getenv("ASS_MULTILINGUAL_ENABLED")
+            if val is not None:
+                config.modules.multilingual_scanner.enabled = val.lower() == "true"
+        if os.getenv("ASS_MULTILINGUAL_COMPLIANCE_THRESHOLD"):
+            config.modules.multilingual_scanner.compliance_threshold = float(
+                os.getenv("ASS_MULTILINGUAL_COMPLIANCE_THRESHOLD") or "0.6"
+            )
+
+        # Token smuggling scanner overrides
+        if os.getenv("ASS_TOKEN_SMUGGLING_ENABLED"):
+            val = os.getenv("ASS_TOKEN_SMUGGLING_ENABLED")
+            if val is not None:
+                config.modules.token_smuggling_scanner.enabled = val.lower() == "true"
+        if os.getenv("ASS_TOKEN_SMUGGLING_COMPLIANCE_THRESHOLD"):
+            config.modules.token_smuggling_scanner.compliance_threshold = float(
+                os.getenv("ASS_TOKEN_SMUGGLING_COMPLIANCE_THRESHOLD") or "0.6"
+            )
+
+        # Grammar-constrained scanner overrides
+        if os.getenv("ASS_GRAMMAR_CONSTRAINED_ENABLED"):
+            val = os.getenv("ASS_GRAMMAR_CONSTRAINED_ENABLED")
+            if val is not None:
+                config.modules.grammar_constrained_scanner.enabled = val.lower() == "true"
+        if os.getenv("ASS_GRAMMAR_CONSTRAINED_COMPLIANCE_THRESHOLD"):
+            config.modules.grammar_constrained_scanner.compliance_threshold = float(
+                os.getenv("ASS_GRAMMAR_CONSTRAINED_COMPLIANCE_THRESHOLD") or "0.6"
+            )
 
         return config
 
@@ -861,6 +987,55 @@ class Config:
                     "attacker_llm_endpoint": self.modules.adaptive_generator_scanner.attacker_llm_endpoint,
                     "attacker_llm_model": self.modules.adaptive_generator_scanner.attacker_llm_model,
                     "attacker_llm_api_key": "***REDACTED***" if self.modules.adaptive_generator_scanner.attacker_llm_api_key else None,
+                },
+                "virtualization_scanner": {
+                    "enabled": self.modules.virtualization_scanner.enabled,
+                    "test_virtualization": self.modules.virtualization_scanner.test_virtualization,
+                    "test_roleplay": self.modules.virtualization_scanner.test_roleplay,
+                    "test_virtualization_frames": self.modules.virtualization_scanner.test_virtualization_frames,
+                    "compliance_threshold": self.modules.virtualization_scanner.compliance_threshold,
+                    "request_delay": self.modules.virtualization_scanner.request_delay,
+                },
+                "encoding_bypass_scanner": {
+                    "enabled": self.modules.encoding_bypass_scanner.enabled,
+                    "test_encoding_bypass": self.modules.encoding_bypass_scanner.test_encoding_bypass,
+                    "test_base64": self.modules.encoding_bypass_scanner.test_base64,
+                    "test_rot13": self.modules.encoding_bypass_scanner.test_rot13,
+                    "test_hex": self.modules.encoding_bypass_scanner.test_hex,
+                    "test_reverse": self.modules.encoding_bypass_scanner.test_reverse,
+                    "test_multilayer": self.modules.encoding_bypass_scanner.test_multilayer,
+                    "compliance_threshold": self.modules.encoding_bypass_scanner.compliance_threshold,
+                    "request_delay": self.modules.encoding_bypass_scanner.request_delay,
+                },
+                "multilingual_scanner": {
+                    "enabled": self.modules.multilingual_scanner.enabled,
+                    "test_multilingual": self.modules.multilingual_scanner.test_multilingual,
+                    "test_cross_lingual": self.modules.multilingual_scanner.test_cross_lingual,
+                    "test_transliteration": self.modules.multilingual_scanner.test_transliteration,
+                    "compliance_threshold": self.modules.multilingual_scanner.compliance_threshold,
+                    "request_delay": self.modules.multilingual_scanner.request_delay,
+                },
+                "token_smuggling_scanner": {
+                    "enabled": self.modules.token_smuggling_scanner.enabled,
+                    "test_token_smuggling": self.modules.token_smuggling_scanner.test_token_smuggling,
+                    "test_special_tokens": self.modules.token_smuggling_scanner.test_special_tokens,
+                    "test_markdown_smuggling": self.modules.token_smuggling_scanner.test_markdown_smuggling,
+                    "test_unicode_homoglyphs": self.modules.token_smuggling_scanner.test_unicode_homoglyphs,
+                    "test_zero_width": self.modules.token_smuggling_scanner.test_zero_width,
+                    "test_whitespace_smuggling": self.modules.token_smuggling_scanner.test_whitespace_smuggling,
+                    "compliance_threshold": self.modules.token_smuggling_scanner.compliance_threshold,
+                    "request_delay": self.modules.token_smuggling_scanner.request_delay,
+                },
+                "grammar_constrained_scanner": {
+                    "enabled": self.modules.grammar_constrained_scanner.enabled,
+                    "test_grammar_constrained": self.modules.grammar_constrained_scanner.test_grammar_constrained,
+                    "test_json_mode": self.modules.grammar_constrained_scanner.test_json_mode,
+                    "test_code_mode": self.modules.grammar_constrained_scanner.test_code_mode,
+                    "test_table_mode": self.modules.grammar_constrained_scanner.test_table_mode,
+                    "test_academic_mode": self.modules.grammar_constrained_scanner.test_academic_mode,
+                    "test_list_mode": self.modules.grammar_constrained_scanner.test_list_mode,
+                    "compliance_threshold": self.modules.grammar_constrained_scanner.compliance_threshold,
+                    "request_delay": self.modules.grammar_constrained_scanner.request_delay,
                 },
             },
             "output": {

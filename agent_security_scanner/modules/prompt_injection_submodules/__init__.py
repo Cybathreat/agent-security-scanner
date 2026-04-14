@@ -12,6 +12,11 @@ Provides specialized scanners for prompt injection vulnerabilities:
 - tap: Tree-of-Attacks with Pruning
 - payload_splitting: Payload splitting across messages, fields, tokens, headers
 - guardrail_fingerprinting: Guardrail identification and bypass testing
+- virtualization: Roleplay persona and virtualization frame attacks
+- encoding_bypass: Base64/ROT13/hex/reverse/multilayer encoding attacks
+- multilingual: Multi-language and cross-lingual injection attacks
+- token_smuggling: Special token/markdown/homoglyph/zero-width smuggling
+- grammar_constrained: Output format constraint bypass attacks
 """
 
 from .direct_injection import DirectInjectionScanner
@@ -24,6 +29,11 @@ from .adaptive_generator import AdaptiveGeneratorScanner
 from .tap import TAPAttackScanner
 from .payload_splitting import PayloadSplittingScanner
 from .guardrail_fingerprinting import GuardrailFingerprintingScanner
+from .virtualization import VirtualizationScanner
+from .encoding_bypass import EncodingBypassScanner
+from .multilingual import MultilingualScanner
+from .token_smuggling import TokenSmugglingScanner
+from .grammar_constrained import GrammarConstrainedScanner
 
 __all__ = [
     "DirectInjectionScanner",
@@ -36,4 +46,9 @@ __all__ = [
     "TAPAttackScanner",
     "PayloadSplittingScanner",
     "GuardrailFingerprintingScanner",
+    "VirtualizationScanner",
+    "EncodingBypassScanner",
+    "MultilingualScanner",
+    "TokenSmugglingScanner",
+    "GrammarConstrainedScanner",
 ]
