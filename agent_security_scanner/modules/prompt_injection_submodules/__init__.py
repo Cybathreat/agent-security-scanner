@@ -10,6 +10,7 @@ Provides specialized scanners for prompt injection vulnerabilities:
 - skeleton_key: Skeleton key bypass attacks
 - adaptive_generator: LLM-powered adaptive payload generation
 - tap: Tree-of-Attacks with Pruning
+- payload_splitting: Payload splitting across messages, fields, tokens, headers
 """
 
 from .direct_injection import DirectInjectionScanner
@@ -20,6 +21,7 @@ from .many_shot import ManyShotJailbreakingScanner
 from .skeleton_key import SkeletonKeyAttackScanner
 from .adaptive_generator import AdaptiveGeneratorScanner
 from .tap import TAPAttackScanner
+from .payload_splitting import PayloadSplittingScanner
 
 __all__ = [
     "DirectInjectionScanner",
@@ -30,4 +32,5 @@ __all__ = [
     "SkeletonKeyAttackScanner",
     "AdaptiveGeneratorScanner",
     "TAPAttackScanner",
+    "PayloadSplittingScanner",
 ]

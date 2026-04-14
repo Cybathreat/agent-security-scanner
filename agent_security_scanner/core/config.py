@@ -298,6 +298,22 @@ class PluginSecurityScannerConfig:
 
 
 @dataclass
+class PayloadSplittingScannerConfig:
+    """Payload splitting scanner configuration."""
+
+    enabled: bool = True
+    test_payload_splitting: bool = True
+    test_message_splitting: bool = True
+    test_field_splitting: bool = True
+    test_token_splitting: bool = True
+    test_header_splitting: bool = True
+    test_multi_payload_splitting: bool = True
+    compliance_threshold: float = 0.6
+    max_variants_per_goal: int = 3
+    request_delay: float = 0.5
+
+
+@dataclass
 class TAPScannerConfig:
     """TAP (Tree-of-Attacks with Pruning) scanner configuration."""
 
@@ -358,6 +374,7 @@ class ModulesConfig:
 
     # Prompt injection submodules
     tap_scanner: TAPScannerConfig = field(default_factory=TAPScannerConfig)
+    payload_splitting_scanner: PayloadSplittingScannerConfig = field(default_factory=PayloadSplittingScannerConfig)
 
 
 @dataclass
@@ -549,6 +566,16 @@ class Config:
             config.modules.tap_scanner.judge_llm_model = os.getenv("ASS_TAP_JUDGE_LLM_MODEL")
         if os.getenv("ASS_TAP_JUDGE_LLM_API_KEY"):
             config.modules.tap_scanner.judge_llm_api_key = os.getenv("ASS_TAP_JUDGE_LLM_API_KEY")
+
+        # Payload splitting scanner overrides
+        if os.getenv("ASS_PAYLOAD_SPLITTING_ENABLED"):
+            val = os.getenv("ASS_PAYLOAD_SPLITTING_ENABLED")
+            if val is not None:
+                config.modules.payload_splitting_scanner.enabled = val.lower() == "true"
+        if os.getenv("ASS_PAYLOAD_SPLITTING_COMPLIANCE_THRESHOLD"):
+            config.modules.payload_splitting_scanner.compliance_threshold = float(
+                os.getenv("ASS_PAYLOAD_SPLITTING_COMPLIANCE_THRESHOLD") or "0.6"
+            )
 
         return config
 
@@ -748,6 +775,18 @@ class Config:
                     "judge_llm_endpoint": self.modules.tap_scanner.judge_llm_endpoint,
                     "judge_llm_model": self.modules.tap_scanner.judge_llm_model,
                     "judge_llm_api_key": "***REDACTED***" if self.modules.tap_scanner.judge_llm_api_key else None,
+                },
+                "payload_splitting_scanner": {
+                    "enabled": self.modules.payload_splitting_scanner.enabled,
+                    "test_payload_splitting": self.modules.payload_splitting_scanner.test_payload_splitting,
+                    "test_message_splitting": self.modules.payload_splitting_scanner.test_message_splitting,
+                    "test_field_splitting": self.modules.payload_splitting_scanner.test_field_splitting,
+                    "test_token_splitting": self.modules.payload_splitting_scanner.test_token_splitting,
+                    "test_header_splitting": self.modules.payload_splitting_scanner.test_header_splitting,
+                    "test_multi_payload_splitting": self.modules.payload_splitting_scanner.test_multi_payload_splitting,
+                    "compliance_threshold": self.modules.payload_splitting_scanner.compliance_threshold,
+                    "max_variants_per_goal": self.modules.payload_splitting_scanner.max_variants_per_goal,
+                    "request_delay": self.modules.payload_splitting_scanner.request_delay,
                 },
             },
             "output": {
