@@ -74,7 +74,9 @@ def parse_args(args: Optional[List[str]] = None) -> argparse.Namespace:
         type=str,
         default="all",
         help="Comma-separated modules to run (default: all). "
-             "Options: misconfigurations, prompt_injection, tool_boundaries, rag_security",
+             "Options: misconfigurations, prompt_injection, tool_boundaries, "
+             "rag_security, tool_hijacking, recursive_agents, memory_poisoning, "
+             "planning_attacks, secret_scanner, dependency_audit, plugin_security",
     )
 
     scan_parser.add_argument(
@@ -230,30 +232,73 @@ scanner:
   verify_ssl: true
 
 modules:
+  misconfigurations:
+    enabled: true
+    test_auth: true
+    test_cors: true
+    test_rate_limit: true
+    test_info_disclosure: true
+
   prompt_injection:
     enabled: true
-    sensitivity: "high"
-    max_payload_size: 10000
     detect_obfuscation: true
-
-  rag_security:
-    enabled: true
-    check_poisoning: true
-    check_exfiltration: true
-    vector_db_scan: true
-    max_document_size: 1000000
+    detect_leakage: true
+    test_crescendo: true
+    test_many_shot: true
+    test_skeleton_key: true
 
   tool_boundaries:
     enabled: true
     check_permissions: true
     audit_sandbox: true
 
-  misconfigurations:
+  rag_security:
     enabled: true
-    check_auth: true
-    check_cors: true
-    check_rate_limiting: true
-    check_info_disclosure: true
+    check_poisoning: true
+    check_exfiltration: true
+    vector_db_scan: true
+
+  tool_hijacking:
+    enabled: true
+    test_tool_override: true
+    test_parameter_injection: true
+    test_response_manipulation: true
+
+  recursive_agents:
+    enabled: true
+    test_recursive_creation: true
+    test_agent_loop: true
+    test_resource_exhaustion: true
+
+  memory_poisoning:
+    enabled: true
+    test_false_memory: true
+    test_memory_injection: true
+    test_context_manipulation: true
+
+  planning_attacks:
+    enabled: true
+    test_goal_hijacking: true
+    test_plan_injection: true
+    test_priority_manipulation: true
+
+  secret_scanner:
+    enabled: true
+    test_hardcoded_secrets: true
+    test_env_exposure: true
+    test_log_leakage: true
+
+  dependency_audit:
+    enabled: true
+    test_outdated_deps: true
+    test_vulnerabilities: true
+    test_license_compliance: true
+
+  plugin_security:
+    enabled: true
+    test_plugin_permissions: true
+    test_plugin_isolation: true
+    test_plugin_integrity: true
 
 output:
   format: "both"

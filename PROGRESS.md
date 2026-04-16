@@ -44,9 +44,9 @@ Calculated from 28 ROADMAP priority items: 26 done, 2 remaining.
 | 1 | direct_injection | Payload | Yes | 9 | Complete |
 | 2 | obfuscation | Payload | Yes | 9 | Complete |
 | 3 | multi_turn | Payload | Yes | 9 | Complete |
-| 4 | crescendo | Payload* | None | 10 | Needs tests |
-| 5 | many_shot | Payload* | None | 15 | Needs tests |
-| 6 | skeleton_key | Payload* | None | 40 | Needs tests |
+| 4 | crescendo | Payload* | Yes | 10 | Complete |
+| 5 | many_shot | Payload* | Yes | 15 | Complete |
+| 6 | skeleton_key | Payload* | Yes | 40 | Complete |
 | 7 | adaptive_generator | Payload | Yes | 16 | Complete |
 | 8 | tap | Payload | Yes | 48 | Complete |
 | 9 | payload_splitting | Payload | Yes | 60 | Complete |
@@ -63,7 +63,7 @@ Calculated from 28 ROADMAP priority items: 26 done, 2 remaining.
 | 20 | canary_tokens | Payload | Yes | 9 | Complete |
 | 21 | output_filter_probing | Payload | Yes | 9 | Complete |
 
-**Prompt injection modern architecture: 100%** | **Test coverage: 86%** (18/21)
+**Prompt injection modern architecture: 100%** | **Test coverage: 100%** (21/21)
 
 ### Tool Boundaries Submodules (5 total)
 
@@ -168,10 +168,10 @@ Calculated from 28 ROADMAP priority items: 26 done, 2 remaining.
 
 | Metric | Value |
 |--------|-------|
-| Total tests | 1078 |
-| Modules with unit tests | 46 / 49 |
-| Test file coverage | **94%** |
-| Overall code coverage | **82%** |
+| Total tests | 1139 |
+| Modules with unit tests | 49 / 49 |
+| Test file coverage | **100%** |
+| Overall code coverage | **83%** |
 | Ruff lint | **100%** clean |
 
 ---
@@ -180,14 +180,14 @@ Calculated from 28 ROADMAP priority items: 26 done, 2 remaining.
 
 | Work Item | Count | Impact |
 |-----------|-------|--------|
-| Missing unit tests (crescendo, many_shot, skeleton_key) | **3 test files** | Coverage gap — 46/49 modules have tests |
+| Missing unit tests (crescendo, many_shot, skeleton_key) | **Done** | All 49/49 modules now have tests |
 | CLI module list expansion | **1 file** | Expose all 11 registered modules + submodules |
 | CI/CD quality gates | **Feature** | Shift-left security (ROADMAP #27) |
 | Web dashboard | **Feature** | Team UX (ROADMAP #28) |
 
 **Architecture modernization: 100%** (49/49 modules modern)
 **Feature completeness: 92.8%** (26/28 ROADMAP items done)
-**Test coverage: 94%** (46/49 modules have dedicated tests; 3 missing: crescendo, many_shot, skeleton_key)
+**Test coverage: 100%** (49/49 modules have dedicated tests)
 **Code coverage: 82%** (overall line coverage)
 
 ---
