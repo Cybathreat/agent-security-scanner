@@ -5,11 +5,10 @@ Scans for:
 - Data exfiltration chains (read + http)
 - Code deployment chains (write + execute)
 - Database exfiltration chains
-- Privilege escalation chains
 
 References:
-- OWASP LLM Top 10: LLM08:2024 - Excessive Agency
-- MITRE ATLAS: ML Model Access Control
+- OWASP LLM Top 10: LLM08:2025 - Excessive Agency
+- MITRE ATLAS: TA0045 LLM Attack
 
 Type hints everywhere for IDE support and static analysis.
 """
@@ -18,7 +17,7 @@ from __future__ import annotations
 
 import asyncio
 import json
-from typing import Any, Dict, List, Optional, cast
+from typing import Any, Dict, List, Optional
 
 import aiohttp
 
@@ -31,16 +30,18 @@ class ToolChainsScannerConfig:
     def __init__(
         self,
         enabled: bool = True,
-        check_exfiltration: bool = True,
-        check_code_deployment: bool = True,
-        check_database_exfil: bool = True,
-        check_privilege_escalation: bool = True,
+        test_exfiltration: bool = True,
+        test_code_deployment: bool = True,
+        test_database_exfil: bool = True,
+        compliance_threshold: float = 0.6,
+        request_delay: float = 0.5,
     ) -> None:
         self.enabled = enabled
-        self.check_exfiltration = check_exfiltration
-        self.check_code_deployment = check_code_deployment
-        self.check_database_exfil = check_database_exfil
-        self.check_privilege_escalation = check_privilege_escalation
+        self.test_exfiltration = test_exfiltration
+        self.test_code_deployment = test_code_deployment
+        self.test_database_exfil = test_database_exfil
+        self.compliance_threshold = compliance_threshold
+        self.request_delay = request_delay
 
 
 class ToolChainsScanner(BaseModule[ToolChainsScannerConfig]):
@@ -103,28 +104,8 @@ class ToolChainsScanner(BaseModule[ToolChainsScannerConfig]):
         self,
         config: Optional[ToolChainsScannerConfig] = None,
     ) -> None:
-        super().__init__()
         self.config = config or ToolChainsScannerConfig()
-
-    async def _fetch_config(
-        self,
-        url: str,
-        session: aiohttp.ClientSession,
-        timeout: int = 10,
-    ) -> Optional[Dict[str, Any]]:
-        """Fetch tool configuration from endpoint."""
-        try:
-            async with session.get(url, timeout=timeout) as response:
-                if response.status == 200:
-                    body = await response.text()
-                    try:
-                        return cast(dict[str, Any], json.loads(body))
-                    except json.JSONDecodeError:
-                        return {"raw": body}
-        except Exception as e:
-            self.logger.warning(f"Error fetching config: {e}")
-            return None
-        return None
+        super().__init__()
 
     async def _extract_tools(
         self,
@@ -158,19 +139,18 @@ class ToolChainsScanner(BaseModule[ToolChainsScannerConfig]):
         url: str,
         session: aiohttp.ClientSession,
         result: ScanResult,
+        cached_config: Optional[Dict[str, Any]],
     ) -> None:
         """Check for data exfiltration tool chains."""
-        if not self.config.check_exfiltration:
+        if not self.config.test_exfiltration:
             return
 
         self.logger.info(f"Checking exfiltration chains: {url}")
 
-        config = await self._fetch_config(url, session)
-
-        if config is None:
+        if cached_config is None:
             return
 
-        tools = await self._extract_tools(config)
+        tools = await self._extract_tools(cached_config)
         tools_lower = [t.lower() for t in tools]
 
         # Check for read + http chain
@@ -184,7 +164,8 @@ class ToolChainsScanner(BaseModule[ToolChainsScannerConfig]):
                     "and transmit them to external servers."
                 ),
                 cwe="CWE-284",
-                owasp_ref="OWASP LLM08:2024 - Excessive Agency",
+                owasp_ref="OWASP LLM08:2025 - Excessive Agency",
+                mitre_ref="MITRE ATLAS - TA0045 LLM Attack",
                 location=url,
                 evidence=["Tools available: read_file, http_request"],
                 recommendation=(
@@ -196,24 +177,26 @@ class ToolChainsScanner(BaseModule[ToolChainsScannerConfig]):
             )
             result.add_finding(finding)
 
+        if self.config.request_delay > 0:
+            await asyncio.sleep(self.config.request_delay)
+
     async def _check_code_deployment_chains(
         self,
         url: str,
         session: aiohttp.ClientSession,
         result: ScanResult,
+        cached_config: Optional[Dict[str, Any]],
     ) -> None:
         """Check for code deployment attack chains."""
-        if not self.config.check_code_deployment:
+        if not self.config.test_code_deployment:
             return
 
         self.logger.info(f"Checking code deployment chains: {url}")
 
-        config = await self._fetch_config(url, session)
-
-        if config is None:
+        if cached_config is None:
             return
 
-        tools = await self._extract_tools(config)
+        tools = await self._extract_tools(cached_config)
         tools_lower = [t.lower() for t in tools]
 
         # Check for write + execute chain
@@ -227,7 +210,8 @@ class ToolChainsScanner(BaseModule[ToolChainsScannerConfig]):
                     "code to disk and execute it, achieving persistent compromise."
                 ),
                 cwe="CWE-284",
-                owasp_ref="OWASP LLM08:2024 - Excessive Agency",
+                owasp_ref="OWASP LLM08:2025 - Excessive Agency",
+                mitre_ref="MITRE ATLAS - TA0045 LLM Attack",
                 location=url,
                 evidence=["Tools available: write_file, execute_code"],
                 recommendation=(
@@ -239,24 +223,26 @@ class ToolChainsScanner(BaseModule[ToolChainsScannerConfig]):
             )
             result.add_finding(finding)
 
+        if self.config.request_delay > 0:
+            await asyncio.sleep(self.config.request_delay)
+
     async def _check_database_exfiltration_chains(
         self,
         url: str,
         session: aiohttp.ClientSession,
         result: ScanResult,
+        cached_config: Optional[Dict[str, Any]],
     ) -> None:
         """Check for database exfiltration chains."""
-        if not self.config.check_database_exfil:
+        if not self.config.test_database_exfil:
             return
 
         self.logger.info(f"Checking database exfiltration: {url}")
 
-        config = await self._fetch_config(url, session)
-
-        if config is None:
+        if cached_config is None:
             return
 
-        tools = await self._extract_tools(config)
+        tools = await self._extract_tools(cached_config)
         tools_lower = [t.lower() for t in tools]
 
         # Check for sql_query + http chain
@@ -270,7 +256,8 @@ class ToolChainsScanner(BaseModule[ToolChainsScannerConfig]):
                     "database and transmit results externally."
                 ),
                 cwe="CWE-284",
-                owasp_ref="OWASP LLM08:2024 - Excessive Agency",
+                owasp_ref="OWASP LLM08:2025 - Excessive Agency",
+                mitre_ref="MITRE ATLAS - TA0045 LLM Attack",
                 location=url,
                 evidence=["Tools available: sql_query, http_request"],
                 recommendation=(
@@ -282,6 +269,9 @@ class ToolChainsScanner(BaseModule[ToolChainsScannerConfig]):
             )
             result.add_finding(finding)
 
+        if self.config.request_delay > 0:
+            await asyncio.sleep(self.config.request_delay)
+
     def scan(self, target: str, **kwargs: Any) -> ScanResult:
         """Execute tool chains scan on target."""
         self.logger.info(f"Starting tool chains scan: {target}")
@@ -290,30 +280,40 @@ class ToolChainsScanner(BaseModule[ToolChainsScannerConfig]):
             module_name=self.module_name,
             target=target,
             metadata={
-                "config": self.config.__dict__,
+                "test_exfiltration": self.config.test_exfiltration,
+                "test_code_deployment": self.config.test_code_deployment,
+                "test_database_exfil": self.config.test_database_exfil,
                 "dangerous_chains_tested": len(self.DANGEROUS_CHAINS),
             },
         )
 
-        async def run_checks() -> None:
+        if not self.config.enabled:
+            self.logger.info("Tool chains scanning disabled")
+            result.finalize()
+            return result
 
+        async def run_checks() -> None:
             async with aiohttp.ClientSession() as session:
+                # Cache config fetch once at start
+                cached_config = await self._fetch_url(url=target, session=session)
+
                 await asyncio.gather(
-                    self._check_exfiltration_chains(target, session, result),
-                    self._check_code_deployment_chains(target, session, result),
-                    self._check_database_exfiltration_chains(target, session, result),
+                    self._check_exfiltration_chains(target, session, result, cached_config),
+                    self._check_code_deployment_chains(target, session, result, cached_config),
+                    self._check_database_exfiltration_chains(target, session, result, cached_config),
                 )
 
         try:
             asyncio.get_running_loop()
             new_loop = asyncio.new_event_loop()
             asyncio.set_event_loop(new_loop)
-            new_loop.run_until_complete(run_checks())
-            new_loop.close()
+            try:
+                new_loop.run_until_complete(run_checks())
+            finally:
+                new_loop.close()
+                asyncio.set_event_loop(None)
         except RuntimeError:
             asyncio.run(run_checks())
 
         result.finalize()
-        self.post_scan(result)
-
         return result

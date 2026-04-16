@@ -8,8 +8,9 @@ Scans for:
 - DDoS vulnerability indicators
 
 References:
-- OWASP API Security Top 10: API4:2019 - Unrestricted Resource Consumption
+- OWASP API Security Top 10: API4:2019 - Lack of Resources & Rate Limiting
 - RFC 6454 - Rate Limiting Best Practices
+- MITRE ATLAS - TA0045 LLM Attack
 
 Type hints everywhere for IDE support and static analysis.
 """
@@ -18,7 +19,7 @@ from __future__ import annotations
 
 import asyncio
 import time
-from typing import Any, Dict, List, Optional
+from typing import Any, List, Optional
 
 import aiohttp
 
@@ -31,15 +32,21 @@ class RateLimitScannerConfig:
     def __init__(
         self,
         enabled: bool = True,
-        check_rate_limiting_headers: bool = True,
-        check_429_responses: bool = True,
+        test_rate_limiting_headers: bool = True,
+        test_429_responses: bool = True,
         test_rate_limit_bypass: bool = True,
+        test_token_bucket: bool = True,
+        compliance_threshold: float = 0.6,
+        request_delay: float = 0.5,
         custom_headers: List[str] | None = None,
     ) -> None:
         self.enabled = enabled
-        self.check_rate_limiting_headers = check_rate_limiting_headers
-        self.check_429_responses = check_429_responses
+        self.test_rate_limiting_headers = test_rate_limiting_headers
+        self.test_429_responses = test_429_responses
         self.test_rate_limit_bypass = test_rate_limit_bypass
+        self.test_token_bucket = test_token_bucket
+        self.compliance_threshold = compliance_threshold
+        self.request_delay = request_delay
         self.custom_headers = custom_headers or [
             "X-RateLimit-Limit",
             "X-RateLimit-Remaining",
@@ -78,31 +85,8 @@ class RateLimitScanner(BaseModule[RateLimitScannerConfig]):
         self,
         config: Optional[RateLimitScannerConfig] = None,
     ) -> None:
-        super().__init__()
         self.config = config or RateLimitScannerConfig()
-
-    async def _fetch_url(  # type: ignore[override]
-        self,
-        url: str,
-        session: aiohttp.ClientSession,
-        headers: Optional[Dict[str, str]] = None,
-        timeout: int = 10,
-    ) -> Optional[Dict[str, Any]]:
-        """Fetch URL and return response details."""
-        try:
-            async with session.get(url, headers=headers, timeout=timeout) as response:
-                return {
-                    "url": url,
-                    "status": response.status,
-                    "headers": dict(response.headers),
-                    "body": await response.text(),
-                }
-        except asyncio.TimeoutError:
-            self.logger.warning(f"Request timeout: {url}")
-            return None
-        except aiohttp.ClientError as e:
-            self.logger.warning(f"Request error: {e}")
-            return None
+        super().__init__()
 
     async def _check_rate_limit_headers(
         self,
@@ -111,12 +95,12 @@ class RateLimitScanner(BaseModule[RateLimitScannerConfig]):
         result: ScanResult,
     ) -> None:
         """Check for rate limiting headers in response."""
-        if not self.config.check_rate_limiting_headers:
+        if not self.config.test_rate_limiting_headers:
             return
 
         self.logger.info(f"Checking rate limit headers: {url}")
 
-        response = await self._fetch_url(url, session)
+        response = await self._fetch_url(url=url, session=session)
 
         if response is None:
             return
@@ -134,7 +118,8 @@ class RateLimitScanner(BaseModule[RateLimitScannerConfig]):
                     "enabling brute-force attacks, DDoS, or resource exhaustion."
                 ),
                 cwe="CWE-770",
-                owasp_ref="OWASP API4:2019 - Unrestricted Resource Consumption",
+                owasp_ref="OWASP API4:2019 - Lack of Resources & Rate Limiting",
+                mitre_ref="MITRE ATLAS - TA0045 LLM Attack",
                 location=url,
                 evidence=["No rate limit headers found"],
                 recommendation=(
@@ -148,6 +133,9 @@ class RateLimitScanner(BaseModule[RateLimitScannerConfig]):
             # Report found headers for documentation
             self.logger.info(f"Rate limit headers found: {rate_limit_headers}")
 
+        if self.config.request_delay > 0:
+            await asyncio.sleep(self.config.request_delay)
+
     async def _check_429_responses(
         self,
         url: str,
@@ -155,7 +143,7 @@ class RateLimitScanner(BaseModule[RateLimitScannerConfig]):
         result: ScanResult,
     ) -> None:
         """Check if 429 Too Many Requests is returned when rate limited."""
-        if not self.config.check_429_responses:
+        if not self.config.test_429_responses:
             return
 
         self.logger.info(f"Testing rate limit enforcement: {url}")
@@ -165,13 +153,16 @@ class RateLimitScanner(BaseModule[RateLimitScannerConfig]):
         rate_limited = False
 
         for i in range(10):
-            response = await self._fetch_url(url, session)
+            response = await self._fetch_url(url=url, session=session)
             if response:
                 if response["status"] == 429:
                     rate_limited = True
                     break
                 elif response["status"] < 500:
                     success_count += 1
+
+            if self.config.request_delay > 0:
+                await asyncio.sleep(self.config.request_delay)
 
         if not rate_limited and success_count > 8:
             finding = self._create_finding(
@@ -183,7 +174,8 @@ class RateLimitScanner(BaseModule[RateLimitScannerConfig]):
                     "leaving the API vulnerable to abuse."
                 ),
                 cwe="CWE-770",
-                owasp_ref="OWASP API4:2019 - Unrestricted Resource Consumption",
+                owasp_ref="OWASP API4:2019 - Lack of Resources & Rate Limiting",
+                mitre_ref="MITRE ATLAS - TA0045 LLM Attack",
                 location=url,
                 evidence=["10 requests successful, 0 rate limited"],
                 recommendation=(
@@ -216,9 +208,12 @@ class RateLimitScanner(BaseModule[RateLimitScannerConfig]):
 
         responses = []
         for headers in bypass_headers:
-            response = await self._fetch_url(url, session, headers)
+            response = await self._fetch_url(url=url, session=session, headers=headers)
             if response:
                 responses.append(response)
+
+            if self.config.request_delay > 0:
+                await asyncio.sleep(self.config.request_delay)
 
         # Check if all bypass attempts succeeded (no 429s)
         if responses and not any(r["status"] == 429 for r in responses):
@@ -231,6 +226,8 @@ class RateLimitScanner(BaseModule[RateLimitScannerConfig]):
                     "validate header authenticity, attackers can bypass limits."
                 ),
                 cwe="CWE-770",
+                owasp_ref="OWASP API4:2019 - Lack of Resources & Rate Limiting",
+                mitre_ref="MITRE ATLAS - TA0045 LLM Attack",
                 location=url,
                 evidence=["Multiple header variations all succeeded"],
                 recommendation=(
@@ -248,6 +245,9 @@ class RateLimitScanner(BaseModule[RateLimitScannerConfig]):
         result: ScanResult,
     ) -> None:
         """Check for token bucket algorithm weaknesses."""
+        if not self.config.test_token_bucket:
+            return
+
         self.logger.info(f"Testing token bucket behavior: {url}")
 
         # Send burst of requests
@@ -256,13 +256,16 @@ class RateLimitScanner(BaseModule[RateLimitScannerConfig]):
 
         for _ in range(burst_size):
             start = time.time()
-            response = await self._fetch_url(url, session)
+            response = await self._fetch_url(url=url, session=session)
             end = time.time()
             timestamps.append(end - start)
 
             if response and response["status"] == 429:
                 self.logger.info("Rate limited after burst")
                 break
+
+            if self.config.request_delay > 0:
+                await asyncio.sleep(self.config.request_delay)
 
         # Analyze timing - if all requests took similar time, might be batched
         if len(timestamps) >= 2:
@@ -278,6 +281,8 @@ class RateLimitScanner(BaseModule[RateLimitScannerConfig]):
                         "burst abuse."
                     ),
                     cwe="CWE-770",
+                    owasp_ref="OWASP API4:2019 - Lack of Resources & Rate Limiting",
+                    mitre_ref="MITRE ATLAS - TA0045 LLM Attack",
                     location=url,
                     evidence=[f"Timing variance: {timing_variance:.6f}s"],
                     recommendation=(
@@ -295,8 +300,18 @@ class RateLimitScanner(BaseModule[RateLimitScannerConfig]):
         result = ScanResult(
             module_name=self.module_name,
             target=target,
-            metadata={"config": self.config.__dict__},
+            metadata={
+                "test_rate_limiting_headers": self.config.test_rate_limiting_headers,
+                "test_429_responses": self.config.test_429_responses,
+                "test_rate_limit_bypass": self.config.test_rate_limit_bypass,
+                "test_token_bucket": self.config.test_token_bucket,
+            },
         )
+
+        if not self.config.enabled:
+            self.logger.info("Rate limit scanning disabled")
+            result.finalize()
+            return result
 
         async def run_checks() -> None:
 
@@ -312,12 +327,13 @@ class RateLimitScanner(BaseModule[RateLimitScannerConfig]):
             asyncio.get_running_loop()
             new_loop = asyncio.new_event_loop()
             asyncio.set_event_loop(new_loop)
-            new_loop.run_until_complete(run_checks())
-            new_loop.close()
+            try:
+                new_loop.run_until_complete(run_checks())
+            finally:
+                new_loop.close()
+                asyncio.set_event_loop(None)
         except RuntimeError:
             asyncio.run(run_checks())
 
         result.finalize()
-        self.post_scan(result)
-
         return result

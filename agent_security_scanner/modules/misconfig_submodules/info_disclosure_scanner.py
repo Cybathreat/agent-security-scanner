@@ -11,6 +11,7 @@ Scans for:
 References:
 - OWASP API Security Top 10: API1:2023 - Broken Object Level Authorization
 - OWASP Web Security Testing Guide: WSTG-INFO-00
+- MITRE ATLAS - TA0045 LLM Attack
 
 Type hints everywhere for IDE support and static analysis.
 """
@@ -18,7 +19,7 @@ Type hints everywhere for IDE support and static analysis.
 from __future__ import annotations
 
 import asyncio
-from typing import Any, Dict, Optional
+from typing import Any, Optional
 
 import aiohttp
 
@@ -31,20 +32,22 @@ class InfoDisclosureScannerConfig:
     def __init__(
         self,
         enabled: bool = True,
-        check_stack_traces: bool = True,
-        check_debug_mode: bool = True,
-        check_version_info: bool = True,
-        check_internal_paths: bool = True,
-        check_server_banner: bool = True,
-        check_error_messages: bool = True,
+        test_stack_traces: bool = True,
+        test_debug_mode: bool = True,
+        test_version_info: bool = True,
+        test_internal_paths: bool = True,
+        test_server_banner: bool = True,
+        compliance_threshold: float = 0.6,
+        request_delay: float = 0.5,
     ) -> None:
         self.enabled = enabled
-        self.check_stack_traces = check_stack_traces
-        self.check_debug_mode = check_debug_mode
-        self.check_version_info = check_version_info
-        self.check_internal_paths = check_internal_paths
-        self.check_server_banner = check_server_banner
-        self.check_error_messages = check_error_messages
+        self.test_stack_traces = test_stack_traces
+        self.test_debug_mode = test_debug_mode
+        self.test_version_info = test_version_info
+        self.test_internal_paths = test_internal_paths
+        self.test_server_banner = test_server_banner
+        self.compliance_threshold = compliance_threshold
+        self.request_delay = request_delay
 
 
 class InfoDisclosureScanner(BaseModule[InfoDisclosureScannerConfig]):
@@ -56,7 +59,7 @@ class InfoDisclosureScanner(BaseModule[InfoDisclosureScannerConfig]):
     - Debug mode indicators
     - Version/banner exposure
     - Internal path leaks
-    - Verbose error messages
+    - Server banner exposure
     """
 
     # Patterns indicating information disclosure
@@ -101,31 +104,8 @@ class InfoDisclosureScanner(BaseModule[InfoDisclosureScannerConfig]):
         self,
         config: Optional[InfoDisclosureScannerConfig] = None,
     ) -> None:
-        super().__init__()
         self.config = config or InfoDisclosureScannerConfig()
-
-    async def _fetch_url(  # type: ignore[override]
-        self,
-        url: str,
-        session: aiohttp.ClientSession,
-        headers: Optional[Dict[str, str]] = None,
-        timeout: int = 10,
-    ) -> Optional[Dict[str, Any]]:
-        """Fetch URL and return response details."""
-        try:
-            async with session.get(url, headers=headers, timeout=timeout) as response:
-                return {
-                    "url": url,
-                    "status": response.status,
-                    "headers": dict(response.headers),
-                    "body": await response.text(),
-                }
-        except asyncio.TimeoutError:
-            self.logger.warning(f"Request timeout: {url}")
-            return None
-        except aiohttp.ClientError as e:
-            self.logger.warning(f"Request error: {e}")
-            return None
+        super().__init__()
 
     async def _check_stack_traces(
         self,
@@ -134,7 +114,7 @@ class InfoDisclosureScanner(BaseModule[InfoDisclosureScannerConfig]):
         result: ScanResult,
     ) -> None:
         """Check for stack traces in error responses."""
-        if not self.config.check_stack_traces:
+        if not self.config.test_stack_traces:
             return
 
         self.logger.info(f"Checking for stack traces: {url}")
@@ -147,7 +127,7 @@ class InfoDisclosureScanner(BaseModule[InfoDisclosureScannerConfig]):
         ]
 
         for test_url in test_urls:
-            response = await self._fetch_url(test_url, session)
+            response = await self._fetch_url(url=test_url, session=session)
 
             if response is None:
                 continue
@@ -166,6 +146,7 @@ class InfoDisclosureScanner(BaseModule[InfoDisclosureScannerConfig]):
                         ),
                         cwe="CWE-209",
                         owasp_ref="OWASP API5:2019 - Security Misconfiguration",
+                        mitre_ref="MITRE ATLAS - TA0045 LLM Attack",
                         location=test_url,
                         evidence=[f"Stack trace pattern: {pattern}"],
                         recommendation=(
@@ -177,6 +158,9 @@ class InfoDisclosureScanner(BaseModule[InfoDisclosureScannerConfig]):
                     result.add_finding(finding)
                     break  # One finding per test
 
+            if self.config.request_delay > 0:
+                await asyncio.sleep(self.config.request_delay)
+
     async def _check_debug_mode(
         self,
         url: str,
@@ -184,12 +168,12 @@ class InfoDisclosureScanner(BaseModule[InfoDisclosureScannerConfig]):
         result: ScanResult,
     ) -> None:
         """Check for debug mode indicators."""
-        if not self.config.check_debug_mode:
+        if not self.config.test_debug_mode:
             return
 
         self.logger.info(f"Checking for debug mode: {url}")
 
-        response = await self._fetch_url(url, session)
+        response = await self._fetch_url(url=url, session=session)
 
         if response is None:
             return
@@ -209,6 +193,8 @@ class InfoDisclosureScanner(BaseModule[InfoDisclosureScannerConfig]):
                         "exposes sensitive internal information."
                     ),
                     cwe="CWE-489",
+                    owasp_ref="OWASP API5:2019 - Security Misconfiguration",
+                    mitre_ref="MITRE ATLAS - TA0045 LLM Attack",
                     location=url,
                     evidence=[f"Found pattern: {pattern}"],
                     recommendation=(
@@ -232,6 +218,8 @@ class InfoDisclosureScanner(BaseModule[InfoDisclosureScannerConfig]):
                         "These headers may leak additional debugging information."
                     ),
                     cwe="CWE-489",
+                    owasp_ref="OWASP API5:2019 - Security Misconfiguration",
+                    mitre_ref="MITRE ATLAS - TA0045 LLM Attack",
                     location=url,
                     evidence=[f"Header present: {header}: {headers[header]}"],
                     recommendation=(
@@ -241,6 +229,9 @@ class InfoDisclosureScanner(BaseModule[InfoDisclosureScannerConfig]):
                 )
                 result.add_finding(finding)
 
+        if self.config.request_delay > 0:
+            await asyncio.sleep(self.config.request_delay)
+
     async def _check_version_info(
         self,
         url: str,
@@ -248,7 +239,7 @@ class InfoDisclosureScanner(BaseModule[InfoDisclosureScannerConfig]):
         result: ScanResult,
     ) -> None:
         """Check for version information exposure."""
-        if not self.config.check_version_info:
+        if not self.config.test_version_info:
             return
 
         self.logger.info(f"Checking version info: {url}")
@@ -265,7 +256,7 @@ class InfoDisclosureScanner(BaseModule[InfoDisclosureScannerConfig]):
 
         for endpoint in version_endpoints:
             test_url = f"{url}{endpoint}"
-            response = await self._fetch_url(test_url, session)
+            response = await self._fetch_url(url=test_url, session=session)
 
             if response is None:
                 continue
@@ -287,6 +278,8 @@ class InfoDisclosureScanner(BaseModule[InfoDisclosureScannerConfig]):
                             "vulnerabilities in specific releases."
                         ),
                         cwe="CWE-200",
+                        owasp_ref="OWASP API5:2019 - Security Misconfiguration",
+                        mitre_ref="MITRE ATLAS - TA0045 LLM Attack",
                         location=test_url,
                         evidence=["Version endpoint accessible"],
                         recommendation=(
@@ -297,6 +290,9 @@ class InfoDisclosureScanner(BaseModule[InfoDisclosureScannerConfig]):
                     )
                     result.add_finding(finding)
 
+            if self.config.request_delay > 0:
+                await asyncio.sleep(self.config.request_delay)
+
     async def _check_internal_paths(
         self,
         url: str,
@@ -304,7 +300,7 @@ class InfoDisclosureScanner(BaseModule[InfoDisclosureScannerConfig]):
         result: ScanResult,
     ) -> None:
         """Check for internal path disclosure."""
-        if not self.config.check_internal_paths:
+        if not self.config.test_internal_paths:
             return
 
         self.logger.info(f"Checking for internal paths: {url}")
@@ -323,7 +319,7 @@ class InfoDisclosureScanner(BaseModule[InfoDisclosureScannerConfig]):
 
         for path in sensitive_paths:
             test_url = f"{url}{path}"
-            response = await self._fetch_url(test_url, session)
+            response = await self._fetch_url(url=test_url, session=session)
 
             if response and response["status"] == 200:
                 finding = self._create_finding(
@@ -336,6 +332,7 @@ class InfoDisclosureScanner(BaseModule[InfoDisclosureScannerConfig]):
                     ),
                     cwe="CWE-200",
                     owasp_ref="OWASP API5:2019 - Security Misconfiguration",
+                    mitre_ref="MITRE ATLAS - TA0045 LLM Attack",
                     location=test_url,
                     evidence=[f"Path accessible: {path}"],
                     recommendation=(
@@ -346,6 +343,9 @@ class InfoDisclosureScanner(BaseModule[InfoDisclosureScannerConfig]):
                 )
                 result.add_finding(finding)
 
+            if self.config.request_delay > 0:
+                await asyncio.sleep(self.config.request_delay)
+
     async def _check_server_banner(
         self,
         url: str,
@@ -353,12 +353,12 @@ class InfoDisclosureScanner(BaseModule[InfoDisclosureScannerConfig]):
         result: ScanResult,
     ) -> None:
         """Check for server banner exposure."""
-        if not self.config.check_server_banner:
+        if not self.config.test_server_banner:
             return
 
         self.logger.info(f"Checking server banner: {url}")
 
-        response = await self._fetch_url(url, session)
+        response = await self._fetch_url(url=url, session=session)
 
         if response is None:
             return
@@ -384,6 +384,8 @@ class InfoDisclosureScanner(BaseModule[InfoDisclosureScannerConfig]):
                         f"to identify known vulnerabilities."
                     ),
                     cwe="CWE-200",
+                    owasp_ref="OWASP API5:2019 - Security Misconfiguration",
+                    mitre_ref="MITRE ATLAS - TA0045 LLM Attack",
                     location=url,
                     evidence=[f"Header: {header}: {headers[header]}"],
                     recommendation=(
@@ -394,6 +396,9 @@ class InfoDisclosureScanner(BaseModule[InfoDisclosureScannerConfig]):
                 )
                 result.add_finding(finding)
 
+        if self.config.request_delay > 0:
+            await asyncio.sleep(self.config.request_delay)
+
     def scan(self, target: str, **kwargs: Any) -> ScanResult:
         """Execute information disclosure scan on target."""
         self.logger.info(f"Starting info disclosure scan: {target}")
@@ -401,8 +406,19 @@ class InfoDisclosureScanner(BaseModule[InfoDisclosureScannerConfig]):
         result = ScanResult(
             module_name=self.module_name,
             target=target,
-            metadata={"config": self.config.__dict__},
+            metadata={
+                "test_stack_traces": self.config.test_stack_traces,
+                "test_debug_mode": self.config.test_debug_mode,
+                "test_version_info": self.config.test_version_info,
+                "test_internal_paths": self.config.test_internal_paths,
+                "test_server_banner": self.config.test_server_banner,
+            },
         )
+
+        if not self.config.enabled:
+            self.logger.info("Information disclosure scanning disabled")
+            result.finalize()
+            return result
 
         async def run_checks() -> None:
 
@@ -419,12 +435,13 @@ class InfoDisclosureScanner(BaseModule[InfoDisclosureScannerConfig]):
             asyncio.get_running_loop()
             new_loop = asyncio.new_event_loop()
             asyncio.set_event_loop(new_loop)
-            new_loop.run_until_complete(run_checks())
-            new_loop.close()
+            try:
+                new_loop.run_until_complete(run_checks())
+            finally:
+                new_loop.close()
+                asyncio.set_event_loop(None)
         except RuntimeError:
             asyncio.run(run_checks())
 
         result.finalize()
-        self.post_scan(result)
-
         return result

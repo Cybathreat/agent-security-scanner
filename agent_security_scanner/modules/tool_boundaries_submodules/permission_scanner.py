@@ -8,8 +8,8 @@ Scans for:
 - Admin mode configuration
 
 References:
-- OWASP LLM Top 10: LLM08:2024 - Excessive Agency
-- MITRE ATLAS: ML Model Access Control
+- OWASP LLM Top 10: LLM08:2025 - Excessive Agency
+- MITRE ATLAS: ML Model Access Control - TA0045 LLM Attack
 
 Type hints everywhere for IDE support and static analysis.
 """
@@ -31,16 +31,20 @@ class PermissionScannerConfig:
     def __init__(
         self,
         enabled: bool = True,
-        check_admin_mode: bool = True,
-        check_unrestricted: bool = True,
-        check_trust_all: bool = True,
-        check_no_validation: bool = True,
+        test_admin_mode: bool = True,
+        test_unrestricted: bool = True,
+        test_trust_all: bool = True,
+        test_no_validation: bool = True,
+        compliance_threshold: float = 0.6,
+        request_delay: float = 0.5,
     ) -> None:
         self.enabled = enabled
-        self.check_admin_mode = check_admin_mode
-        self.check_unrestricted = check_unrestricted
-        self.check_trust_all = check_trust_all
-        self.check_no_validation = check_no_validation
+        self.test_admin_mode = test_admin_mode
+        self.test_unrestricted = test_unrestricted
+        self.test_trust_all = test_trust_all
+        self.test_no_validation = test_no_validation
+        self.compliance_threshold = compliance_threshold
+        self.request_delay = request_delay
 
 
 class PermissionScanner(BaseModule[PermissionScannerConfig]):
@@ -88,47 +92,43 @@ class PermissionScanner(BaseModule[PermissionScannerConfig]):
         self,
         config: Optional[PermissionScannerConfig] = None,
     ) -> None:
-        super().__init__()
         self.config = config or PermissionScannerConfig()
+        super().__init__()
 
     async def _fetch_config(
         self,
         url: str,
         session: aiohttp.ClientSession,
-        timeout: int = 10,
     ) -> Optional[Dict[str, Any]]:
-        """Fetch tool configuration from endpoint."""
-        try:
-            async with session.get(url, timeout=timeout) as response:
-                if response.status == 200:
-                    body = await response.text()
-                    try:
-                        return cast(dict[str, Any], json.loads(body))
-                    except json.JSONDecodeError:
-                        return {"raw": body}
-        except Exception as e:
-            self.logger.warning(f"Error fetching config: {e}")
+        """Fetch tool configuration from endpoint using base class _fetch_url."""
+        response = await self._fetch_url(url=url, session=session)
+        if response is None:
             return None
-        return None
+        if response["status"] != 200:
+            return None
+        body = response["body"]
+        try:
+            return cast(dict[str, Any], json.loads(body))
+        except json.JSONDecodeError:
+            return {"raw": body}
 
     async def _check_admin_mode(
         self,
         url: str,
         session: aiohttp.ClientSession,
         result: ScanResult,
+        config_data: Optional[Dict[str, Any]],
     ) -> None:
         """Check for admin/developer mode configurations."""
-        if not self.config.check_admin_mode:
+        if not self.config.test_admin_mode:
             return
 
         self.logger.info(f"Checking for admin mode: {url}")
 
-        config = await self._fetch_config(url, session)
-
-        if config is None:
+        if config_data is None:
             return
 
-        config_str = json.dumps(config).lower()
+        config_str = json.dumps(config_data).lower()
 
         if "admin_mode" in config_str or "developer_mode" in config_str:
             finding = self._create_finding(
@@ -140,7 +140,8 @@ class PermissionScanner(BaseModule[PermissionScannerConfig]):
                     "unrestricted tool execution."
                 ),
                 cwe="CWE-284",
-                owasp_ref="OWASP LLM08:2024 - Excessive Agency",
+                owasp_ref="OWASP LLM08:2025 - Excessive Agency",
+                mitre_ref="MITRE ATLAS - TA0045 LLM Attack",
                 location=url,
                 evidence=["Admin/developer mode configuration found"],
                 recommendation=(
@@ -156,19 +157,18 @@ class PermissionScanner(BaseModule[PermissionScannerConfig]):
         url: str,
         session: aiohttp.ClientSession,
         result: ScanResult,
+        config_data: Optional[Dict[str, Any]],
     ) -> None:
         """Check for unrestricted tool access."""
-        if not self.config.check_unrestricted:
+        if not self.config.test_unrestricted:
             return
 
         self.logger.info(f"Checking unrestricted access: {url}")
 
-        config = await self._fetch_config(url, session)
-
-        if config is None:
+        if config_data is None:
             return
 
-        config_str = json.dumps(config).lower()
+        config_str = json.dumps(config_data).lower()
 
         if "unrestricted" in config_str or "allow_all" in config_str:
             finding = self._create_finding(
@@ -180,7 +180,8 @@ class PermissionScanner(BaseModule[PermissionScannerConfig]):
                     "checks, enabling privilege escalation."
                 ),
                 cwe="CWE-284",
-                owasp_ref="OWASP LLM08:2024 - Excessive Agency",
+                owasp_ref="OWASP LLM08:2025 - Excessive Agency",
+                mitre_ref="MITRE ATLAS - TA0045 LLM Attack",
                 location=url,
                 evidence=["Unrestricted configuration found"],
                 recommendation=(
@@ -196,19 +197,18 @@ class PermissionScanner(BaseModule[PermissionScannerConfig]):
         url: str,
         session: aiohttp.ClientSession,
         result: ScanResult,
+        config_data: Optional[Dict[str, Any]],
     ) -> None:
         """Check for trust-all configurations."""
-        if not self.config.check_trust_all:
+        if not self.config.test_trust_all:
             return
 
         self.logger.info(f"Checking trust-all config: {url}")
 
-        config = await self._fetch_config(url, session)
-
-        if config is None:
+        if config_data is None:
             return
 
-        config_str = json.dumps(config).lower()
+        config_str = json.dumps(config_data).lower()
 
         if "trust_all" in config_str:
             finding = self._create_finding(
@@ -220,6 +220,8 @@ class PermissionScanner(BaseModule[PermissionScannerConfig]):
                     "This defeats the purpose of boundary validation."
                 ),
                 cwe="CWE-284",
+                owasp_ref="OWASP LLM08:2025 - Excessive Agency",
+                mitre_ref="MITRE ATLAS - TA0045 LLM Attack",
                 location=url,
                 evidence=["Trust-all configuration found"],
                 recommendation=(
@@ -235,19 +237,18 @@ class PermissionScanner(BaseModule[PermissionScannerConfig]):
         url: str,
         session: aiohttp.ClientSession,
         result: ScanResult,
+        config_data: Optional[Dict[str, Any]],
     ) -> None:
         """Check for missing validation/auth checks."""
-        if not self.config.check_no_validation:
+        if not self.config.test_no_validation:
             return
 
         self.logger.info(f"Checking for missing validation: {url}")
 
-        config = await self._fetch_config(url, session)
-
-        if config is None:
+        if config_data is None:
             return
 
-        config_str = json.dumps(config).lower()
+        config_str = json.dumps(config_data).lower()
 
         # Check for dangerous tools without validation
         dangerous_found = []
@@ -267,7 +268,8 @@ class PermissionScanner(BaseModule[PermissionScannerConfig]):
                     "operations without authorization."
                 ),
                 cwe="CWE-284",
-                owasp_ref="OWASP LLM08:2024 - Excessive Agency",
+                owasp_ref="OWASP LLM08:2025 - Excessive Agency",
+                mitre_ref="MITRE ATLAS - TA0045 LLM Attack",
                 location=url,
                 evidence=[f"Tools without auth: {', '.join(dangerous_found[:5])}"],
                 recommendation=(
@@ -285,29 +287,43 @@ class PermissionScanner(BaseModule[PermissionScannerConfig]):
         result = ScanResult(
             module_name=self.module_name,
             target=target,
-            metadata={"config": self.config.__dict__},
+            metadata={
+                "test_admin_mode": self.config.test_admin_mode,
+                "test_unrestricted": self.config.test_unrestricted,
+                "test_trust_all": self.config.test_trust_all,
+                "test_no_validation": self.config.test_no_validation,
+            },
         )
+
+        if not self.config.enabled:
+            self.logger.info("Permission scanning disabled")
+            result.finalize()
+            return result
 
         async def run_checks() -> None:
 
             async with aiohttp.ClientSession() as session:
+                # Cache the config response once for all checks
+                config_data = await self._fetch_config(target, session)
+
                 await asyncio.gather(
-                    self._check_admin_mode(target, session, result),
-                    self._check_unrestricted_access(target, session, result),
-                    self._check_trust_all(target, session, result),
-                    self._check_missing_validation(target, session, result),
+                    self._check_admin_mode(target, session, result, config_data),
+                    self._check_unrestricted_access(target, session, result, config_data),
+                    self._check_trust_all(target, session, result, config_data),
+                    self._check_missing_validation(target, session, result, config_data),
                 )
 
         try:
             asyncio.get_running_loop()
             new_loop = asyncio.new_event_loop()
             asyncio.set_event_loop(new_loop)
-            new_loop.run_until_complete(run_checks())
-            new_loop.close()
+            try:
+                new_loop.run_until_complete(run_checks())
+            finally:
+                new_loop.close()
+                asyncio.set_event_loop(None)
         except RuntimeError:
             asyncio.run(run_checks())
 
         result.finalize()
-        self.post_scan(result)
-
         return result

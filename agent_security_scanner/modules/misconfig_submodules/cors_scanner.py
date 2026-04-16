@@ -11,6 +11,7 @@ References:
 - OWASP API Security Top 10: API8:2019 - Security Misconfiguration
 - OWASP Web Security Testing Guide: WSTG-SESS-002
 - RFC 6454 - The Web Origin Concept
+- MITRE ATLAS - TA0045 LLM Attack
 
 Type hints everywhere for IDE support and static analysis.
 """
@@ -31,19 +32,23 @@ class CORSScannerConfig:
     def __init__(
         self,
         enabled: bool = True,
-        check_wildcard_origin: bool = True,
-        check_credentials_with_wildcard: bool = True,
-        check_preflight: bool = True,
-        check_allowed_methods: bool = True,
-        check_allowed_headers: bool = True,
+        test_wildcard_origin: bool = True,
+        test_credentials_with_wildcard: bool = True,
+        test_preflight: bool = True,
+        test_allowed_methods: bool = True,
+        test_allowed_headers: bool = True,
+        compliance_threshold: float = 0.6,
+        request_delay: float = 0.5,
         test_custom_origins: List[str] | None = None,
     ) -> None:
         self.enabled = enabled
-        self.check_wildcard_origin = check_wildcard_origin
-        self.check_credentials_with_wildcard = check_credentials_with_wildcard
-        self.check_preflight = check_preflight
-        self.check_allowed_methods = check_allowed_methods
-        self.check_allowed_headers = check_allowed_headers
+        self.test_wildcard_origin = test_wildcard_origin
+        self.test_credentials_with_wildcard = test_credentials_with_wildcard
+        self.test_preflight = test_preflight
+        self.test_allowed_methods = test_allowed_methods
+        self.test_allowed_headers = test_allowed_headers
+        self.compliance_threshold = compliance_threshold
+        self.request_delay = request_delay
         self.test_custom_origins = test_custom_origins or [
             "https://evil-site.com",
             "https://attacker.example.com",
@@ -74,31 +79,8 @@ class CORSScanner(BaseModule[CORSScannerConfig]):
         self,
         config: Optional[CORSScannerConfig] = None,
     ) -> None:
-        super().__init__()
         self.config = config or CORSScannerConfig()
-
-    async def _fetch_url(  # type: ignore[override]
-        self,
-        url: str,
-        session: aiohttp.ClientSession,
-        headers: Optional[Dict[str, str]] = None,
-        timeout: int = 10,
-    ) -> Optional[Dict[str, Any]]:
-        """Fetch URL and return response details."""
-        try:
-            async with session.get(url, headers=headers, timeout=timeout) as response:
-                return {
-                    "url": url,
-                    "status": response.status,
-                    "headers": dict(response.headers),
-                    "body": await response.text(),
-                }
-        except asyncio.TimeoutError:
-            self.logger.warning(f"Request timeout: {url}")
-            return None
-        except aiohttp.ClientError as e:
-            self.logger.warning(f"Request error: {e}")
-            return None
+        super().__init__()
 
     async def _preflight_request(
         self,
@@ -106,7 +88,6 @@ class CORSScanner(BaseModule[CORSScannerConfig]):
         session: aiohttp.ClientSession,
         origin: str,
         method: str = "GET",
-        timeout: int = 10,
     ) -> Optional[Dict[str, Any]]:
         """Send preflight OPTIONS request."""
         headers = {
@@ -114,7 +95,11 @@ class CORSScanner(BaseModule[CORSScannerConfig]):
             "Access-Control-Request-Method": method,
         }
         try:
-            async with session.options(url, headers=headers, timeout=timeout) as response:
+            async with session.options(
+                url,
+                headers=headers,
+                timeout=aiohttp.ClientTimeout(total=10),
+            ) as response:
                 return {
                     "url": url,
                     "status": response.status,
@@ -133,12 +118,12 @@ class CORSScanner(BaseModule[CORSScannerConfig]):
         result: ScanResult,
     ) -> None:
         """Check for wildcard CORS origin."""
-        if not self.config.check_wildcard_origin:
+        if not self.config.test_wildcard_origin:
             return
 
         self.logger.info(f"Checking wildcard origin: {url}")
 
-        response = await self._fetch_url(url, session)
+        response = await self._fetch_url(url=url, session=session)
 
         if response is None:
             return
@@ -164,6 +149,7 @@ class CORSScanner(BaseModule[CORSScannerConfig]):
                     ),
                     cwe="CWE-942",
                     owasp_ref="OWASP API8:2019 - Security Misconfiguration",
+                    mitre_ref="MITRE ATLAS - TA0045 LLM Attack",
                     location=url,
                     evidence=[
                         "Access-Control-Allow-Origin: *",
@@ -185,6 +171,8 @@ class CORSScanner(BaseModule[CORSScannerConfig]):
                         "reconnaissance and API enumeration attacks."
                     ),
                     cwe="CWE-942",
+                    owasp_ref="OWASP API8:2019 - Security Misconfiguration",
+                    mitre_ref="MITRE ATLAS - TA0045 LLM Attack",
                     location=url,
                     evidence=["Access-Control-Allow-Origin: *"],
                     recommendation=(
@@ -194,6 +182,9 @@ class CORSScanner(BaseModule[CORSScannerConfig]):
                 )
                 result.add_finding(finding)
 
+        if self.config.request_delay > 0:
+            await asyncio.sleep(self.config.request_delay)
+
     async def _check_credentials_with_wildcard(
         self,
         url: str,
@@ -201,7 +192,7 @@ class CORSScanner(BaseModule[CORSScannerConfig]):
         result: ScanResult,
     ) -> None:
         """Check for credentials being allowed with wildcard origin."""
-        if not self.config.check_credentials_with_wildcard:
+        if not self.config.test_credentials_with_wildcard:
             return
 
         self.logger.info(f"Checking credentials configuration: {url}")
@@ -230,6 +221,7 @@ class CORSScanner(BaseModule[CORSScannerConfig]):
                 ),
                 cwe="CWE-942",
                 owasp_ref="OWASP API8:2019 - Security Misconfiguration",
+                mitre_ref="MITRE ATLAS - TA0045 LLM Attack",
                 location=url,
                 evidence=[
                     "OPTIONS preflight successful",
@@ -243,6 +235,9 @@ class CORSScanner(BaseModule[CORSScannerConfig]):
             )
             result.add_finding(finding)
 
+        if self.config.request_delay > 0:
+            await asyncio.sleep(self.config.request_delay)
+
     async def _check_preflight_manipulation(
         self,
         url: str,
@@ -250,7 +245,7 @@ class CORSScanner(BaseModule[CORSScannerConfig]):
         result: ScanResult,
     ) -> None:
         """Check if preflight can be manipulated."""
-        if not self.config.check_preflight:
+        if not self.config.test_preflight:
             return
 
         self.logger.info(f"Testing preflight manipulation: {url}")
@@ -282,6 +277,8 @@ class CORSScanner(BaseModule[CORSScannerConfig]):
                             "origin is not properly validated."
                         ),
                         cwe="CWE-942",
+                        owasp_ref="OWASP API8:2019 - Security Misconfiguration",
+                        mitre_ref="MITRE ATLAS - TA0045 LLM Attack",
                         location=url,
                         evidence=[f"Reflected origin: {origin}"],
                         recommendation=(
@@ -293,6 +290,9 @@ class CORSScanner(BaseModule[CORSScannerConfig]):
                     result.add_finding(finding)
                     break
 
+            if self.config.request_delay > 0:
+                await asyncio.sleep(self.config.request_delay)
+
     async def _check_overly_permissive_methods(
         self,
         url: str,
@@ -300,7 +300,7 @@ class CORSScanner(BaseModule[CORSScannerConfig]):
         result: ScanResult,
     ) -> None:
         """Check for overly permissive HTTP methods in CORS."""
-        if not self.config.check_allowed_methods:
+        if not self.config.test_allowed_methods:
             return
 
         self.logger.info(f"Checking allowed methods: {url}")
@@ -322,6 +322,8 @@ class CORSScanner(BaseModule[CORSScannerConfig]):
                         "resources on behalf of users if authentication is present."
                     ),
                     cwe="CWE-942",
+                    owasp_ref="OWASP API8:2019 - Security Misconfiguration",
+                    mitre_ref="MITRE ATLAS - TA0045 LLM Attack",
                     location=url,
                     evidence=[f"Allowed methods: {allow_methods}"],
                     recommendation=(
@@ -332,6 +334,9 @@ class CORSScanner(BaseModule[CORSScannerConfig]):
                 )
                 result.add_finding(finding)
 
+        if self.config.request_delay > 0:
+            await asyncio.sleep(self.config.request_delay)
+
     async def _check_missing_cors_headers(
         self,
         url: str,
@@ -339,9 +344,12 @@ class CORSScanner(BaseModule[CORSScannerConfig]):
         result: ScanResult,
     ) -> None:
         """Check for missing CORS configuration (not an error but worth noting)."""
+        if not self.config.test_allowed_headers:
+            return
+
         self.logger.info(f"Checking CORS headers: {url}")
 
-        response = await self._fetch_url(url, session)
+        response = await self._fetch_url(url=url, session=session)
 
         if response is None:
             return
@@ -366,6 +374,8 @@ class CORSScanner(BaseModule[CORSScannerConfig]):
                     "can cause issues with legitimate cross-origin requests."
                 ),
                 cwe="CWE-942",
+                owasp_ref="OWASP API8:2019 - Security Misconfiguration",
+                mitre_ref="MITRE ATLAS - TA0045 LLM Attack",
                 location=url,
                 evidence=["No CORS headers present"],
                 recommendation=(
@@ -375,6 +385,9 @@ class CORSScanner(BaseModule[CORSScannerConfig]):
             )
             result.add_finding(finding)
 
+        if self.config.request_delay > 0:
+            await asyncio.sleep(self.config.request_delay)
+
     def scan(self, target: str, **kwargs: Any) -> ScanResult:
         """Execute CORS scan on target."""
         self.logger.info(f"Starting CORS scan: {target}")
@@ -382,8 +395,19 @@ class CORSScanner(BaseModule[CORSScannerConfig]):
         result = ScanResult(
             module_name=self.module_name,
             target=target,
-            metadata={"config": self.config.__dict__},
+            metadata={
+                "test_wildcard_origin": self.config.test_wildcard_origin,
+                "test_credentials_with_wildcard": self.config.test_credentials_with_wildcard,
+                "test_preflight": self.config.test_preflight,
+                "test_allowed_methods": self.config.test_allowed_methods,
+                "test_allowed_headers": self.config.test_allowed_headers,
+            },
         )
+
+        if not self.config.enabled:
+            self.logger.info("CORS scanning disabled")
+            result.finalize()
+            return result
 
         async def run_checks() -> None:
 
@@ -400,12 +424,13 @@ class CORSScanner(BaseModule[CORSScannerConfig]):
             asyncio.get_running_loop()
             new_loop = asyncio.new_event_loop()
             asyncio.set_event_loop(new_loop)
-            new_loop.run_until_complete(run_checks())
-            new_loop.close()
+            try:
+                new_loop.run_until_complete(run_checks())
+            finally:
+                new_loop.close()
+                asyncio.set_event_loop(None)
         except RuntimeError:
             asyncio.run(run_checks())
 
         result.finalize()
-        self.post_scan(result)
-
         return result

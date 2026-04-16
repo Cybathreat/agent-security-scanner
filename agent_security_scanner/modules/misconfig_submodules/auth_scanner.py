@@ -3,23 +3,29 @@ Authentication and Authorization Scanner.
 
 Scans for:
 - Missing or weak authentication
+- API key exposure in URLs or headers
 - Session fixation vulnerabilities
-- Token leakage in responses
-- Missing MFA/2FA requirements
-- Broken access control patterns
+- Missing MFA requirements
+- Brute force protection detection
+- Token leakage in error messages
 
 References:
-- OWASP API Security Top 10: API1:2023 - Broken Object Level Authorization
-- OWASP API Security Top 10: API2:2023 - Broken Authentication
-- OWASP LLM Top 10: LLM08:2024 - Excessive Agency
-
-Type hints everywhere for IDE support and static analysis.
+- CWE-306: Missing Authentication for Critical Function
+- CWE-598: Use of GET Request Method With Sensitive Query Strings
+- CWE-384: Session Fixation
+- CWE-308: Use of Single-Factor Authentication
+- CWE-770: Allocation of Resources Without Limits
+- CWE-209: Generation of Error Message Containing Sensitive Information
+- OWASP API1:2023 - Broken Object Level Authorization
+- OWASP API2:2023 - Broken Authentication
+- OWASP LLM08:2025 - Excessive Agency
+- MITRE ATLAS - TA0045 LLM Attack
 """
 
 from __future__ import annotations
 
 import asyncio
-from typing import Any, Dict, Optional
+from typing import Any, Optional
 
 import aiohttp
 
@@ -32,33 +38,32 @@ class AuthScannerConfig:
     def __init__(
         self,
         enabled: bool = True,
-        check_basic_auth: bool = True,
-        check_api_keys: bool = True,
-        check_session_fixation: bool = True,
-        check_mfa: bool = True,
-        check_token_leakage: bool = True,
         test_unauthenticated: bool = True,
+        test_api_keys: bool = True,
+        test_session_fixation: bool = True,
+        test_mfa: bool = True,
+        test_brute_force: bool = True,
+        test_token_leakage: bool = True,
+        compliance_threshold: float = 0.6,
+        request_delay: float = 0.5,
     ) -> None:
         self.enabled = enabled
-        self.check_basic_auth = check_basic_auth
-        self.check_api_keys = check_api_keys
-        self.check_session_fixation = check_session_fixation
-        self.check_mfa = check_mfa
-        self.check_token_leakage = check_token_leakage
         self.test_unauthenticated = test_unauthenticated
+        self.test_api_keys = test_api_keys
+        self.test_session_fixation = test_session_fixation
+        self.test_mfa = test_mfa
+        self.test_brute_force = test_brute_force
+        self.test_token_leakage = test_token_leakage
+        self.compliance_threshold = compliance_threshold
+        self.request_delay = request_delay
 
 
 class AuthScanner(BaseModule[AuthScannerConfig]):
     """
     Authentication and authorization vulnerability scanner.
 
-    Tests for:
-    - Unauthenticated access to protected endpoints
-    - Weak authentication mechanisms (basic auth without TLS)
-    - API key exposure in URLs or headers
-    - Session fixation attacks
-    - Missing MFA requirements
-    - Token leakage in responses/logs
+    Tests for unauthenticated access, API key exposure, session fixation,
+    missing MFA, brute force protection, and token leakage.
     """
 
     # Default test credentials to attempt
@@ -66,17 +71,6 @@ class AuthScanner(BaseModule[AuthScannerConfig]):
         ("admin", "admin"),
         ("admin", "password"),
         ("root", "root"),
-        ("test", "test"),
-        ("user", "user"),
-    ]
-
-    # API key patterns to detect in responses
-    API_KEY_PATTERNS = [
-        r"api[_-]?key['\"]?\s*[:=]\s*['\"]?[a-zA-Z0-9]{20,}",
-        r"Bearer\s+[a-zA-Z0-9_-]{20,}",
-        r"sk-[a-zA-Z0-9]{20,}",
-        r"API_KEY=['\"][a-zA-Z0-9]+['\"]",
-        r"SECRET['\"][a-zA-Z0-9]+['\"]",
     ]
 
     # MFA indicators in responses
@@ -94,32 +88,8 @@ class AuthScanner(BaseModule[AuthScannerConfig]):
         self,
         config: Optional[AuthScannerConfig] = None,
     ) -> None:
-        super().__init__()
         self.config = config or AuthScannerConfig()
-
-    async def _fetch_url(  # type: ignore[override]
-        self,
-        url: str,
-        session: aiohttp.ClientSession,
-        headers: Optional[Dict[str, str]] = None,
-        timeout: int = 10,
-    ) -> Optional[Dict[str, Any]]:
-        """Fetch URL and return response details."""
-        try:
-            async with session.get(url, headers=headers, timeout=timeout) as response:
-                body = await response.text()
-                return {
-                    "url": url,
-                    "status": response.status,
-                    "headers": dict(response.headers),
-                    "body": body,
-                }
-        except asyncio.TimeoutError:
-            self.logger.warning(f"Request timeout: {url}")
-            return None
-        except aiohttp.ClientError as e:
-            self.logger.warning(f"Request error: {e}")
-            return None
+        super().__init__()
 
     async def _check_unauthenticated_access(
         self,
@@ -133,22 +103,16 @@ class AuthScanner(BaseModule[AuthScannerConfig]):
 
         self.logger.info(f"Testing unauthenticated access: {url}")
 
-        # Test basic GET without auth
-        response = await self._fetch_url(url, session)
+        response = await self._fetch_url(url=url, session=session)
 
         if response is None:
             result.add_error(f"Failed to fetch: {url}")
             return
 
-        # If 200 OK without auth challenge, potential issue
         if response["status"] == 200:
             has_auth_challenge = "WWW-Authenticate" in response["headers"]
             auth_headers = ["Authorization", "Cookie", "X-API-Key"]
-
-            # Check if auth is required but not enforced
-            has_auth_header = any(
-                h in response["headers"] for h in auth_headers
-            )
+            has_auth_header = any(h in response["headers"] for h in auth_headers)
 
             if not has_auth_challenge and not has_auth_header:
                 finding = self._create_finding(
@@ -161,6 +125,7 @@ class AuthScanner(BaseModule[AuthScannerConfig]):
                     ),
                     cwe="CWE-306",
                     owasp_ref="OWASP API1:2023 - Broken Object Level Authorization",
+                    mitre_ref="MITRE ATLAS - TA0045 LLM Attack",
                     location=url,
                     evidence=[
                         f"Status: {response['status']}",
@@ -174,6 +139,9 @@ class AuthScanner(BaseModule[AuthScannerConfig]):
                 )
                 result.add_finding(finding)
 
+        if self.config.request_delay > 0:
+            await asyncio.sleep(self.config.request_delay)
+
     async def _check_api_key_exposure(
         self,
         url: str,
@@ -181,17 +149,15 @@ class AuthScanner(BaseModule[AuthScannerConfig]):
         result: ScanResult,
     ) -> None:
         """Check for API key exposure in URLs or headers."""
-        if not self.config.check_api_keys:
+        if not self.config.test_api_keys:
             return
 
         self.logger.info(f"Checking API key exposure: {url}")
 
-        # Test with API key in URL query
         test_url = f"{url}?api_key=test_key_1234567890abcdef"
-        response = await self._fetch_url(test_url, session)
+        response = await self._fetch_url(url=test_url, session=session)
 
         if response and response["status"] == 200:
-            # Check if response contains echoes of the API key
             if "test_key_1234567890abcdef" in response["body"]:
                 finding = self._create_finding(
                     severity=Severity.CRITICAL,
@@ -203,6 +169,7 @@ class AuthScanner(BaseModule[AuthScannerConfig]):
                     ),
                     cwe="CWE-598",
                     owasp_ref="OWASP API5:2019 - Security Misconfiguration",
+                    mitre_ref="MITRE ATLAS - TA0045 LLM Attack",
                     location=url,
                     evidence=["API key in URL query", "API key echoed in response"],
                     recommendation=(
@@ -213,6 +180,9 @@ class AuthScanner(BaseModule[AuthScannerConfig]):
                 )
                 result.add_finding(finding)
 
+        if self.config.request_delay > 0:
+            await asyncio.sleep(self.config.request_delay)
+
     async def _check_session_fixation(
         self,
         url: str,
@@ -220,17 +190,15 @@ class AuthScanner(BaseModule[AuthScannerConfig]):
         result: ScanResult,
     ) -> None:
         """Check for session fixation vulnerabilities."""
-        if not self.config.check_session_fixation:
+        if not self.config.test_session_fixation:
             return
 
         self.logger.info(f"Testing session fixation: {url}")
 
-        # Send request with test session ID
         headers = {"Cookie": "session_id=test_session_12345"}
-        response = await self._fetch_url(url, session, headers)
+        response = await self._fetch_url(url=url, session=session, headers=headers)
 
         if response:
-            # Check if session ID is echoed back unchanged
             if "test_session_12345" in response["body"]:
                 finding = self._create_finding(
                     severity=Severity.HIGH,
@@ -242,15 +210,19 @@ class AuthScanner(BaseModule[AuthScannerConfig]):
                     ),
                     cwe="CWE-384",
                     owasp_ref="OWASP API2:2023 - Broken Authentication",
+                    mitre_ref="MITRE ATLAS - TA0045 LLM Attack",
                     location=url,
                     evidence=["Session ID echoed in response"],
                     recommendation=(
                         "Regenerate session IDs on login. "
                         "Validate session IDs server-side. "
-                        "Use secure,HttpOnly cookie flags."
+                        "Use secure, HttpOnly cookie flags."
                     ),
                 )
                 result.add_finding(finding)
+
+        if self.config.request_delay > 0:
+            await asyncio.sleep(self.config.request_delay)
 
     async def _check_missing_mfa(
         self,
@@ -259,25 +231,20 @@ class AuthScanner(BaseModule[AuthScannerConfig]):
         result: ScanResult,
     ) -> None:
         """Check for missing MFA requirements on sensitive endpoints."""
-        if not self.config.check_mfa:
+        if not self.config.test_mfa:
             return
 
         self.logger.info(f"Checking MFA requirements: {url}")
 
-        response = await self._fetch_url(url, session)
+        response = await self._fetch_url(url=url, session=session)
 
         if response is None:
             return
 
-        # Check if response contains MFA-related content
         body_lower = response["body"].lower()
-
-        # Look for MFA indicators that suggest it's supported
         mfa_found = any(indicator in body_lower for indicator in self.MFA_INDICATORS)
 
-        # If MFA is mentioned but not enforced, warn
         if mfa_found and response["status"] != 401:
-            # MFA is supported but not required - potential issue
             finding = self._create_finding(
                 severity=Severity.MEDIUM,
                 title="MFA Not Enforced",
@@ -288,6 +255,7 @@ class AuthScanner(BaseModule[AuthScannerConfig]):
                 ),
                 cwe="CWE-308",
                 owasp_ref="OWASP API2:2023 - Broken Authentication",
+                mitre_ref="MITRE ATLAS - TA0045 LLM Attack",
                 location=url,
                 evidence=["MFA indicators found in response"],
                 recommendation=(
@@ -298,6 +266,9 @@ class AuthScanner(BaseModule[AuthScannerConfig]):
             )
             result.add_finding(finding)
 
+        if self.config.request_delay > 0:
+            await asyncio.sleep(self.config.request_delay)
+
     async def _check_brute_force_protection(
         self,
         url: str,
@@ -305,30 +276,32 @@ class AuthScanner(BaseModule[AuthScannerConfig]):
         result: ScanResult,
     ) -> None:
         """Check for brute force protection on login endpoints."""
+        if not self.config.test_brute_force:
+            return
+
         self.logger.info(f"Testing brute force protection: {url}")
 
-        # Try multiple failed login attempts
-        for credentials in self.DEFAULT_CREDENTIALS[:3]:  # Test first 3
-            headers = {"Content-Type": "application/json"}
+        for credentials in self.DEFAULT_CREDENTIALS:
             body = {"username": credentials[0], "password": credentials[1]}
 
             try:
                 async with session.post(
                     url,
                     json=body,
-                    headers=headers,
-                    timeout=10,
+                    headers={"Content-Type": "application/json"},
+                    timeout=aiohttp.ClientTimeout(total=10),
                 ) as response:
-                    # Check if rate limit headers present
                     if response.status == 429:
                         finding = self._create_finding(
                             severity=Severity.LOW,
                             title="Brute Force Protection Detected",
                             description=(
-                                "Rate limiting is active on this endpoint. "
-                                "Rate limit headers: X-RateLimit-Limit, X-RateLimit-Remaining"
+                                "Rate limiting is active on this endpoint, "
+                                "which is a positive security control."
                             ),
                             cwe="CWE-770",
+                            owasp_ref="OWASP API4:2019 - Lack of Resources & Rate Limiting",
+                            mitre_ref="MITRE ATLAS - TA0045 LLM Attack",
                             location=url,
                             evidence=["Rate limited after failed attempts"],
                             recommendation=(
@@ -341,6 +314,9 @@ class AuthScanner(BaseModule[AuthScannerConfig]):
             except Exception:
                 pass
 
+            if self.config.request_delay > 0:
+                await asyncio.sleep(self.config.request_delay)
+
     async def _check_token_leakage(
         self,
         url: str,
@@ -348,19 +324,17 @@ class AuthScanner(BaseModule[AuthScannerConfig]):
         result: ScanResult,
     ) -> None:
         """Check for token leakage in error messages."""
-        if not self.config.check_token_leakage:
+        if not self.config.test_token_leakage:
             return
 
         self.logger.info(f"Checking token leakage: {url}")
 
-        # Try to trigger error with invalid token
         headers = {"Authorization": "Bearer invalid_token_xyz123"}
-        response = await self._fetch_url(url, session, headers)
+        response = await self._fetch_url(url=url, session=session, headers=headers)
 
         if response and response["status"] in [400, 401, 403]:
             body = response["body"].lower()
 
-            # Check for token in error message
             if "invalid_token" in body or "token xyz123" in body:
                 finding = self._create_finding(
                     severity=Severity.HIGH,
@@ -372,6 +346,7 @@ class AuthScanner(BaseModule[AuthScannerConfig]):
                     ),
                     cwe="CWE-209",
                     owasp_ref="OWASP API1:2023 - Broken Object Level Authorization",
+                    mitre_ref="MITRE ATLAS - TA0045 LLM Attack",
                     location=url,
                     evidence=["Token exposed in error response"],
                     recommendation=(
@@ -382,6 +357,9 @@ class AuthScanner(BaseModule[AuthScannerConfig]):
                 )
                 result.add_finding(finding)
 
+        if self.config.request_delay > 0:
+            await asyncio.sleep(self.config.request_delay)
+
     def scan(self, target: str, **kwargs: Any) -> ScanResult:
         """Execute authentication scan on target."""
         self.logger.info(f"Starting authentication scan: {target}")
@@ -389,11 +367,22 @@ class AuthScanner(BaseModule[AuthScannerConfig]):
         result = ScanResult(
             module_name=self.module_name,
             target=target,
-            metadata={"config": self.config.__dict__},
+            metadata={
+                "test_unauthenticated": self.config.test_unauthenticated,
+                "test_api_keys": self.config.test_api_keys,
+                "test_session_fixation": self.config.test_session_fixation,
+                "test_mfa": self.config.test_mfa,
+                "test_brute_force": self.config.test_brute_force,
+                "test_token_leakage": self.config.test_token_leakage,
+            },
         )
 
-        async def run_checks() -> None:
+        if not self.config.enabled:
+            self.logger.info("Authentication scanning disabled")
+            result.finalize()
+            return result
 
+        async def run_checks() -> None:
             async with aiohttp.ClientSession() as session:
                 await asyncio.gather(
                     self._check_unauthenticated_access(target, session, result),
@@ -408,12 +397,13 @@ class AuthScanner(BaseModule[AuthScannerConfig]):
             asyncio.get_running_loop()
             new_loop = asyncio.new_event_loop()
             asyncio.set_event_loop(new_loop)
-            new_loop.run_until_complete(run_checks())
-            new_loop.close()
+            try:
+                new_loop.run_until_complete(run_checks())
+            finally:
+                new_loop.close()
+                asyncio.set_event_loop(None)
         except RuntimeError:
             asyncio.run(run_checks())
 
         result.finalize()
-        self.post_scan(result)
-
         return result

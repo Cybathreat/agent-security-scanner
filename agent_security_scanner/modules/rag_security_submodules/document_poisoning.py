@@ -8,8 +8,8 @@ Scans for:
 - Malicious document ingestion
 
 References:
-- OWASP LLM Top 10: LLM03:2024 - Training Data Poisoning
-- RAG Security Best Practices
+- OWASP LLM Top 10: LLM03:2025 - Supply Chain Vulnerability
+- MITRE ATLAS: TA0045 LLM Attack
 
 Type hints everywhere for IDE support and static analysis.
 """
@@ -18,7 +18,7 @@ from __future__ import annotations
 
 import asyncio
 import json
-from typing import Any, Dict, Optional, cast
+from typing import Any, Dict, Optional
 
 import aiohttp
 
@@ -31,16 +31,20 @@ class DocumentPoisoningScannerConfig:
     def __init__(
         self,
         enabled: bool = True,
-        check_poisoning_patterns: bool = True,
-        check_validation: bool = True,
-        check_sanitization: bool = True,
-        check_ingestion_security: bool = True,
+        test_poisoning_patterns: bool = True,
+        test_validation: bool = True,
+        test_sanitization: bool = True,
+        test_ingestion_security: bool = True,
+        compliance_threshold: float = 0.6,
+        request_delay: float = 0.5,
     ) -> None:
         self.enabled = enabled
-        self.check_poisoning_patterns = check_poisoning_patterns
-        self.check_validation = check_validation
-        self.check_sanitization = check_sanitization
-        self.check_ingestion_security = check_ingestion_security
+        self.test_poisoning_patterns = test_poisoning_patterns
+        self.test_validation = test_validation
+        self.test_sanitization = test_sanitization
+        self.test_ingestion_security = test_ingestion_security
+        self.compliance_threshold = compliance_threshold
+        self.request_delay = request_delay
 
 
 class DocumentPoisoningScanner(BaseModule[DocumentPoisoningScannerConfig]):
@@ -72,47 +76,26 @@ class DocumentPoisoningScanner(BaseModule[DocumentPoisoningScannerConfig]):
         self,
         config: Optional[DocumentPoisoningScannerConfig] = None,
     ) -> None:
-        super().__init__()
         self.config = config or DocumentPoisoningScannerConfig()
-
-    async def _fetch_config(
-        self,
-        url: str,
-        session: aiohttp.ClientSession,
-        timeout: int = 10,
-    ) -> Optional[Dict[str, Any]]:
-        """Fetch RAG pipeline configuration."""
-        try:
-            async with session.get(url, timeout=timeout) as response:
-                if response.status == 200:
-                    body = await response.text()
-                    try:
-                        return cast(dict[str, Any], json.loads(body))
-                    except json.JSONDecodeError:
-                        return {"raw": body}
-        except Exception as e:
-            self.logger.warning(f"Error fetching config: {e}")
-            return None
-        return None
+        super().__init__()
 
     async def _check_poisoning_patterns(
         self,
         url: str,
         session: aiohttp.ClientSession,
         result: ScanResult,
+        cached_config: Optional[Dict[str, Any]],
     ) -> None:
         """Check for poisoning patterns in configuration."""
-        if not self.config.check_poisoning_patterns:
+        if not self.config.test_poisoning_patterns:
             return
 
         self.logger.info(f"Checking poisoning patterns: {url}")
 
-        config = await self._fetch_config(url, session)
-
-        if config is None:
+        if cached_config is None:
             return
 
-        config_str = json.dumps(config).lower()
+        config_str = json.dumps(cached_config).lower()
 
         for pattern in self.POISONING_PATTERNS:
             if pattern in config_str:
@@ -125,7 +108,8 @@ class DocumentPoisoningScanner(BaseModule[DocumentPoisoningScannerConfig]):
                         "can inject malicious content into the knowledge base."
                     ),
                     cwe="CWE-94",
-                    owasp_ref="OWASP LLM03:2024 - Training Data Poisoning",
+                    owasp_ref="OWASP LLM03:2025 - Supply Chain Vulnerability",
+                    mitre_ref="MITRE ATLAS - TA0045 LLM Attack",
                     location=url,
                     evidence=[f"Pattern found: {pattern}"],
                     recommendation=(
@@ -136,24 +120,26 @@ class DocumentPoisoningScanner(BaseModule[DocumentPoisoningScannerConfig]):
                 )
                 result.add_finding(finding)
 
+        if self.config.request_delay > 0:
+            await asyncio.sleep(self.config.request_delay)
+
     async def _check_document_validation(
         self,
         url: str,
         session: aiohttp.ClientSession,
         result: ScanResult,
+        cached_config: Optional[Dict[str, Any]],
     ) -> None:
         """Check for missing document validation."""
-        if not self.config.check_validation:
+        if not self.config.test_validation:
             return
 
         self.logger.info(f"Checking document validation: {url}")
 
-        config = await self._fetch_config(url, session)
-
-        if config is None:
+        if cached_config is None:
             return
 
-        config_str = json.dumps(config).lower()
+        config_str = json.dumps(cached_config).lower()
 
         # Check for validation configuration
         has_validation = any(
@@ -178,6 +164,8 @@ class DocumentPoisoningScanner(BaseModule[DocumentPoisoningScannerConfig]):
                     "base, enabling poisoning attacks."
                 ),
                 cwe="CWE-20",
+                owasp_ref="OWASP LLM03:2025 - Supply Chain Vulnerability",
+                mitre_ref="MITRE ATLAS - TA0045 LLM Attack",
                 location=url,
                 evidence=["No validation keywords in config"],
                 recommendation=(
@@ -189,24 +177,26 @@ class DocumentPoisoningScanner(BaseModule[DocumentPoisoningScannerConfig]):
             )
             result.add_finding(finding)
 
+        if self.config.request_delay > 0:
+            await asyncio.sleep(self.config.request_delay)
+
     async def _check_sanitization(
         self,
         url: str,
         session: aiohttp.ClientSession,
         result: ScanResult,
+        cached_config: Optional[Dict[str, Any]],
     ) -> None:
         """Check for missing content sanitization."""
-        if not self.config.check_sanitization:
+        if not self.config.test_sanitization:
             return
 
         self.logger.info(f"Checking content sanitization: {url}")
 
-        config = await self._fetch_config(url, session)
-
-        if config is None:
+        if cached_config is None:
             return
 
-        config_str = json.dumps(config).lower()
+        config_str = json.dumps(cached_config).lower()
 
         # Check for sanitization configuration
         has_sanitization = any(
@@ -231,6 +221,8 @@ class DocumentPoisoningScanner(BaseModule[DocumentPoisoningScannerConfig]):
                     "HTML, or other executable content."
                 ),
                 cwe="CWE-79",
+                owasp_ref="OWASP LLM03:2025 - Supply Chain Vulnerability",
+                mitre_ref="MITRE ATLAS - TA0045 LLM Attack",
                 location=url,
                 evidence=["No sanitization configuration found"],
                 recommendation=(
@@ -242,24 +234,26 @@ class DocumentPoisoningScanner(BaseModule[DocumentPoisoningScannerConfig]):
             )
             result.add_finding(finding)
 
+        if self.config.request_delay > 0:
+            await asyncio.sleep(self.config.request_delay)
+
     async def _check_ingestion_security(
         self,
         url: str,
         session: aiohttp.ClientSession,
         result: ScanResult,
+        cached_config: Optional[Dict[str, Any]],
     ) -> None:
         """Check for secure knowledge base ingestion."""
-        if not self.config.check_ingestion_security:
+        if not self.config.test_ingestion_security:
             return
 
         self.logger.info(f"Checking ingestion security: {url}")
 
-        config = await self._fetch_config(url, session)
-
-        if config is None:
+        if cached_config is None:
             return
 
-        config_str = json.dumps(config).lower()
+        config_str = json.dumps(cached_config).lower()
 
         # Check for secure ingestion features
         secure_features = {
@@ -276,6 +270,8 @@ class DocumentPoisoningScanner(BaseModule[DocumentPoisoningScannerConfig]):
                     title=f"Missing Ingestion Security: {feature}",
                     description=description,
                     cwe="CWE-284",
+                    owasp_ref="OWASP LLM03:2025 - Supply Chain Vulnerability",
+                    mitre_ref="MITRE ATLAS - TA0045 LLM Attack",
                     location=url,
                     evidence=[f"Not found in config: {feature}"],
                     recommendation=(
@@ -286,6 +282,9 @@ class DocumentPoisoningScanner(BaseModule[DocumentPoisoningScannerConfig]):
                 )
                 result.add_finding(finding)
 
+        if self.config.request_delay > 0:
+            await asyncio.sleep(self.config.request_delay)
+
     def scan(self, target: str, **kwargs: Any) -> ScanResult:
         """Execute document poisoning scan on target."""
         self.logger.info(f"Starting document poisoning scan: {target}")
@@ -294,31 +293,42 @@ class DocumentPoisoningScanner(BaseModule[DocumentPoisoningScannerConfig]):
             module_name=self.module_name,
             target=target,
             metadata={
-                "config": self.config.__dict__,
+                "test_poisoning_patterns": self.config.test_poisoning_patterns,
+                "test_validation": self.config.test_validation,
+                "test_sanitization": self.config.test_sanitization,
+                "test_ingestion_security": self.config.test_ingestion_security,
                 "poisoning_patterns_tested": len(self.POISONING_PATTERNS),
             },
         )
 
-        async def run_checks() -> None:
+        if not self.config.enabled:
+            self.logger.info("Document poisoning scanning disabled")
+            result.finalize()
+            return result
 
+        async def run_checks() -> None:
             async with aiohttp.ClientSession() as session:
+                # Cache config fetch once at start
+                cached_config = await self._fetch_url(url=target, session=session)
+
                 await asyncio.gather(
-                    self._check_poisoning_patterns(target, session, result),
-                    self._check_document_validation(target, session, result),
-                    self._check_sanitization(target, session, result),
-                    self._check_ingestion_security(target, session, result),
+                    self._check_poisoning_patterns(target, session, result, cached_config),
+                    self._check_document_validation(target, session, result, cached_config),
+                    self._check_sanitization(target, session, result, cached_config),
+                    self._check_ingestion_security(target, session, result, cached_config),
                 )
 
         try:
             asyncio.get_running_loop()
             new_loop = asyncio.new_event_loop()
             asyncio.set_event_loop(new_loop)
-            new_loop.run_until_complete(run_checks())
-            new_loop.close()
+            try:
+                new_loop.run_until_complete(run_checks())
+            finally:
+                new_loop.close()
+                asyncio.set_event_loop(None)
         except RuntimeError:
             asyncio.run(run_checks())
 
         result.finalize()
-        self.post_scan(result)
-
         return result

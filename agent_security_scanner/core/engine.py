@@ -275,8 +275,54 @@ class ScanEngine:
             class_obj = getattr(module, class_name)
 
             # Get config for this submodule
-            config_key = name.replace("_scanner", "").replace("_", ".")
-            module_config = getattr(self.config.modules, f"{config_key}_config", None)
+            # Explicit mapping for names that don't follow the simple pattern
+            config_key_map = {
+                "auth_scanner": "auth_scanner",
+                "cors_scanner": "cors_scanner",
+                "rate_limit_scanner": "rate_limit_scanner",
+                "info_disclosure_scanner": "info_disclosure_scanner",
+                "direct_injection": "direct_injection_scanner",
+                "obfuscation": "obfuscation_scanner",
+                "multi_turn": "multi_turn_scanner",
+                "adaptive_generator": "adaptive_generator_scanner",
+                "tap": "tap_scanner",
+                "payload_splitting": "payload_splitting_scanner",
+                "guardrail_fingerprinting": "guardrail_fingerprinting_scanner",
+                "virtualization": "virtualization_scanner",
+                "encoding_bypass": "encoding_bypass_scanner",
+                "multilingual": "multilingual_scanner",
+                "token_smuggling": "token_smuggling_scanner",
+                "grammar_constrained": "grammar_constrained_scanner",
+                "perplexity_evasion": "perplexity_evasion_scanner",
+                "timing_sidechannels": "timing_sidechannels_scanner",
+                "rate_limit_evasion": "rate_limit_evasion_scanner",
+                "waf_fingerprinting": "waf_fingerprinting_scanner",
+                "canary_tokens": "canary_tokens_scanner",
+                "output_filter_probing": "output_filter_probing_scanner",
+                "permission_scanner": "permission_scanner",
+                "sandbox_scanner": "sandbox_scanner",
+                "tool_chains": "tool_chains_scanner",
+                "mcp_scanner": "mcp_scanner",
+                "confused_deputy": "confused_deputy_scanner",
+                "document_poisoning": "document_poisoning_scanner",
+                "exfiltration": "exfiltration_scanner",
+                "vector_db": "vector_db_scanner",
+                "embedding_attacks": "embedding_attacks_scanner",
+                "multi_tenant": "multi_tenant_scanner",
+                "phantom_document": "phantom_document_scanner",
+                "chunk_boundary": "chunk_boundary_scanner",
+                "tool_hijacking": "tool_hijacking_scanner",
+                "recursive_agents": "recursive_agents_scanner",
+                "memory_poisoning": "memory_poisoning_scanner",
+                "planning_attacks": "planning_attacks_scanner",
+                "secret_scanner": "secret_scanner",
+                "dependency_audit": "dependency_audit_scanner",
+                "plugin_security": "plugin_security_scanner",
+                "model_provenance": "model_provenance_scanner",
+            }
+
+            config_attr = config_key_map.get(name)
+            module_config = getattr(self.config.modules, config_attr, None) if config_attr else None
 
             return cast(BaseModule[Any], class_obj(module_config))
         except (ImportError, AttributeError) as e:
