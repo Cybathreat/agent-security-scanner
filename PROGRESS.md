@@ -169,8 +169,8 @@ Calculated from 28 ROADMAP priority items: 26 done, 2 remaining.
 | Metric | Value |
 |--------|-------|
 | Total tests | 1078 |
-| Modules with unit tests | 49 / 49 |
-| Test file coverage | **100%** |
+| Modules with unit tests | 46 / 49 |
+| Test file coverage | **94%** |
 | Overall code coverage | **82%** |
 | Ruff lint | **100%** clean |
 
@@ -180,14 +180,14 @@ Calculated from 28 ROADMAP priority items: 26 done, 2 remaining.
 
 | Work Item | Count | Impact |
 |-----------|-------|--------|
-| Missing unit tests (crescendo, many_shot, skeleton_key) | **3 test files** | Coverage gap for Phase 1 scanners |
+| Missing unit tests (crescendo, many_shot, skeleton_key) | **3 test files** | Coverage gap — 46/49 modules have tests |
 | CLI module list expansion | **1 file** | Expose all 11 registered modules + submodules |
 | CI/CD quality gates | **Feature** | Shift-left security (ROADMAP #27) |
 | Web dashboard | **Feature** | Team UX (ROADMAP #28) |
 
 **Architecture modernization: 100%** (49/49 modules modern)
 **Feature completeness: 92.8%** (26/28 ROADMAP items done)
-**Test coverage: 94%** (46/49 modules have tests; 3 are Phase 1 scanners needing tests)
+**Test coverage: 94%** (46/49 modules have dedicated tests; 3 missing: crescendo, many_shot, skeleton_key)
 **Code coverage: 82%** (overall line coverage)
 
 ---
