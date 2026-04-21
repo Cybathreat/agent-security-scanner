@@ -113,3 +113,26 @@ def test_delete_scan_always_attempts_db_deletion():
     # when the scan was active
     assert "db.delete_scan" in source, "delete_scan does not call db.delete_scan"
     assert "cancel_scan" in source, "delete_scan does not call cancel_scan before DB deletion"
+
+
+@pytest.mark.asyncio
+async def test_get_active_scan_includes_modules():
+    """GET /api/scans/{id} for running scan should include modules and module_statuses."""
+    from agent_security_scanner.web.scan_manager import ScanManager
+    mgr = ScanManager()
+    scan_id = "test-active-789"
+    mgr._active_scans[scan_id] = {
+        "status": "running",
+        "target": "https://example.com",
+        "modules": ["prompt_injection", "tool_boundaries"],
+        "module_statuses": [
+            {"module_name": "prompt_injection", "status": "completed", "findings_count": 3, "duration_ms": 500, "errors": []},
+            {"module_name": "tool_boundaries", "status": "running", "findings_count": 0, "duration_ms": 0, "errors": []},
+        ],
+        "started_at": "2026-01-01T00:00:00Z",
+        "findings_count": 3,
+    }
+    status = await mgr.get_scan_status(scan_id)
+    assert status is not None
+    assert status.get("modules") == ["prompt_injection", "tool_boundaries"]
+    assert len(status.get("module_statuses", [])) == 2

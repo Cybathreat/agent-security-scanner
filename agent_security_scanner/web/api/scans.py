@@ -15,6 +15,8 @@ from typing import Any, Dict, List, Optional
 from fastapi import APIRouter, HTTPException
 
 from ..models import (
+    ModuleStatus,
+    ModuleStatusInfo,
     ScanDetailResponse,
     ScanListItem,
     ScanRequest,
@@ -132,6 +134,18 @@ async def get_scan(scan_id: str) -> ScanDetailResponse:
         target=scan.get("target", ""),
         status=ScanStatus(scan.get("status", "running")),
         started_at=scan.get("started_at", ""),
+        modules=scan.get("modules", []),
+        module_statuses=[
+            ModuleStatusInfo(
+                module_name=ms.get("module_name", ""),
+                status=ModuleStatus(ms.get("status", "pending")),
+                findings_count=ms.get("findings_count", 0),
+                duration_ms=ms.get("duration_ms", 0),
+                errors=ms.get("errors", []),
+            )
+            for ms in scan.get("module_statuses", [])
+            if isinstance(ms, dict)
+        ],
     )
 
 
