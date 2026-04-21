@@ -14,7 +14,7 @@ import type { ScanDetailResponse } from "@/lib/types";
 import { DndContext, closestCenter, type DragEndEvent } from "@dnd-kit/core";
 import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import html2pdf from "html2pdf.js";
+// html2pdf.js uses `self` which doesn't exist during SSR — lazy load it
 
 interface Section {
   id: string;
@@ -82,9 +82,10 @@ export default function ReportsPage() {
     }
   };
 
-  const downloadPdf = () => {
+  const downloadPdf = async () => {
     const element = document.getElementById("report-preview");
     if (!element) return;
+    const html2pdf = (await import("html2pdf.js")).default;
     html2pdf()
       .set({
         margin: 10,

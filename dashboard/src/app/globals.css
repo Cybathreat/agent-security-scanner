@@ -1,0 +1,153 @@
+@import "tailwindcss";
+
+/* ---------------------------------------------------------------------------
+   Agent Security Scanner — Cyberpunk Design System
+   Dark-mode-only security dashboard with neon accents
+   --------------------------------------------------------------------------- */
+
+:root {
+  /* Core palette */
+  --background: #020617;
+  --foreground: #F8FAFC;
+  --card: #0F172A;
+  --card-foreground: #F8FAFC;
+  --muted: #1A1E2F;
+  --muted-foreground: #94A3B8;
+  --border: #334155;
+  --input: #1E293B;
+  --ring: #22C55E;
+
+  /* Semantic colors */
+  --primary: #22C55E;
+  --primary-foreground: #020617;
+  --destructive: #EF4444;
+  --destructive-foreground: #F8FAFC;
+  --warning: #F59E0B;
+  --warning-foreground: #020617;
+  --info: #3B82F6;
+  --info-foreground: #F8FAFC;
+
+  /* Severity palette */
+  --severity-critical: #EF4444;
+  --severity-high: #F59E0B;
+  --severity-medium: #3B82F6;
+  --severity-low: #22C55E;
+  --severity-info: #94A3B8;
+
+  /* Radius */
+  --radius: 0.5rem;
+
+  /* Font families */
+  --font-sans: "Fira Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "Fira Code", ui-monospace, monospace;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-info: var(--info);
+  --color-info-foreground: var(--info-foreground);
+  --color-severity-critical: var(--severity-critical);
+  --color-severity-high: var(--severity-high);
+  --color-severity-medium: var(--severity-medium);
+  --color-severity-low: var(--severity-low);
+  --color-severity-info: var(--severity-info);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --font-sans: var(--font-sans);
+  --font-mono: var(--font-mono);
+}
+
+/* Base styles */
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--background);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--muted-foreground);
+}
+
+/* Neon glow effects */
+.glow-green {
+  box-shadow: 0 0 15px rgba(34, 197, 94, 0.3), 0 0 45px rgba(34, 197, 94, 0.1);
+}
+
+.glow-red {
+  box-shadow: 0 0 15px rgba(239, 68, 68, 0.3), 0 0 45px rgba(239, 68, 68, 0.1);
+}
+
+.glow-amber {
+  box-shadow: 0 0 15px rgba(245, 158, 11, 0.3), 0 0 45px rgba(245, 158, 11, 0.1);
+}
+
+.glow-blue {
+  box-shadow: 0 0 15px rgba(59, 130, 246, 0.3), 0 0 45px rgba(59, 130, 246, 0.1);
+}
+
+/* Terminal-style output */
+.terminal-output {
+  font-family: var(--font-mono);
+  background: var(--background);
+  border: 1px solid var(--border);
+  padding: 1rem;
+  border-radius: var(--radius);
+  white-space: pre-wrap;
+  word-break: break-all;
+  line-height: 1.6;
+}
+
+/* Subtle scanline overlay */
+.scanlines {
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0, 0, 0, 0.03) 2px,
+    rgba(0, 0, 0, 0.03) 4px
+  );
+  pointer-events: none;
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .glow-green,
+  .glow-red,
+  .glow-amber,
+  .glow-blue {
+    box-shadow: none;
+  }
+}
