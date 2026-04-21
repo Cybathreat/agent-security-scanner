@@ -138,38 +138,41 @@ async def update_scan_status(
     gate_passed: Optional[bool] = None,
     gate_reason: Optional[str] = None,
     gate_exit_code: Optional[int] = None,
-    db_path: Optional[str] = None,
+    db_path: Optional[Path] = None,
 ) -> None:
     """Update scan status and results."""
-    path = Path(db_path) if db_path else DB_PATH
-    async with aiosqlite.connect(path) as db:
-        sets = ["status = ?"]
-        vals: list[Any] = [status]
+    _ALLOWED_FIELDS = {
+        "status", "completed_at", "duration_ms", "result_json",
+        "summary_json", "gate_passed", "gate_reason", "gate_exit_code",
+    }
+    updates: Dict[str, Any] = {"status": status}
+    if completed_at is not None:
+        updates["completed_at"] = completed_at
+    if duration_ms is not None:
+        updates["duration_ms"] = duration_ms
+    if result_json is not None:
+        updates["result_json"] = result_json
+    if summary_json is not None:
+        updates["summary_json"] = summary_json
+    if gate_passed is not None:
+        updates["gate_passed"] = gate_passed
+    if gate_reason is not None:
+        updates["gate_reason"] = gate_reason
+    if gate_exit_code is not None:
+        updates["gate_exit_code"] = gate_exit_code
 
-        if completed_at is not None:
-            sets.append("completed_at = ?")
-            vals.append(completed_at)
-        if duration_ms:
-            sets.append("duration_ms = ?")
-            vals.append(duration_ms)
-        if result_json is not None:
-            sets.append("result_json = ?")
-            vals.append(result_json)
-        if summary_json is not None:
-            sets.append("summary_json = ?")
-            vals.append(summary_json)
-        if gate_passed is not None:
-            sets.append("gate_passed = ?")
-            vals.append(1 if gate_passed else 0)
-        if gate_reason is not None:
-            sets.append("gate_reason = ?")
-            vals.append(gate_reason)
-        if gate_exit_code is not None:
-            sets.append("gate_exit_code = ?")
-            vals.append(gate_exit_code)
+    for field in updates:
+        if field not in _ALLOWED_FIELDS:
+            raise ValueError(f"Invalid field name: {field}")
 
-        vals.append(scan_id)
-        await db.execute(f"UPDATE scans SET {', '.join(sets)} WHERE id = ?", vals)
+    sets = [f"{k} = ?" for k in updates]
+    vals = list(updates.values())
+    vals.append(scan_id)
+
+    async with aiosqlite.connect(db_path or DB_PATH) as db:
+        await db.execute(
+            f"UPDATE scans SET {', '.join(sets)} WHERE id = ?", vals
+        )
         await db.commit()
 
 
