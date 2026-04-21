@@ -4,9 +4,9 @@
 
 ---
 
-## Overall Project Progress: 92.8%
+## Overall Project Progress: 96.4%
 
-Calculated from 28 ROADMAP priority items: 26 done, 2 remaining.
+Calculated from 28 ROADMAP priority items: 27 done, 1 remaining.
 
 ---
 
@@ -17,7 +17,7 @@ Calculated from 28 ROADMAP priority items: 26 done, 2 remaining.
 | v0.2 | Current State | **100%** | All 8 items complete |
 | Phase 1 | Advanced Detection Engine | **100%** | All 11 techniques + adaptive gen + multi-turn/crescendo done |
 | Phase 2 | Agent-Specific & Infrastructure | **100%** | All 24 scan types across 4 sections done |
-| Phase 3 | Intelligence & Automation | **0%** | CI/CD shift-left integration not started |
+| Phase 3 | Intelligence & Automation | **50%** | CI/CD quality gates done; web dashboard not started |
 | Phase 4 | Web Dashboard | **0%** | React/Next.js + FastAPI dashboard not started |
 
 ---
@@ -143,17 +143,17 @@ Calculated from 28 ROADMAP priority items: 26 done, 2 remaining.
 |----------|--------|----------|
 | Core engine (ScanEngine) | Complete | **100%** |
 | Config system (dataclasses + YAML + env) | Complete | **100%** |
-| CLI (scan + config subcommands) | Partial | **50%** — only exposes 4 top-level modules, not 11 registered |
+| CLI (scan + config subcommands + quality gates) | Complete | **100%** — all 11 modules + --fail-on/--max-findings/--max-risk-score |
 | JSON report generation | Complete | **100%** |
 | Markdown report generation | Complete | **100%** |
 | SSRF protection | Complete | **100%** |
 | Path traversal protection | Complete | **100%** |
 | Input validation framework | Complete | **100%** |
-| GitHub Actions CI (pytest + coverage) | Complete | **100%** |
+| GitHub Actions CI (pytest + coverage + lint + gates) | Complete | **100%** |
 | PyPI publish workflow | Complete | **100%** |
 | Dependabot config | Complete | **100%** |
 | GitLab CI / other CI | Not started | **0%** |
-| CI/CD quality gates (fail on CRITICAL) | Not started | **0%** |
+| CI/CD quality gates (fail on CRITICAL) | Complete | **100%** — --fail-on, --max-findings, --max-risk-score, pre-commit, ruff/mypy in CI |
 | Web dashboard | Not started | **0%** |
 | Real-time scan visualization | Not started | **0%** |
 | Attack surface map | Not started | **0%** |
@@ -168,10 +168,10 @@ Calculated from 28 ROADMAP priority items: 26 done, 2 remaining.
 
 | Metric | Value |
 |--------|-------|
-| Total tests | 1139 |
+| Total tests | 1200 |
 | Modules with unit tests | 49 / 49 |
 | Test file coverage | **100%** |
-| Overall code coverage | **83%** |
+| Overall code coverage | **84%** |
 | Ruff lint | **100%** clean |
 
 ---
@@ -181,14 +181,14 @@ Calculated from 28 ROADMAP priority items: 26 done, 2 remaining.
 | Work Item | Count | Impact |
 |-----------|-------|--------|
 | Missing unit tests (crescendo, many_shot, skeleton_key) | **Done** | All 49/49 modules now have tests |
-| CLI module list expansion | **1 file** | Expose all 11 registered modules + submodules |
-| CI/CD quality gates | **Feature** | Shift-left security (ROADMAP #27) |
+| CLI module list expansion | **Done** | All 11 registered modules + submodules exposed |
+| CI/CD quality gates | **Done** | --fail-on, --max-findings, --max-risk-score, pre-commit, ruff/mypy in CI |
 | Web dashboard | **Feature** | Team UX (ROADMAP #28) |
 
 **Architecture modernization: 100%** (49/49 modules modern)
-**Feature completeness: 92.8%** (26/28 ROADMAP items done)
+**Feature completeness: 96.4%** (27/28 ROADMAP items done)
 **Test coverage: 100%** (49/49 modules have dedicated tests)
-**Code coverage: 82%** (overall line coverage)
+**Code coverage: 84%** (overall line coverage)
 
 ---
 

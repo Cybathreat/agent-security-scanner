@@ -56,11 +56,12 @@ pytest tests/ -v
 agent_security_scanner/
 ├── core/
 │   ├── engine.py          # Scan orchestration
-│   ├── config.py          # Configuration loader
+│   ├── config.py          # Configuration loader (includes QualityGateConfig)
+│   ├── quality_gate.py    # CI/CD quality gate evaluation
 │   ├── validators.py      # Input validation (SSRF, path traversal)
 │   └── logging.py         # Structured logging
 ├── modules/
-│   ├── base.py            # BaseModule ABC, Finding, ScanResult, Severity
+│   ├── base.py            # BaseModule ABC, Finding, ScanResult, Severity, SEVERITY_WEIGHT
 │   ├── misconfigurations.py
 │   ├── prompt_injection.py
 │   │   └── submodules/    # Advanced injection techniques
@@ -70,7 +71,7 @@ agent_security_scanner/
 │   ├── tool_boundaries.py
 │   └── rag_security.py
 ├── output/
-│   ├── json_report.py
+│   ├── json_report.py     # Includes quality_gate section when threshold provided
 │   └── markdown_report.py
 └── cli.py
 tests/
@@ -185,7 +186,15 @@ Lint and type check before submitting:
 
 ```bash
 ruff check agent_security_scanner/
-mypy agent_security_scanner/
+ruff format --check agent_security_scanner/
+mypy agent_security_scanner/ --ignore-missing-imports
+```
+
+Pre-commit hooks are available:
+
+```bash
+pre-commit install   # Auto-run ruff + mypy on every commit
+pre-commit run --all-files   # Run manually on all files
 ```
 
 ---
@@ -197,7 +206,23 @@ mypy agent_security_scanner/
 | `pytest tests/ -v` | Run all tests |
 | `pytest tests/unit/ -v` | Unit tests only |
 | `pytest tests/integration/ -v` | Integration tests only |
-| `pytest tests/ --cov=src --cov-report=html` | Coverage report |
+| `pytest tests/ --cov=agent_security_scanner --cov-report=html` | Coverage report |
+| `pytest tests/ --cov-fail-under=70` | CI coverage gate (70% minimum) |
+
+### Quality Gates
+
+The scanner supports CI/CD quality gates:
+
+```bash
+# Fail on HIGH severity or above (default: critical)
+python -m agent_security_scanner.cli scan --target <url> --fail-on high
+
+# Fail if more than 10 findings or risk score exceeds 50
+python -m agent_security_scanner.cli scan --target <url> --max-findings 10 --max-risk-score 50
+
+# Exit codes: 0 = pass, 1 = error, 2 = quality gate failed
+echo $?  # Check exit code
+```
 
 - All tests must pass before a PR is merged
 - New modules require both unit and integration tests

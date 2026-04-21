@@ -15,7 +15,7 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Any, Callable, Dict, Generic, List, Optional, TypeVar, cast
+from typing import Any, Callable, Dict, Generic, List, Optional, Tuple, TypeVar, cast
 
 import aiohttp
 from loguru import logger
@@ -35,11 +35,31 @@ class Severity(Enum):
     - LOW: 0.1-3.9 - Minimal security impact
     - INFO: 0.0 - Informational, no direct risk
     """
+
     CRITICAL = "CRITICAL"
     HIGH = "HIGH"
     MEDIUM = "MEDIUM"
     LOW = "LOW"
     INFO = "INFO"
+
+
+# Severity weights for risk score calculation (used by quality gate and reports)
+SEVERITY_WEIGHT: Dict[Severity, int] = {
+    Severity.CRITICAL: 10,
+    Severity.HIGH: 7,
+    Severity.MEDIUM: 4,
+    Severity.LOW: 1,
+    Severity.INFO: 0,
+}
+
+# Severity ordering for quality gate threshold comparison (highest first)
+SEVERITY_LEVELS: Tuple[Severity, ...] = (
+    Severity.CRITICAL,
+    Severity.HIGH,
+    Severity.MEDIUM,
+    Severity.LOW,
+    Severity.INFO,
+)
 
 
 class Sensitivity(Enum):
@@ -51,9 +71,10 @@ class Sensitivity(Enum):
     - Depth of analysis
     - Time allowed for each test
     """
-    LOW = "low"      # Minimal payloads, fast scan
+
+    LOW = "low"  # Minimal payloads, fast scan
     MEDIUM = "medium"  # Standard payloads, balanced scan
-    HIGH = "high"     # Maximum payloads, thorough scan
+    HIGH = "high"  # Maximum payloads, thorough scan
 
 
 @dataclass
@@ -76,6 +97,7 @@ class Finding:
         confidence: Confidence level (high, medium, low)
         timestamp: When the finding was discovered
     """
+
     id: str
     severity: Severity
     category: str
@@ -130,6 +152,7 @@ class ScanResult:
         status: Scan status (success, partial, failed)
         metadata: Additional metadata (version, config, etc.)
     """
+
     module_name: str
     target: str
     findings: List[Finding] = field(default_factory=list)
@@ -167,8 +190,10 @@ class ScanResult:
         else:
             self.status = "success"
 
-        logger.info(f"Scan finalized: {self.module_name} - {self.status} "
-                   f"({len(self.findings)} findings, {len(self.errors)} errors)")
+        logger.info(
+            f"Scan finalized: {self.module_name} - {self.status} "
+            f"({len(self.findings)} findings, {len(self.errors)} errors)"
+        )
 
     def to_dict(self) -> Dict[str, Any]:
         """
@@ -253,8 +278,9 @@ class BaseModule(ABC, Generic[ConfigT]):
         # Convert PascalCase to snake_case: RAGSecurity -> rag_security
         # Handles consecutive capitals: RAGSecurity -> rag_security (not r_a_g_security)
         import re
-        s1 = re.sub(r'(.)([A-Z][a-z]+)', r'\1_\2', name)
-        self.module_name = re.sub(r'([A-Z]+)([A-Z][a-z])', r'\1_\2', s1).lower()
+
+        s1 = re.sub(r"(.)([A-Z][a-z]+)", r"\1_\2", name)
+        self.module_name = re.sub(r"([A-Z]+)([A-Z][a-z])", r"\1_\2", s1).lower()
         self.logger = logger.bind(module=self.module_name)
         self.logger.debug(f"Module initialized: {self.module_name}")
 

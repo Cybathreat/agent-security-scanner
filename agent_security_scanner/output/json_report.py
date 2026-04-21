@@ -16,17 +16,8 @@ from typing import Any, Dict, List, Optional
 
 from loguru import logger
 
-from ..modules.base import ScanResult, Severity
-
-
-# Severity weights for risk score calculation
-_SEVERITY_WEIGHT = {
-    Severity.CRITICAL: 10,
-    Severity.HIGH: 7,
-    Severity.MEDIUM: 4,
-    Severity.LOW: 1,
-    Severity.INFO: 0,
-}
+from ..core.quality_gate import GateThreshold, evaluate as evaluate_gate
+from ..modules.base import ScanResult, SEVERITY_WEIGHT, Severity
 
 
 class JSONReport:
@@ -54,12 +45,17 @@ class JSONReport:
         self.pretty_print = pretty_print
         self.include_timestamp = include_timestamp
 
-    def generate(self, results: List[ScanResult]) -> Dict[str, Any]:
+    def generate(
+        self,
+        results: List[ScanResult],
+        gate_threshold: Optional[GateThreshold] = None,
+    ) -> Dict[str, Any]:
         """
         Generate JSON report from scan results.
 
         Args:
             results: List of scan results from all modules.
+            gate_threshold: Optional quality gate threshold to evaluate.
 
         Returns:
             Dict: Structured report ready for serialization.
@@ -83,7 +79,7 @@ class JSONReport:
         for finding in all_findings:
             key = finding.severity.value.lower()
             summary[key] += 1
-            summary["risk_score"] += _SEVERITY_WEIGHT.get(finding.severity, 0)
+            summary["risk_score"] += SEVERITY_WEIGHT.get(finding.severity, 0)
 
         # Framework mappings: category/ref -> [finding_ids]
         owasp_map: Dict[str, List[str]] = {}
@@ -111,6 +107,17 @@ class JSONReport:
                 "mitre_atlas": mitre_map,
             },
         }
+
+        # Evaluate quality gate if threshold provided
+        if gate_threshold is not None:
+            gate_result = evaluate_gate(results, gate_threshold)
+            report["quality_gate"] = {
+                "passed": gate_result.passed,
+                "exit_code": gate_result.exit_code,
+                "reason": gate_result.reason,
+                "summary": gate_result.summary,
+                "risk_score": gate_result.risk_score,
+            }
 
         return report
 

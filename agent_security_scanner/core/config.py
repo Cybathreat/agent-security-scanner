@@ -637,7 +637,9 @@ class ModulesConfig:
     auth_scanner: AuthScannerConfig = field(default_factory=AuthScannerConfig)
     cors_scanner: CORSScannerConfig = field(default_factory=CORSScannerConfig)
     rate_limit_scanner: RateLimitScannerConfig = field(default_factory=RateLimitScannerConfig)
-    info_disclosure_scanner: InfoDisclosureScannerConfig = field(default_factory=InfoDisclosureScannerConfig)
+    info_disclosure_scanner: InfoDisclosureScannerConfig = field(
+        default_factory=InfoDisclosureScannerConfig
+    )
 
     # New tool_boundaries submodules
     permission_scanner: PermissionScannerConfig = field(default_factory=PermissionScannerConfig)
@@ -646,58 +648,114 @@ class ModulesConfig:
     mcp_scanner: MCPScannerConfig = field(default_factory=MCPScannerConfig)
 
     # New rag_security submodules
-    document_poisoning_scanner: DocumentPoisoningScannerConfig = field(default_factory=DocumentPoisoningScannerConfig)
-    exfiltration_scanner: ExfiltrationScannerConfig = field(default_factory=ExfiltrationScannerConfig)
+    document_poisoning_scanner: DocumentPoisoningScannerConfig = field(
+        default_factory=DocumentPoisoningScannerConfig
+    )
+    exfiltration_scanner: ExfiltrationScannerConfig = field(
+        default_factory=ExfiltrationScannerConfig
+    )
     vector_db_scanner: VectorDBScannerConfig = field(default_factory=VectorDBScannerConfig)
-    embedding_attacks_scanner: EmbeddingAttacksScannerConfig = field(default_factory=EmbeddingAttacksScannerConfig)
+    embedding_attacks_scanner: EmbeddingAttacksScannerConfig = field(
+        default_factory=EmbeddingAttacksScannerConfig
+    )
     multi_tenant_scanner: MultiTenantScannerConfig = field(default_factory=MultiTenantScannerConfig)
 
     # New agent submodules
-    tool_hijacking_scanner: ToolHijackingScannerConfig = field(default_factory=ToolHijackingScannerConfig)
-    recursive_agents_scanner: RecursiveAgentsScannerConfig = field(default_factory=RecursiveAgentsScannerConfig)
-    memory_poisoning_scanner: MemoryPoisoningScannerConfig = field(default_factory=MemoryPoisoningScannerConfig)
-    planning_attacks_scanner: PlanningAttacksScannerConfig = field(default_factory=PlanningAttacksScannerConfig)
+    tool_hijacking_scanner: ToolHijackingScannerConfig = field(
+        default_factory=ToolHijackingScannerConfig
+    )
+    recursive_agents_scanner: RecursiveAgentsScannerConfig = field(
+        default_factory=RecursiveAgentsScannerConfig
+    )
+    memory_poisoning_scanner: MemoryPoisoningScannerConfig = field(
+        default_factory=MemoryPoisoningScannerConfig
+    )
+    planning_attacks_scanner: PlanningAttacksScannerConfig = field(
+        default_factory=PlanningAttacksScannerConfig
+    )
 
     # New infrastructure submodules
     secret_scanner: SecretScannerConfig = field(default_factory=SecretScannerConfig)
-    dependency_audit_scanner: DependencyAuditScannerConfig = field(default_factory=DependencyAuditScannerConfig)
-    plugin_security_scanner: PluginSecurityScannerConfig = field(default_factory=PluginSecurityScannerConfig)
+    dependency_audit_scanner: DependencyAuditScannerConfig = field(
+        default_factory=DependencyAuditScannerConfig
+    )
+    plugin_security_scanner: PluginSecurityScannerConfig = field(
+        default_factory=PluginSecurityScannerConfig
+    )
 
     # Prompt injection submodules
     tap_scanner: TAPScannerConfig = field(default_factory=TAPScannerConfig)
-    payload_splitting_scanner: PayloadSplittingScannerConfig = field(default_factory=PayloadSplittingScannerConfig)
-    guardrail_fingerprinting_scanner: GuardrailFingerprintingScannerConfig = field(default_factory=GuardrailFingerprintingScannerConfig)
-    adaptive_generator_scanner: AdaptiveGeneratorScannerConfig = field(default_factory=AdaptiveGeneratorScannerConfig)
+    payload_splitting_scanner: PayloadSplittingScannerConfig = field(
+        default_factory=PayloadSplittingScannerConfig
+    )
+    guardrail_fingerprinting_scanner: GuardrailFingerprintingScannerConfig = field(
+        default_factory=GuardrailFingerprintingScannerConfig
+    )
+    adaptive_generator_scanner: AdaptiveGeneratorScannerConfig = field(
+        default_factory=AdaptiveGeneratorScannerConfig
+    )
 
     # Phase 1 new prompt injection submodules
-    virtualization_scanner: VirtualizationScannerConfig = field(default_factory=VirtualizationScannerConfig)
-    encoding_bypass_scanner: EncodingBypassScannerConfig = field(default_factory=EncodingBypassScannerConfig)
-    multilingual_scanner: MultilingualScannerConfig = field(default_factory=MultilingualScannerConfig)
-    token_smuggling_scanner: TokenSmugglingScannerConfig = field(default_factory=TokenSmugglingScannerConfig)
-    grammar_constrained_scanner: GrammarConstrainedScannerConfig = field(default_factory=GrammarConstrainedScannerConfig)
+    virtualization_scanner: VirtualizationScannerConfig = field(
+        default_factory=VirtualizationScannerConfig
+    )
+    encoding_bypass_scanner: EncodingBypassScannerConfig = field(
+        default_factory=EncodingBypassScannerConfig
+    )
+    multilingual_scanner: MultilingualScannerConfig = field(
+        default_factory=MultilingualScannerConfig
+    )
+    token_smuggling_scanner: TokenSmugglingScannerConfig = field(
+        default_factory=TokenSmugglingScannerConfig
+    )
+    grammar_constrained_scanner: GrammarConstrainedScannerConfig = field(
+        default_factory=GrammarConstrainedScannerConfig
+    )
 
     # Upgraded prompt injection submodules (payload-based)
-    direct_injection_scanner: DirectInjectionScannerConfig = field(default_factory=DirectInjectionScannerConfig)
+    direct_injection_scanner: DirectInjectionScannerConfig = field(
+        default_factory=DirectInjectionScannerConfig
+    )
     obfuscation_scanner: ObfuscationScannerConfig = field(default_factory=ObfuscationScannerConfig)
     multi_turn_scanner: MultiTurnScannerConfig = field(default_factory=MultiTurnScannerConfig)
 
     # Phase 2 new tool_boundaries submodules
-    confused_deputy_scanner: ConfusedDeputyScannerConfig = field(default_factory=ConfusedDeputyScannerConfig)
+    confused_deputy_scanner: ConfusedDeputyScannerConfig = field(
+        default_factory=ConfusedDeputyScannerConfig
+    )
 
     # Phase 2 new rag_security submodules
-    phantom_document_scanner: PhantomDocumentScannerConfig = field(default_factory=PhantomDocumentScannerConfig)
-    chunk_boundary_scanner: ChunkBoundaryScannerConfig = field(default_factory=ChunkBoundaryScannerConfig)
+    phantom_document_scanner: PhantomDocumentScannerConfig = field(
+        default_factory=PhantomDocumentScannerConfig
+    )
+    chunk_boundary_scanner: ChunkBoundaryScannerConfig = field(
+        default_factory=ChunkBoundaryScannerConfig
+    )
 
     # Phase 2 new infrastructure submodule
-    model_provenance_scanner: ModelProvenanceScannerConfig = field(default_factory=ModelProvenanceScannerConfig)
+    model_provenance_scanner: ModelProvenanceScannerConfig = field(
+        default_factory=ModelProvenanceScannerConfig
+    )
 
     # Phase 2 new evasion submodules
-    perplexity_evasion_scanner: PerplexityEvasionScannerConfig = field(default_factory=PerplexityEvasionScannerConfig)
-    timing_sidechannels_scanner: TimingSidechannelsScannerConfig = field(default_factory=TimingSidechannelsScannerConfig)
-    rate_limit_evasion_scanner: RateLimitEvasionScannerConfig = field(default_factory=RateLimitEvasionScannerConfig)
-    waf_fingerprinting_scanner: WAFFingerprintingScannerConfig = field(default_factory=WAFFingerprintingScannerConfig)
-    canary_tokens_scanner: CanaryTokensScannerConfig = field(default_factory=CanaryTokensScannerConfig)
-    output_filter_probing_scanner: OutputFilterProbingScannerConfig = field(default_factory=OutputFilterProbingScannerConfig)
+    perplexity_evasion_scanner: PerplexityEvasionScannerConfig = field(
+        default_factory=PerplexityEvasionScannerConfig
+    )
+    timing_sidechannels_scanner: TimingSidechannelsScannerConfig = field(
+        default_factory=TimingSidechannelsScannerConfig
+    )
+    rate_limit_evasion_scanner: RateLimitEvasionScannerConfig = field(
+        default_factory=RateLimitEvasionScannerConfig
+    )
+    waf_fingerprinting_scanner: WAFFingerprintingScannerConfig = field(
+        default_factory=WAFFingerprintingScannerConfig
+    )
+    canary_tokens_scanner: CanaryTokensScannerConfig = field(
+        default_factory=CanaryTokensScannerConfig
+    )
+    output_filter_probing_scanner: OutputFilterProbingScannerConfig = field(
+        default_factory=OutputFilterProbingScannerConfig
+    )
 
 
 @dataclass
@@ -709,6 +767,15 @@ class OutputConfig:
     pretty_print: bool = True
     include_timestamp: bool = True
     verbose: bool = False
+
+
+@dataclass
+class QualityGateConfig:
+    """Quality gate configuration for CI/CD integration."""
+
+    fail_on_severity: str = "critical"  # critical, high, medium, low, info
+    max_findings: Optional[int] = None
+    max_risk_score: Optional[int] = None
 
 
 @dataclass
@@ -741,6 +808,7 @@ class Config:
     scanner: ScannerConfig = field(default_factory=ScannerConfig)
     modules: ModulesConfig = field(default_factory=ModulesConfig)
     output: OutputConfig = field(default_factory=OutputConfig)
+    quality_gate: QualityGateConfig = field(default_factory=QualityGateConfig)
     logging: LoggingConfig = field(default_factory=LoggingConfig)
 
     @classmethod
@@ -767,8 +835,10 @@ class Config:
         # Override with environment variables
         config = cls._apply_env_overrides(config)
 
-        logger.debug(f"Configuration loaded: timeout={config.scanner.timeout}, "
-                    f"log_level={config.logging.level}")
+        logger.debug(
+            f"Configuration loaded: timeout={config.scanner.timeout}, "
+            f"log_level={config.logging.level}"
+        )
 
         return config
 
@@ -809,9 +879,7 @@ class Config:
                 )
 
             if "rag_security" in modules_raw:
-                config.modules.rag_security = RAGSecurityConfig(
-                    **modules_raw["rag_security"]
-                )
+                config.modules.rag_security = RAGSecurityConfig(**modules_raw["rag_security"])
 
             if "tool_boundaries" in modules_raw:
                 config.modules.tool_boundaries = ToolBoundariesConfig(
@@ -825,6 +893,9 @@ class Config:
 
         if "output" in raw_config:
             config.output = OutputConfig(**raw_config["output"])
+
+        if "quality_gate" in raw_config:
+            config.quality_gate = QualityGateConfig(**raw_config["quality_gate"])
 
         if "logging" in raw_config:
             config.logging = LoggingConfig(**raw_config["logging"])
@@ -876,13 +947,31 @@ class Config:
             if val is not None:
                 config.output.verbose = val.lower() == "true"
 
+        # Quality gate overrides
+        if os.getenv("ASS_QUALITY_GATE_FAIL_ON_SEVERITY"):
+            config.quality_gate.fail_on_severity = (
+                os.getenv("ASS_QUALITY_GATE_FAIL_ON_SEVERITY") or "critical"
+            )
+        if os.getenv("ASS_QUALITY_GATE_MAX_FINDINGS"):
+            config.quality_gate.max_findings = (
+                int(os.getenv("ASS_QUALITY_GATE_MAX_FINDINGS") or "0") or None
+            )
+        if os.getenv("ASS_QUALITY_GATE_MAX_RISK_SCORE"):
+            config.quality_gate.max_risk_score = (
+                int(os.getenv("ASS_QUALITY_GATE_MAX_RISK_SCORE") or "0") or None
+            )
+
         # TAP scanner overrides
         if os.getenv("ASS_TAP_ATTACKER_LLM_ENDPOINT"):
-            config.modules.tap_scanner.attacker_llm_endpoint = os.getenv("ASS_TAP_ATTACKER_LLM_ENDPOINT")
+            config.modules.tap_scanner.attacker_llm_endpoint = os.getenv(
+                "ASS_TAP_ATTACKER_LLM_ENDPOINT"
+            )
         if os.getenv("ASS_TAP_ATTACKER_LLM_MODEL"):
             config.modules.tap_scanner.attacker_llm_model = os.getenv("ASS_TAP_ATTACKER_LLM_MODEL")
         if os.getenv("ASS_TAP_ATTACKER_LLM_API_KEY"):
-            config.modules.tap_scanner.attacker_llm_api_key = os.getenv("ASS_TAP_ATTACKER_LLM_API_KEY")
+            config.modules.tap_scanner.attacker_llm_api_key = os.getenv(
+                "ASS_TAP_ATTACKER_LLM_API_KEY"
+            )
         if os.getenv("ASS_TAP_JUDGE_LLM_ENDPOINT"):
             config.modules.tap_scanner.judge_llm_endpoint = os.getenv("ASS_TAP_JUDGE_LLM_ENDPOINT")
         if os.getenv("ASS_TAP_JUDGE_LLM_MODEL"):
@@ -920,11 +1009,17 @@ class Config:
                 os.getenv("ASS_ADAPTIVE_GENERATOR_MAX_ITERATIONS") or "5"
             )
         if os.getenv("ASS_ADAPTIVE_GENERATOR_ATTACKER_LLM_ENDPOINT"):
-            config.modules.adaptive_generator_scanner.attacker_llm_endpoint = os.getenv("ASS_ADAPTIVE_GENERATOR_ATTACKER_LLM_ENDPOINT")
+            config.modules.adaptive_generator_scanner.attacker_llm_endpoint = os.getenv(
+                "ASS_ADAPTIVE_GENERATOR_ATTACKER_LLM_ENDPOINT"
+            )
         if os.getenv("ASS_ADAPTIVE_GENERATOR_ATTACKER_LLM_MODEL"):
-            config.modules.adaptive_generator_scanner.attacker_llm_model = os.getenv("ASS_ADAPTIVE_GENERATOR_ATTACKER_LLM_MODEL")
+            config.modules.adaptive_generator_scanner.attacker_llm_model = os.getenv(
+                "ASS_ADAPTIVE_GENERATOR_ATTACKER_LLM_MODEL"
+            )
         if os.getenv("ASS_ADAPTIVE_GENERATOR_ATTACKER_LLM_API_KEY"):
-            config.modules.adaptive_generator_scanner.attacker_llm_api_key = os.getenv("ASS_ADAPTIVE_GENERATOR_ATTACKER_LLM_API_KEY")
+            config.modules.adaptive_generator_scanner.attacker_llm_api_key = os.getenv(
+                "ASS_ADAPTIVE_GENERATOR_ATTACKER_LLM_API_KEY"
+            )
 
         # Virtualization scanner overrides
         if os.getenv("ASS_VIRTUALIZATION_ENABLED"):
@@ -1208,10 +1303,14 @@ class Config:
                     "request_delay": self.modules.tap_scanner.request_delay,
                     "attacker_llm_endpoint": self.modules.tap_scanner.attacker_llm_endpoint,
                     "attacker_llm_model": self.modules.tap_scanner.attacker_llm_model,
-                    "attacker_llm_api_key": "***REDACTED***" if self.modules.tap_scanner.attacker_llm_api_key else None,
+                    "attacker_llm_api_key": "***REDACTED***"
+                    if self.modules.tap_scanner.attacker_llm_api_key
+                    else None,
                     "judge_llm_endpoint": self.modules.tap_scanner.judge_llm_endpoint,
                     "judge_llm_model": self.modules.tap_scanner.judge_llm_model,
-                    "judge_llm_api_key": "***REDACTED***" if self.modules.tap_scanner.judge_llm_api_key else None,
+                    "judge_llm_api_key": "***REDACTED***"
+                    if self.modules.tap_scanner.judge_llm_api_key
+                    else None,
                 },
                 "payload_splitting_scanner": {
                     "enabled": self.modules.payload_splitting_scanner.enabled,
@@ -1242,7 +1341,9 @@ class Config:
                     "request_delay": self.modules.adaptive_generator_scanner.request_delay,
                     "attacker_llm_endpoint": self.modules.adaptive_generator_scanner.attacker_llm_endpoint,
                     "attacker_llm_model": self.modules.adaptive_generator_scanner.attacker_llm_model,
-                    "attacker_llm_api_key": "***REDACTED***" if self.modules.adaptive_generator_scanner.attacker_llm_api_key else None,
+                    "attacker_llm_api_key": "***REDACTED***"
+                    if self.modules.adaptive_generator_scanner.attacker_llm_api_key
+                    else None,
                 },
                 "virtualization_scanner": {
                     "enabled": self.modules.virtualization_scanner.enabled,

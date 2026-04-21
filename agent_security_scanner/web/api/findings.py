@@ -9,7 +9,7 @@ PATCH  /api/findings/{id}     — Annotate a finding
 from __future__ import annotations
 
 import json
-from typing import Any, Dict, List, Optional
+from typing import List, Optional
 
 from fastapi import APIRouter, HTTPException, Query
 

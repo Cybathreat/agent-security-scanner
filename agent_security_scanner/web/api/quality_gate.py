@@ -7,7 +7,7 @@ POST /api/quality-gate/evaluate — Evaluate quality gate against scan results
 from __future__ import annotations
 
 import json
-from typing import Dict, List, Optional
+from typing import Dict, List
 
 from fastapi import APIRouter, HTTPException
 

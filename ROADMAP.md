@@ -12,6 +12,8 @@
 - **SSRF protection** — blocks scanning of internal services, AWS metadata, private IPs
 - **Path traversal protection** — validates output paths in reports and configs
 - Input validation framework (`core/validators.py`)
+- **CI/CD quality gates** — --fail-on, --max-findings, --max-risk-score with exit codes 0/1/2
+- **Pre-commit hooks** — ruff lint + format, mypy type checking
 
 ---
 
@@ -106,6 +108,18 @@ Replace static payload list with a comprehensive, categorized attack library:
 
 **Goal:** Move from point-in-time scanning to continuous, autonomous security intelligence.
 
+### 3.1 CI/CD Quality Gates ✅ Done
+
+Configurable quality gates for CI/CD integration:
+- `--fail-on <severity>`: Fail build when findings at or above the specified severity (default: critical)
+- `--max-findings <N>`: Fail build when total findings exceed N
+- `--max-risk-score <N>`: Fail build when aggregate risk score exceeds N
+- Exit codes: 0 (pass), 1 (scan error), 2 (quality gate failed)
+- Pre-commit hooks for ruff (lint + format) and mypy
+- CI pipeline with ruff, mypy, coverage enforcement (70% threshold), security gate demo
+
+### 3.2 Web Dashboard (Planned)
+
 **Stack:** React / Next.js frontend + FastAPI backend, WebSocket for real-time updates.
 
 | View | Features |
@@ -178,7 +192,7 @@ Replace static payload list with a comprehensive, categorized attack library:
 24. ~~WAF fingerprinting~~ — ✅ Done (3 WAF detection + 3 bypass testing + 3 encoding tricks payloads)
 25. ~~Canary token detection~~ — ✅ Done (3 token discovery + 3 neutralization + 3 bypass payloads)
 26. ~~Output filter probing~~ — ✅ Done (3 filter mapping + 3 boundary testing + 3 encoding bypass payloads)
-27. CI/CD integration — shift-left security adoption driver
+27. ~~CI/CD integration~~ — ✅ Done (quality gates: --fail-on, --max-findings, --max-risk-score; pre-commit hooks; ruff/mypy in CI; coverage enforcement)
 28. Web dashboard with real-time visualization — massive UX improvement (final phase)
 
 ---

@@ -70,6 +70,13 @@ This tool helps security teams, developers, and researchers identify potential s
   - Markdown human-readable summaries with remediation guidance
   - Severity-based risk scoring
 
+- **CI/CD Quality Gates**
+  - Configurable fail-on-severity thresholds (critical, high, medium, low, info)
+  - Maximum findings limits
+  - Maximum risk score limits
+  - Exit codes: 0 (pass), 1 (error), 2 (gate failed)
+  - Pre-commit hooks for ruff and mypy
+
 ---
 
 ## Installation
@@ -109,6 +116,12 @@ python -m agent_security_scanner.cli scan --target https://api.example.com/agent
 
 # Markdown report only
 python -m agent_security_scanner.cli scan --target https://api.example.com/agent --format markdown --output output/
+
+# Quality gate: fail on HIGH severity or above
+python -m agent_security_scanner.cli scan --target https://api.example.com/agent --fail-on high
+
+# Quality gate: fail if more than 10 findings or risk score exceeds 50
+python -m agent_security_scanner.cli scan --target https://api.example.com/agent --max-findings 10 --max-risk-score 50
 ```
 
 ---
@@ -134,6 +147,9 @@ Options:
   --verbose, -v   Enable verbose output (includes evidence in reports)
   --log-level     DEBUG | INFO | WARNING | ERROR (default: INFO)
   --dry-run       Load config and modules without executing scan
+  --fail-on       Minimum severity to fail the build (critical|high|medium|low|info, default: critical)
+  --max-findings  Maximum total findings allowed (default: no limit)
+  --max-risk-score Maximum aggregate risk score allowed (default: no limit)
 ```
 
 ### Configuration
@@ -182,6 +198,11 @@ output:
   output_dir: output
   verbose: false
 
+quality_gate:
+  fail_on_severity: critical
+  # max_findings: 50
+  # max_risk_score: 100
+
 logging:
   level: INFO
 ```
@@ -195,6 +216,9 @@ export ASS_SCANNER_TIMEOUT=60
 export ASS_SCANNER_VERIFY_SSL=false
 export ASS_LOG_LEVEL=DEBUG
 export ASS_OUTPUT_FORMAT=json
+export ASS_QUALITY_GATE_FAIL_ON_SEVERITY=high
+export ASS_QUALITY_GATE_MAX_FINDINGS=50
+export ASS_QUALITY_GATE_MAX_RISK_SCORE=100
 ```
 
 ---
@@ -206,10 +230,11 @@ agent_security_scanner/
 ├── core/
 │   ├── engine.py                          # Scan orchestration — module selection and lifecycle
 │   ├── config.py                          # YAML + environment variable configuration loader
+│   ├── quality_gate.py                    # CI/CD quality gate evaluation (fail_on_severity, max_findings, max_risk_score)
 │   ├── validators.py                      # Input validation (SSRF, path traversal protection)
 │   └── logging.py                         # Structured logging via loguru
 ├── modules/
-│   ├── base.py                            # BaseModule ABC, Finding, ScanResult, Severity
+│   ├── base.py                            # BaseModule ABC, Finding, ScanResult, Severity, SEVERITY_WEIGHT, SEVERITY_LEVELS
 │   ├── misconfigurations.py               # → misconfig_submodules/
 │   │   └── misconfig_submodules/          # auth_scanner, cors_scanner, rate_limit_scanner, info_disclosure_scanner
 │   ├── prompt_injection.py                # → prompt_injection_submodules/
@@ -229,9 +254,9 @@ agent_security_scanner/
 │       ├── dependency_audit.py
 │       └── plugin_security.py
 ├── output/
-│   ├── json_report.py                     # Structured JSON reports
+│   ├── json_report.py                     # Structured JSON reports (includes quality_gate section)
 │   └── markdown_report.py                 # Human-readable Markdown reports
-└── cli.py                                 # Command-line interface
+└── cli.py                                 # Command-line interface (with quality gate exit codes)
 ```
 
 ### ScanEngine
@@ -289,6 +314,13 @@ results = engine.run(
   "frameworks": {
     "owasp_llm_top_10": { "OWASP LLM01:2024 - Prompt Injection": ["FIND-..."] },
     "mitre_atlas": { "MITRE ATLAS - TA0045 LLM Attack": ["FIND-..."] }
+  },
+  "quality_gate": {
+    "passed": false,
+    "exit_code": 2,
+    "reason": "Quality gate FAILED: 3 findings at or above HIGH severity (1 CRITICAL, 2 HIGH)",
+    "summary": { "total": 5, "critical": 1, "high": 2, "medium": 1, "low": 1, "info": 0 },
+    "risk_score": 42
   }
 }
 ```

@@ -48,4 +48,4 @@ Thumbs.db
 output/
 
 # Local package (removed — code lives in agent_security_scanner/)
-src/
+src/.superpowers/

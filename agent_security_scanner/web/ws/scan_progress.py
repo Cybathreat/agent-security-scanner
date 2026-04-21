@@ -7,7 +7,6 @@ WS /ws/scans/{scan_id}/progress — Subscribe to scan progress events
 from __future__ import annotations
 
 import asyncio
-import json
 from datetime import datetime, timezone
 
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect

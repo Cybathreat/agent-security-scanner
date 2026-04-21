@@ -6,7 +6,7 @@ GET /api/scans/{scan_id}/attack-surface  — Compute attack surface graph from s
 
 from __future__ import annotations
 
-from typing import List, Optional
+from typing import Optional
 
 from fastapi import APIRouter, HTTPException
 

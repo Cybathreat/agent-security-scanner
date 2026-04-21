@@ -7,7 +7,6 @@ POST /api/findings/{finding_id}/replay — Replay a finding's scan module
 from __future__ import annotations
 
 import uuid
-from typing import Any, Dict
 
 from fastapi import APIRouter, HTTPException
 from loguru import logger

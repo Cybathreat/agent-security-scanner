@@ -98,7 +98,7 @@ For questions about this disclaimer or proper use:
 
 ## Version
 
-**MVP v0.1** — Last updated: 2026-03-21
+**v0.2** — Last updated: 2026-04-16
 
 ---
 

@@ -22,7 +22,7 @@ from ..core.quality_gate import GateThreshold, evaluate as evaluate_gate
 from ..modules.base import Severity
 from ..output.json_report import JSONReport
 from . import db
-from .models import ModuleStatus, ModuleStatusInfo, ScanStatus
+from .models import ScanStatus
 
 
 class ScanManager:

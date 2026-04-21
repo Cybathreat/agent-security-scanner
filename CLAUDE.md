@@ -21,7 +21,12 @@ mypy agent_security_scanner/
 # Run the scanner
 python -m agent_security_scanner.cli scan --target <url> --output output/
 python -m agent_security_scanner.cli scan --target <url> --modules prompt_injection,rag_security
+python -m agent_security_scanner.cli scan --target <url> --fail-on high --max-findings 10
 python -m agent_security_scanner.cli config --generate
+
+# Pre-commit hooks
+pre-commit install
+pre-commit run --all-files
 ```
 
 ## Architecture
@@ -37,9 +42,10 @@ agent_security_scanner/
 ├── core/
 │   ├── engine.py      # ScanEngine — ALL_MODULES list, _build_module(), _build_submodule()
 │   ├── config.py      # Config dataclasses (one per module), load_config(), env overrides (ASS_ prefix)
+│   ├── quality_gate.py # GateThreshold, GateResult, evaluate() — CI/CD quality gate evaluation
 │   └── logging.py     # loguru setup_logger() — console + rotating file + optional JSON
 ├── modules/
-│   ├── base.py        # BaseModule[ConfigT], Finding, ScanResult, Severity, Sensitivity
+│   ├── base.py        # BaseModule[ConfigT], Finding, ScanResult, Severity, Sensitivity, SEVERITY_WEIGHT, SEVERITY_LEVELS
 │   ├── misconfigurations.py        # delegates to misconfig_submodules/
 │   │   └── misconfig_submodules/   # auth_scanner, cors_scanner, rate_limit_scanner, info_disclosure_scanner
 │   ├── prompt_injection.py         # delegates to prompt_injection_submodules/
@@ -63,7 +69,7 @@ agent_security_scanner/
 └── cli.py
 ```
 
-The 10 registered modules in `ALL_MODULES` (engine.py): `misconfigurations`, `prompt_injection`, `tool_boundaries`, `rag_security`, `tool_hijacking`, `recursive_agents`, `memory_poisoning`, `planning_attacks`, `secret_scanner`, `dependency_audit`, `plugin_security`.
+The 11 registered modules in `ALL_MODULES` (engine.py): `misconfigurations`, `prompt_injection`, `tool_boundaries`, `rag_security`, `tool_hijacking`, `recursive_agents`, `memory_poisoning`, `planning_attacks`, `secret_scanner`, `dependency_audit`, `plugin_security`.
 
 ### Key patterns
 
@@ -73,7 +79,9 @@ The 10 registered modules in `ALL_MODULES` (engine.py): `misconfigurations`, `pr
 
 **Async scan pattern.** Modules use `aiohttp.ClientSession` for HTTP requests. The `BaseModule._run_scan_async()` helper handles the event loop edge case (running inside or outside an existing loop). Individual modules that manage their own async also duplicate this pattern — see `prompt_injection.py:scan()` for the canonical example.
 
-**Config loading order:** defaults → YAML file → env vars (`ASS_` prefix, e.g., `ASS_SCANNER_TIMEOUT`, `ASS_LOG_LEVEL`, `ASS_OUTPUT_FORMAT`).
+**Config loading order:** defaults → YAML file → env vars (`ASS_` prefix, e.g., `ASS_SCANNER_TIMEOUT`, `ASS_LOG_LEVEL`, `ASS_OUTPUT_FORMAT`, `ASS_QUALITY_GATE_FAIL_ON_SEVERITY`).
+
+**Quality gate evaluation.** CLI flags `--fail-on`, `--max-findings`, `--max-risk-score` map to `GateThreshold`. The `evaluate()` function in `core/quality_gate.py` flattens findings, computes risk score (sum of `SEVERITY_WEIGHT` values), and returns `GateResult` with `passed`, `exit_code` (0 or 2), and `reason`. CLI args override config file values. Default `--fail-on critical` is backward compatible with previous hardcoded behavior.
 
 ### Adding a new module
 

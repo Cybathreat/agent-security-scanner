@@ -8,6 +8,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### Added
+
+#### CI/CD Quality Gates
+- `core/quality_gate.py` — `GateThreshold`, `GateResult` dataclasses, `evaluate()` function for configurable pass/fail evaluation
+- `QualityGateConfig` in `core/config.py` — `fail_on_severity`, `max_findings`, `max_risk_score` with YAML and `ASS_QUALITY_GATE_*` env var overrides
+- CLI flags: `--fail-on` (critical/high/medium/low/info), `--max-findings`, `--max-risk-score`
+- Exit codes: 0 (pass), 1 (error), 2 (quality gate failed) — backward compatible with previous behavior
+- Quality gate results in JSON reports (`quality_gate` section with passed, exit_code, reason, summary, risk_score)
+- Scan summary now shows per-severity counts and risk score with PASSED/FAILED verdict
+- Pre-commit hooks: `.pre-commit-config.yaml` (ruff lint + format, mypy)
+- CI workflow: lint job (ruff + mypy), coverage enforcement (`--cov-fail-under=70`), `fail_ci_if_error: true` for codecov, security gate demo job
+- `SEVERITY_WEIGHT` and `SEVERITY_LEVELS` added to `modules/base.py` as canonical definitions
+- Tests: `test_quality_gate.py` (36 tests), `test_cli.py` (25 tests)
+
 ---
 
 ## [0.2.0] - 2026-04-12
