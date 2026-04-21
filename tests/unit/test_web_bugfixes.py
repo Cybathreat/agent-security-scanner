@@ -161,3 +161,14 @@ def test_ws_handler_has_catchup():
     source = inspect.getsource(scan_progress)
     assert "catchup" in source.lower() or "replay" in source.lower() or "result_json" in source.lower(), \
         "WebSocket handler doesn't implement event catch-up"
+
+
+def test_config_patch_persists_changes():
+    """PATCH /api/config should apply and persist config updates."""
+    import inspect
+    from agent_security_scanner.web.api import config
+    source = inspect.getsource(config)
+    # Should not have the old stub comment
+    assert "full implementation would" not in source.lower(), "config.py PATCH is still a stub"
+    # Should have YAML persistence
+    assert "yaml.dump" in source, "config.py PATCH doesn't persist to YAML"
