@@ -1,26 +1,29 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useScans } from "@/hooks/use-scans";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { startScan, listFindings } from "@/lib/api";
+import { listFindings, replayFinding, getScan } from "@/lib/api";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { SeverityBadge } from "@/components/findings/severity-badge";
 import { FindingDetail } from "@/components/findings/finding-detail";
 import { Skeleton } from "@/components/ui/skeleton";
-import type { FindingResponse } from "@/lib/types";
-import { Terminal, Play } from "lucide-react";
+import type { FindingResponse, ScanEvent } from "@/lib/types";
+import { ScanProgressWS } from "@/lib/ws";
+import { Terminal, Play, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 export default function ReplayPage() {
   const router = useRouter();
-  const queryClient = useQueryClient();
   const { data: scansList } = useScans(50, 0);
   const [selectedScanId, setSelectedScanId] = useState("");
   const [selectedFinding, setSelectedFinding] = useState<FindingResponse | null>(null);
-  const [replayTarget, setReplayTarget] = useState("");
+  const [replayParams, setReplayParams] = useState<Record<string, string>>({});
+  const [replayScanId, setReplayScanId] = useState<string | null>(null);
+  const [replayEvents, setReplayEvents] = useState<ScanEvent[]>([]);
+  const [replayComplete, setReplayComplete] = useState(false);
 
   const { data: findings, isLoading: findingsLoading } = useQuery({
     queryKey: ["findings", { scan_id: selectedScanId }],
@@ -28,148 +31,191 @@ export default function ReplayPage() {
     enabled: !!selectedScanId,
   });
 
+  const { data: replayScan } = useQuery({
+    queryKey: ["scan", replayScanId],
+    queryFn: () => getScan(replayScanId!),
+    enabled: !!replayScanId && replayComplete,
+  });
+
   const replayMutation = useMutation({
-    mutationFn: startScan,
+    mutationFn: (findingId: string) => replayFinding(findingId, replayParams),
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ["scans"] });
-      router.push(`/scans/${data.scan_id}`);
+      setReplayScanId(data.scan_id);
+      setReplayComplete(false);
+      setReplayEvents([]);
+      const ws = new ScanProgressWS(data.scan_id);
+      ws.on("*", (event: ScanEvent) => {
+        setReplayEvents((prev) => [...prev, event]);
+        if (event.event === "scan_completed" || event.event === "scan_error") {
+          setReplayComplete(true);
+          ws.disconnect();
+        }
+      });
+      ws.connect();
     },
   });
 
-  const scans = scansList ?? [];
-  const completedScans = scans.filter((s) => s.status === "completed");
-  const scanFindings = findings ?? [];
-
-  const handleReplay = (finding: FindingResponse) => {
-    const target = replayTarget || finding.location || "";
-    if (!target) return;
-    replayMutation.mutate({
-      target,
-      modules: [finding.category],
-    });
+  const handleSelectFinding = (finding: FindingResponse) => {
+    setSelectedFinding(finding);
+    const params: Record<string, string> = {};
+    // evidence is string[] — try to extract key/value pairs from each entry
+    for (const entry of finding.evidence) {
+      try {
+        const parsed = JSON.parse(entry);
+        for (const [key, value] of Object.entries(parsed)) {
+          if (typeof value === "string" || typeof value === "number") {
+            params[key] = String(value);
+          }
+        }
+      } catch {
+        // Not JSON — use the raw string as a param if it looks like key=value
+        if (entry.includes("=")) {
+          const [key, ...rest] = entry.split("=");
+          params[key.trim()] = rest.join("=").trim();
+        }
+      }
+    }
+    // Fallback: if no params were extracted, provide location as a param
+    if (Object.keys(params).length === 0 && finding.location) {
+      params.target = finding.location;
+    }
+    setReplayParams(params);
   };
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-mono font-bold flex items-center gap-2">
-        <Terminal className="h-6 w-6" />
-        Replay Console
-      </h1>
+      <div className="flex items-center gap-2">
+        <Terminal className="h-6 w-6 text-primary" />
+        <h1 className="text-2xl font-bold">Replay Console</h1>
+      </div>
 
-      {/* Scan Selection */}
+      {/* Scan selector */}
       <Card>
         <CardHeader>
-          <CardTitle>Select a Scan</CardTitle>
-          <CardDescription>Browse findings and re-test them</CardDescription>
+          <CardTitle className="text-sm">Select a Scan</CardTitle>
         </CardHeader>
         <CardContent>
           <select
             value={selectedScanId}
-            onChange={(e) => setSelectedScanId(e.target.value)}
-            className="flex h-10 w-full rounded-md border border-border bg-input px-3 py-2 text-sm font-mono text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            onChange={(e) => {
+              setSelectedScanId(e.target.value);
+              setSelectedFinding(null);
+              setReplayScanId(null);
+              setReplayEvents([]);
+              setReplayComplete(false);
+            }}
+            className="w-full bg-muted border border-border rounded px-3 py-2 text-sm"
           >
             <option value="">Select a completed scan...</option>
-            {completedScans.map((s) => (
-              <option key={s.scan_id} value={s.scan_id}>
-                {s.target} ({s.scan_id.slice(0, 8)}) &mdash; {s.summary.total} findings
+            {scansList?.filter((s) => s.status === "completed").map((scan) => (
+              <option key={scan.scan_id} value={scan.scan_id}>
+                {scan.target} — {new Date(scan.started_at).toLocaleDateString()}
               </option>
             ))}
           </select>
         </CardContent>
       </Card>
 
-      {/* Findings List */}
-      {selectedScanId && (
-        <div className="flex gap-6">
-          <div className="flex-1">
-            <Card>
-              <CardHeader>
-                <CardTitle>Findings ({scanFindings.length})</CardTitle>
-              </CardHeader>
-              <CardContent>
-                {findingsLoading ? (
-                  <div className="space-y-3">
-                    {[1, 2, 3].map((i) => (
-                      <Skeleton key={i} className="h-14 w-full" />
-                    ))}
-                  </div>
-                ) : scanFindings.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">No findings for this scan.</p>
-                ) : (
-                  <div className="space-y-2">
-                    {scanFindings.map((f) => (
-                      <div
-                        key={f.id}
-                        className={`flex items-center justify-between p-3 rounded-md border transition-colors cursor-pointer ${
-                          selectedFinding?.id === f.id
-                            ? "border-primary bg-primary/5"
-                            : "border-border hover:bg-muted"
-                        }`}
-                        onClick={() => setSelectedFinding(f)}
-                      >
-                        <div className="flex items-center gap-3">
-                          <SeverityBadge severity={f.severity} />
-                          <span className="text-sm font-mono">{f.title}</span>
-                        </div>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleReplay(f);
-                          }}
-                          disabled={replayMutation.isPending}
-                        >
-                          <Play className="h-3 w-3 mr-1" />
-                          Re-test
-                        </Button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Detail + Replay Panel */}
-          {selectedFinding && (
-            <div className="w-96 shrink-0 space-y-4">
-              <Card className="sticky top-6">
-                <CardHeader>
-                  <CardTitle>Finding Detail</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <FindingDetail finding={selectedFinding} />
-
-                  <div className="border-t border-border pt-4">
-                    <p className="text-sm font-mono font-medium mb-2">Re-test Target</p>
-                    <Input
-                      placeholder={selectedFinding.location || "Enter target URL..."}
-                      value={replayTarget}
-                      onChange={(e) => setReplayTarget(e.target.value)}
-                    />
-                    <Button
-                      className="w-full mt-2"
-                      onClick={() => handleReplay(selectedFinding)}
-                      disabled={replayMutation.isPending}
-                    >
-                      <Play className="h-4 w-4 mr-2" />
-                      {replayMutation.isPending ? "Starting..." : "Re-test Finding"}
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          )}
-        </div>
+      {/* Findings list */}
+      {findingsLoading && <Skeleton className="h-40" />}
+      {findings && findings.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-sm">Findings ({findings.length})</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2 max-h-60 overflow-auto">
+            {findings.map((f) => (
+              <button
+                key={f.id}
+                onClick={() => handleSelectFinding(f)}
+                className={`w-full text-left p-2 rounded border border-border hover:border-primary text-sm ${
+                  selectedFinding?.id === f.id ? "border-primary bg-primary/5" : ""
+                }`}
+              >
+                <SeverityBadge severity={f.severity} />
+                <span className="ml-2">{f.title}</span>
+              </button>
+            ))}
+          </CardContent>
+        </Card>
       )}
 
-      {/* Empty State */}
-      {!selectedScanId && (
-        <div className="text-center py-12">
-          <Terminal className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-          <p className="text-muted-foreground font-mono">Select a scan to browse findings</p>
-        </div>
+      {/* Replay panel */}
+      {selectedFinding && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Replay: {selectedFinding.title}</CardTitle>
+            <CardDescription>Modify parameters and re-test this attack</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <FindingDetail finding={selectedFinding} />
+
+            {/* Editable parameters */}
+            <div className="space-y-2">
+              <h3 className="text-sm font-medium text-muted-foreground">Parameters (editable)</h3>
+              {Object.entries(replayParams).map(([key, value]) => (
+                <div key={key} className="flex gap-2 items-center">
+                  <span className="text-sm text-muted-foreground w-32">{key}</span>
+                  <Input
+                    value={value}
+                    onChange={(e) => setReplayParams({ ...replayParams, [key]: e.target.value })}
+                    className="flex-1"
+                  />
+                </div>
+              ))}
+            </div>
+
+            <Button
+              onClick={() => replayMutation.mutate(selectedFinding.id)}
+              disabled={replayMutation.isPending}
+            >
+              {replayMutation.isPending ? (
+                <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Replaying...</>
+              ) : (
+                <><Play className="h-4 w-4 mr-2" />Replay Attack</>
+              )}
+            </Button>
+
+            {/* Live replay results */}
+            {replayEvents.length > 0 && (
+              <div className="space-y-2">
+                <h3 className="text-sm font-medium text-muted-foreground">Live Replay Output</h3>
+                <div className="terminal-output p-3 rounded text-xs max-h-60 overflow-auto">
+                  {replayEvents.map((event, i) => (
+                    <div key={i} className="text-green-400">
+                      [{event.event}] {JSON.stringify(event.data)}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Comparison after completion */}
+            {replayComplete && replayScan && (
+              <div className="space-y-2">
+                <h3 className="text-sm font-medium text-muted-foreground">Replay Results</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <Card>
+                    <CardHeader><CardTitle className="text-sm">Original</CardTitle></CardHeader>
+                    <CardContent>
+                      <SeverityBadge severity={selectedFinding.severity} />
+                      <p className="text-xs mt-1">{selectedFinding.evidence.join("; ")}</p>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardHeader><CardTitle className="text-sm">Replay</CardTitle></CardHeader>
+                    <CardContent>
+                      <p className="text-xs">{replayScan.findings?.length} finding(s) in replay scan</p>
+                      <Button variant="outline" size="sm" className="mt-2" onClick={() => router.push(`/scans/${replayScanId}`)}>
+                        View Replay Scan
+                      </Button>
+                    </CardContent>
+                  </Card>
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
       )}
     </div>
   );
