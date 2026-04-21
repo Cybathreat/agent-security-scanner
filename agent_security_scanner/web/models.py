@@ -68,6 +68,19 @@ class FindingResponse(BaseModel):
     recommendation: str = "Review and remediate according to security best practices."
     confidence: Confidence = Confidence.HIGH
     timestamp: str
+    is_false_positive: bool = False
+    notes: str = ""
+    assigned_to: str = ""
+    status: str = "open"
+
+
+class FindingAnnotationRequest(BaseModel):
+    """Request to annotate a finding (mark false positive, add notes, etc.)."""
+
+    is_false_positive: Optional[bool] = None
+    notes: Optional[str] = None
+    assigned_to: Optional[str] = None
+    status: Optional[str] = None
 
 
 # ---------------------------------------------------------------------------
@@ -204,3 +217,57 @@ class ScanEvent(BaseModel):
     scan_id: str
     data: Dict[str, Any] = Field(default_factory=dict)
     timestamp: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat() + "Z")
+
+
+# ---------------------------------------------------------------------------
+# Replay models
+# ---------------------------------------------------------------------------
+
+
+class ReplayRequest(BaseModel):
+    """Request to replay a finding's scan module."""
+
+    params: Dict[str, Any] = Field(default_factory=dict)
+
+
+class ReplayResponse(BaseModel):
+    """Response for a replay request."""
+
+    replay_id: str
+    scan_id: str
+    status: str
+    message: str
+
+
+# ---------------------------------------------------------------------------
+# Attack surface models
+# ---------------------------------------------------------------------------
+
+
+class AttackSurfaceNode(BaseModel):
+    """A node in the attack surface graph."""
+
+    id: str
+    type: str  # endpoint, tool, data_flow, agent, external
+    label: str
+    findings_count: int = 0
+    max_severity: Optional[str] = None
+    finding_ids: List[str] = Field(default_factory=list)
+
+
+class AttackSurfaceEdge(BaseModel):
+    """An edge in the attack surface graph."""
+
+    id: str
+    source: str
+    target: str
+    label: str
+    finding_count: int = 0
+
+
+class AttackSurfaceResponse(BaseModel):
+    """Response for the attack surface endpoint."""
+
+    scan_id: str
+    nodes: List[AttackSurfaceNode]
+    edges: List[AttackSurfaceEdge]

@@ -14,7 +14,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from loguru import logger
 
-from .api import config, findings, modules, quality_gate, scans
+from .api import attack_surface, config, findings, modules, quality_gate, replay, scans
 from .db import init_db
 from .scan_manager import scan_manager
 from .ws import scan_progress
@@ -73,6 +73,8 @@ def create_app() -> FastAPI:
     app.include_router(modules.router, prefix="/api")
     app.include_router(quality_gate.router, prefix="/api")
     app.include_router(config.router, prefix="/api")
+    app.include_router(replay.router, prefix="/api")
+    app.include_router(attack_surface.router, prefix="/api")
 
     # Mount WebSocket router
     app.include_router(scan_progress.router, prefix="/ws")
