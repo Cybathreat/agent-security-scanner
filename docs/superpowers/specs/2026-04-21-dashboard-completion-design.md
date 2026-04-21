@@ -8,11 +8,11 @@ Complete the Agent Security Scanner web dashboard (ROADMAP #28, Phase 3/4). Stra
 
 ## Section 1: Backend Bug Fixes
 
-Fix all 11 identified bugs plus one missing implementation:
+Fix all 10 identified bugs plus one missing implementation:
 
 1. **Scan cancellation is non-functional** — `ScanManager._run_scan()` never checks the cancelled flag. Fix: check `self._active_scans[scan_id]["status"]` between module executions; abort early if cancelled.
 2. **DELETE endpoint conflates cancel and delete** — `DELETE /api/scans/{id}` cancels active scans but returns 204 without deleting from DB. Fix: cancel if active, then always delete from DB.
-3. **Active scan response missing module_statuses** — `GET /api/scans/{id}` fallback for running scans omits `module_statuses` and `modules` from the in-memory dict. Fix: populate both fields from `_active_scans[scan_id]`.
+3. **Active scan response missing module_statuses and modules** — `GET /api/scans/{id}` fallback for running scans omits `module_statuses` and `modules` from the in-memory dict. Fix: populate both fields from `_active_scans[scan_id]`.
 4. **`datetime.utcnow()` deprecated** — 6 occurrences across `scan_manager.py`, `ws/scan_progress.py`, `models.py`. Fix: replace with `datetime.now(timezone.utc)`.
 5. **SQL f-string in `update_scan_status`** — `db.py:170` uses f-string for column names. Fix: use parameterized column allowlist pattern.
 6. **Quality gate wraps single aggregate ScanResult** — `quality_gate.py` creates one synthetic `ScanResult(module_name="aggregate")` instead of per-module results. Fix: reconstruct per-module ScanResult objects from stored JSON.
@@ -35,14 +35,14 @@ Run `npm install` in `dashboard/` to resolve missing Tailwind Linux native binar
 - Wire CI/CD panel to set quality gates via API
 
 ### Replay Console
-- New endpoint: `POST /api/findings/{id}/replay` — takes finding's payload data, accepts optional parameter modifications, re-sends to target, returns live results
+- New endpoint: `POST /api/findings/{id}/replay` — request body: `{"params": Dict[str, Any]}` to override payload parameters from the original finding. If `params` is empty, replays with original values. Re-sends to target, streams results via the existing WebSocket progress channel.
 - Frontend: show original payload with editable parameter fields, send replay request, stream results via WebSocket, display response comparison (original vs replay)
 
 ### Report Builder
 - Integrate `@dnd-kit/core` + `@dnd-kit/sortable` for drag-and-drop section reordering
 - Add PDF export via `html2pdf.js`
 - Add HTML export (serialize rendered report to standalone HTML with inline styles)
-- Add executive summary auto-generation — aggregate stats: total findings by severity, top categories, gate result, risk score trend
+- Add executive summary auto-generation — computed client-side from scan data (not LLM): total findings by severity, top categories, gate result, risk score trend
 - Wire section toggle state to report output in real-time
 
 ### Scan Detail page
@@ -63,7 +63,7 @@ Run `npm install` in `dashboard/` to resolve missing Tailwind Linux native binar
 - New endpoint `GET /api/scans/{id}/attack-surface`
 - Computes a graph from scan findings:
   - **Nodes**: target endpoints, agent tools, data flows (RAG sources, APIs), each tagged with finding count and max severity
-  - **Edges**: derived from finding relationships (e.g., prompt injection flows from endpoint to tool, exfiltration flows from RAG to external)
+  - **Edges**: inferred from module category — `prompt_injection` findings create endpoint→tool edges, `rag_security` findings create data_flow→external edges, `tool_boundaries` findings create endpoint→tool edges, `agent` findings create agent→tool/endpoint edges, `infrastructure` findings create endpoint→external edges
   - **Node types**: `endpoint`, `tool`, `data_flow`, `agent` — color-coded by risk level
   - Each node includes `findings: [...]` for drill-down into Finding Explorer
 
@@ -117,7 +117,7 @@ Everything uses the existing FastAPI + aiosqlite stack.
 
 ## Execution Order
 
-1. **Backend bug fixes** (all 11 + PATCH config implementation) — block everything else
+1. **Backend bug fixes** (all 10 bugs + PATCH config implementation) — block everything else
 2. **Frontend build fix** (`npm install`) — unblocks all frontend work
 3. **Parallel track A — Frontend partial page completion**: Settings fixes, Replay Console, Report Builder, Finding annotations UI, Delete scan UI, Scan Detail fix
 4. **Parallel track B — New backend endpoints**: PATCH findings, POST replay, GET attack-surface
