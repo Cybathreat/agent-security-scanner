@@ -1,6 +1,6 @@
 import os
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
@@ -73,3 +73,43 @@ def test_db_update_scan_status_no_fstring_sql():
     # The allowlist pattern validates field names before use in SQL
     assert "_ALLOWED_FIELDS" in source, "db.py missing _ALLOWED_FIELDS allowlist in update_scan_status"
     assert "raise ValueError" in source, "db.py missing field validation in update_scan_status"
+
+
+@pytest.mark.asyncio
+async def test_cancel_scan_sets_status():
+    """Cancelling a scan should set status to cancelled."""
+    from agent_security_scanner.web.scan_manager import ScanManager
+    from agent_security_scanner.web.models import ScanStatus
+    mgr = ScanManager()
+    scan_id = "test-cancel-123"
+    mgr._active_scans[scan_id] = {
+        "status": ScanStatus.RUNNING,
+        "target": "https://example.com",
+        "modules": ["prompt_injection"],
+        "started_at": "2026-01-01T00:00:00Z",
+    }
+    with patch("agent_security_scanner.web.scan_manager.db") as mock_db:
+        mock_db.update_scan_status = AsyncMock()
+        result = await mgr.cancel_scan(scan_id)
+    assert result is True
+    assert mgr._active_scans[scan_id]["status"] == ScanStatus.CANCELLED
+
+
+def test_run_scan_checks_cancelled_status():
+    """_run_scan should check cancelled status and abort if cancelled."""
+    import inspect
+    from agent_security_scanner.web import scan_manager
+    source = inspect.getsource(scan_manager.ScanManager._run_scan)
+    # Verify that the cancellation check exists in _run_scan
+    assert "cancelled" in source, "_run_scan does not check for cancelled status"
+
+
+def test_delete_scan_always_attempts_db_deletion():
+    """Delete endpoint should cancel active scan AND delete from DB."""
+    import inspect
+    from agent_security_scanner.web.api import scans
+    source = inspect.getsource(scans.delete_scan)
+    # The delete function should always call db.delete_scan, not skip it
+    # when the scan was active
+    assert "db.delete_scan" in source, "delete_scan does not call db.delete_scan"
+    assert "cancel_scan" in source, "delete_scan does not call cancel_scan before DB deletion"

@@ -121,6 +121,11 @@ class ScanManager:
                     self._loop,
                 )
 
+            # Check if scan was cancelled before running
+            if scan_id in self._active_scans and self._active_scans[scan_id].get("status") == "cancelled":
+                logger.info(f"Scan {scan_id} cancelled, aborting")
+                return
+
             # Run scan (synchronous)
             results = engine.run(target, modules=module_list, timeout=timeout)
 
@@ -137,6 +142,11 @@ class ScanManager:
 
             # Publish findings as they complete
             for result in results:
+                # Check if scan was cancelled between module iterations
+                if scan_id in self._active_scans and self._active_scans[scan_id].get("status") == "cancelled":
+                    logger.info(f"Scan {scan_id} cancelled, aborting")
+                    break
+
                 if self._loop and not self._loop.is_closed():
                     asyncio.run_coroutine_threadsafe(
                         self._publish_event(
@@ -301,6 +311,9 @@ class ScanManager:
             # Mark as cancelled — the thread will check and stop
             self._active_scans[scan_id]["status"] = ScanStatus.CANCELLED
             await db.update_scan_status(scan_id, status=ScanStatus.CANCELLED)
+            # Publish cancellation event
+            if self._loop and not self._loop.is_closed():
+                await self._publish_event(scan_id, "scan_error", {"error": "cancelled"})
             return True
         return False
 
