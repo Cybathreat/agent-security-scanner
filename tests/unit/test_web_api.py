@@ -336,3 +336,270 @@ class TestAttackSurfaceAPI:
 
         # Cleanup
         db_module.DB_PATH = tmp_path / "original.db"
+
+
+# ---------------------------------------------------------------------------
+# Finding Annotations (PATCH) API
+# ---------------------------------------------------------------------------
+
+
+class TestFindingAnnotationAPI:
+    @pytest.mark.asyncio
+    async def test_patch_finding_annotation(self, tmp_path):
+        """Test PATCH /api/findings/{id} to annotate a finding."""
+        from agent_security_scanner.web import db as db_module
+        from agent_security_scanner.web.app import create_app
+
+        test_db = tmp_path / "test_annotate.db"
+        db_module.DB_PATH = test_db
+        await db_module.init_db()
+
+        # Create a scan and finding
+        await db_module.save_scan(
+            scan_id="scan-ann-001",
+            target="https://ann.example.com",
+            modules=["prompt_injection"],
+            status="completed",
+            started_at="2026-01-01T00:00:00Z",
+            completed_at="2026-01-01T00:01:00Z",
+        )
+        await db_module.save_findings(
+            scan_id="scan-ann-001",
+            findings=[
+                {
+                    "id": "FIND-ann-001",
+                    "severity": "HIGH",
+                    "category": "prompt_injection",
+                    "title": "Direct injection",
+                    "description": "Test finding",
+                    "cwe": None,
+                    "owasp_ref": None,
+                    "mitre_ref": None,
+                    "location": None,
+                    "evidence": [],
+                    "recommendation": "",
+                    "confidence": "high",
+                    "timestamp": "2026-01-01T00:00:30Z",
+                },
+            ],
+        )
+
+        db_module.DB_PATH = test_db
+        app = create_app()
+        with TestClient(app) as c:
+            # Patch the finding with annotations
+            response = c.patch(
+                "/api/findings/FIND-ann-001",
+                json={
+                    "is_false_positive": True,
+                    "notes": "Confirmed false positive by security team",
+                    "assigned_to": "alice",
+                    "status": "resolved",
+                },
+            )
+            assert response.status_code == 200
+            data = response.json()
+            assert data["id"] == "FIND-ann-001"
+            assert data["is_false_positive"] is True
+            assert data["notes"] == "Confirmed false positive by security team"
+            assert data["assigned_to"] == "alice"
+            assert data["status"] == "resolved"
+
+    @pytest.mark.asyncio
+    async def test_patch_finding_partial_annotation(self, tmp_path):
+        """Test PATCH with only some fields updates only those fields."""
+        from agent_security_scanner.web import db as db_module
+        from agent_security_scanner.web.app import create_app
+
+        test_db = tmp_path / "test_partial.db"
+        db_module.DB_PATH = test_db
+        await db_module.init_db()
+
+        await db_module.save_scan(
+            scan_id="scan-partial-001",
+            target="https://partial.example.com",
+            modules=["prompt_injection"],
+            status="completed",
+            started_at="2026-01-01T00:00:00Z",
+        )
+        await db_module.save_findings(
+            scan_id="scan-partial-001",
+            findings=[
+                {
+                    "id": "FIND-partial-001",
+                    "severity": "MEDIUM",
+                    "category": "prompt_injection",
+                    "title": "Partial test",
+                    "description": "Partial update test",
+                    "cwe": None,
+                    "owasp_ref": None,
+                    "mitre_ref": None,
+                    "location": None,
+                    "evidence": [],
+                    "recommendation": "",
+                    "confidence": "high",
+                    "timestamp": "2026-01-01T00:00:30Z",
+                },
+            ],
+        )
+
+        db_module.DB_PATH = test_db
+        app = create_app()
+        with TestClient(app) as c:
+            # Only update notes
+            response = c.patch(
+                "/api/findings/FIND-partial-001",
+                json={"notes": "Investigating"},
+            )
+            assert response.status_code == 200
+            data = response.json()
+            assert data["notes"] == "Investigating"
+            assert data["status"] == "open"  # default unchanged
+            assert data["is_false_positive"] is False  # default unchanged
+
+    def test_patch_nonexistent_finding(self, client):
+        """Patching a nonexistent finding returns 404."""
+        response = client.patch(
+            "/api/findings/FIND-nonexistent",
+            json={"status": "resolved"},
+        )
+        assert response.status_code == 404
+
+    @pytest.mark.asyncio
+    async def test_get_finding_includes_annotations(self, tmp_path):
+        """Test that GET /api/findings/{id} includes annotation fields."""
+        from agent_security_scanner.web import db as db_module
+        from agent_security_scanner.web.app import create_app
+
+        test_db = tmp_path / "test_get_ann.db"
+        db_module.DB_PATH = test_db
+        await db_module.init_db()
+
+        await db_module.save_scan(
+            scan_id="scan-getann-001",
+            target="https://getann.example.com",
+            modules=["prompt_injection"],
+            status="completed",
+            started_at="2026-01-01T00:00:00Z",
+        )
+        await db_module.save_findings(
+            scan_id="scan-getann-001",
+            findings=[
+                {
+                    "id": "FIND-getann-001",
+                    "severity": "LOW",
+                    "category": "prompt_injection",
+                    "title": "Get annotation test",
+                    "description": "Testing annotation fields in GET",
+                    "cwe": None,
+                    "owasp_ref": None,
+                    "mitre_ref": None,
+                    "location": None,
+                    "evidence": [],
+                    "recommendation": "",
+                    "confidence": "medium",
+                    "timestamp": "2026-01-01T00:00:30Z",
+                },
+            ],
+        )
+
+        db_module.DB_PATH = test_db
+        app = create_app()
+        with TestClient(app) as c:
+            response = c.get("/api/findings/FIND-getann-001")
+            assert response.status_code == 200
+            data = response.json()
+            assert "is_false_positive" in data
+            assert data["is_false_positive"] is False
+            assert "notes" in data
+            assert data["notes"] == ""
+            assert "assigned_to" in data
+            assert data["assigned_to"] == ""
+            assert "status" in data
+            assert data["status"] == "open"
+
+
+# ---------------------------------------------------------------------------
+# Replay API
+# ---------------------------------------------------------------------------
+
+
+class TestReplayAPI:
+    @pytest.mark.asyncio
+    async def test_replay_nonexistent_finding(self, tmp_path):
+        """Replaying a nonexistent finding returns 404."""
+        from agent_security_scanner.web import db as db_module
+        from agent_security_scanner.web.app import create_app
+
+        test_db = tmp_path / "test_replay_404.db"
+        db_module.DB_PATH = test_db
+        await db_module.init_db()
+
+        db_module.DB_PATH = test_db
+        app = create_app()
+        with TestClient(app) as c:
+            response = client_patch_replay(c, "FIND-nonexistent")
+            assert response.status_code == 404
+
+    @pytest.mark.asyncio
+    async def test_replay_finding_success(self, tmp_path):
+        """Test POST /api/findings/{id}/replay starts a new scan."""
+        from agent_security_scanner.web import db as db_module
+        from agent_security_scanner.web.app import create_app
+
+        test_db = tmp_path / "test_replay_ok.db"
+        db_module.DB_PATH = test_db
+        await db_module.init_db()
+
+        await db_module.save_scan(
+            scan_id="scan-replay-001",
+            target="https://replay.example.com",
+            modules=["prompt_injection"],
+            status="completed",
+            started_at="2026-01-01T00:00:00Z",
+        )
+        await db_module.save_findings(
+            scan_id="scan-replay-001",
+            findings=[
+                {
+                    "id": "FIND-replay-001",
+                    "severity": "HIGH",
+                    "category": "prompt_injection",
+                    "title": "Replay test",
+                    "description": "Testing replay endpoint",
+                    "cwe": None,
+                    "owasp_ref": None,
+                    "mitre_ref": None,
+                    "location": None,
+                    "evidence": [],
+                    "recommendation": "",
+                    "confidence": "high",
+                    "timestamp": "2026-01-01T00:00:30Z",
+                },
+            ],
+        )
+
+        db_module.DB_PATH = test_db
+        app = create_app()
+
+        with patch("agent_security_scanner.web.scan_manager.ScanEngine"), \
+             patch("agent_security_scanner.web.scan_manager.load_config"):
+            with TestClient(app) as c:
+                response = c.post(
+                    "/api/findings/FIND-replay-001/replay",
+                    json={"params": {}},
+                )
+                assert response.status_code == 200
+                data = response.json()
+                assert "replay_id" in data
+                assert "scan_id" in data
+                assert data["status"] == "pending"
+                assert "prompt_injection" in data["message"]
+
+
+def client_patch_replay(client, finding_id):
+    """Helper to post a replay request (used for 404 test)."""
+    return client.post(
+        f"/api/findings/{finding_id}/replay",
+        json={"params": {}},
+    )

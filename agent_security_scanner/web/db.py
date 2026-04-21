@@ -51,6 +51,10 @@ CREATE TABLE IF NOT EXISTS findings (
     recommendation TEXT,
     confidence TEXT DEFAULT 'high',
     timestamp TEXT NOT NULL,
+    is_false_positive BOOLEAN DEFAULT FALSE,
+    notes TEXT DEFAULT '',
+    assigned_to TEXT DEFAULT '',
+    status TEXT DEFAULT 'open',
     FOREIGN KEY (scan_id) REFERENCES scans(id)
 );
 
@@ -62,6 +66,25 @@ CREATE INDEX IF NOT EXISTS idx_scans_target ON scans(target);
 """
 
 
+async def _migrate_annotations(db_path: Optional[str] = None) -> None:
+    """Add annotation columns to the findings table if they don't exist."""
+    path = Path(db_path) if db_path else DB_PATH
+    annotation_columns = [
+        ("is_false_positive", "BOOLEAN DEFAULT FALSE"),
+        ("notes", "TEXT DEFAULT ''"),
+        ("assigned_to", "TEXT DEFAULT ''"),
+        ("status", "TEXT DEFAULT 'open'"),
+    ]
+    async with aiosqlite.connect(path) as db:
+        # Get existing column names
+        cursor = await db.execute("PRAGMA table_info(findings)")
+        existing = {row[1] for row in await cursor.fetchall()}
+        for col_name, col_type in annotation_columns:
+            if col_name not in existing:
+                await db.execute(f"ALTER TABLE findings ADD COLUMN {col_name} {col_type}")
+        await db.commit()
+
+
 async def init_db(db_path: Optional[str] = None) -> None:
     """Initialize the database and create tables."""
     path = Path(db_path) if db_path else DB_PATH
@@ -70,6 +93,9 @@ async def init_db(db_path: Optional[str] = None) -> None:
     async with aiosqlite.connect(path) as db:
         await db.executescript(SCHEMA)
         await db.commit()
+
+    # Migrate annotation columns for existing databases
+    await _migrate_annotations(db_path)
 
     logger.info(f"Database initialized: {path}")
 
@@ -287,6 +313,41 @@ async def get_findings(
         )
         rows = await cursor.fetchall()
         return [dict(r) for r in rows]
+
+
+async def update_finding_annotation(
+    finding_id: str,
+    is_false_positive: Optional[bool] = None,
+    notes: Optional[str] = None,
+    assigned_to: Optional[str] = None,
+    status: Optional[str] = None,
+    db_path: Optional[str] = None,
+) -> bool:
+    """Update annotation fields on a finding. Returns True if a row was updated."""
+    updates: Dict[str, Any] = {}
+    if is_false_positive is not None:
+        updates["is_false_positive"] = is_false_positive
+    if notes is not None:
+        updates["notes"] = notes
+    if assigned_to is not None:
+        updates["assigned_to"] = assigned_to
+    if status is not None:
+        updates["status"] = status
+
+    if not updates:
+        return False
+
+    sets = [f"{k} = ?" for k in updates]
+    vals = list(updates.values())
+    vals.append(finding_id)
+
+    path = Path(db_path) if db_path else DB_PATH
+    async with aiosqlite.connect(path) as db:
+        cursor = await db.execute(
+            f"UPDATE findings SET {', '.join(sets)} WHERE id = ?", vals
+        )
+        await db.commit()
+        return cursor.rowcount > 0
 
 
 async def get_finding(finding_id: str, db_path: Optional[str] = None) -> Optional[Dict[str, Any]]:
