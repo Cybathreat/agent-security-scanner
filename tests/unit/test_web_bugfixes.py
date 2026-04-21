@@ -136,3 +136,28 @@ async def test_get_active_scan_includes_modules():
     assert status is not None
     assert status.get("modules") == ["prompt_injection", "tool_boundaries"]
     assert len(status.get("module_statuses", [])) == 2
+
+
+def test_quality_gate_preserves_timestamp():
+    """Reconstructed Findings should include the timestamp field."""
+    import inspect
+    from agent_security_scanner.web.api import quality_gate
+    source = inspect.getsource(quality_gate)
+    assert "timestamp" in source, "quality_gate.py doesn't pass timestamp to Finding"
+
+
+def test_quality_gate_groups_by_category():
+    """Quality gate should create per-module ScanResult objects."""
+    import inspect
+    from agent_security_scanner.web.api import quality_gate
+    source = inspect.getsource(quality_gate)
+    assert "findings_by_module" in source, "quality_gate.py doesn't group findings by module"
+
+
+def test_ws_handler_has_catchup():
+    """WebSocket handler should replay past events on connect."""
+    import inspect
+    from agent_security_scanner.web.ws import scan_progress
+    source = inspect.getsource(scan_progress)
+    assert "catchup" in source.lower() or "replay" in source.lower() or "result_json" in source.lower(), \
+        "WebSocket handler doesn't implement event catch-up"

@@ -12,6 +12,7 @@ from datetime import datetime, timezone
 
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 
+from .. import db
 from ..scan_manager import scan_manager
 
 router = APIRouter(tags=["websocket"])
@@ -32,6 +33,32 @@ async def scan_progress(websocket: WebSocket, scan_id: str) -> None:
     queue = scan_manager.subscribe(scan_id)
 
     try:
+        # Catch-up: replay stored findings and module completions from DB
+        scan_data = await db.get_scan(scan_id)
+        if scan_data and scan_data.get("result_json"):
+            import json as _json
+            report = _json.loads(scan_data["result_json"]) if isinstance(scan_data["result_json"], str) else scan_data["result_json"]
+            # Replay module completions
+            for module_name, module_data in report.get("modules", {}).items():
+                await websocket.send_json({
+                    "event": "module_completed",
+                    "scan_id": scan_id,
+                    "data": {
+                        "module_name": module_name,
+                        "status": module_data.get("status", "completed"),
+                        "findings_count": len(module_data.get("findings", [])),
+                    },
+                    "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
+                })
+            # Replay individual findings
+            for finding in report.get("findings", []):
+                await websocket.send_json({
+                    "event": "finding_discovered",
+                    "scan_id": scan_id,
+                    "data": finding,
+                    "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
+                })
+
         # Send initial connection confirmation
         await websocket.send_json(
             {
