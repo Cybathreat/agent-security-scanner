@@ -59,11 +59,10 @@ export default function NewScanPage() {
   const allModules = modules ?? [];
 
   return (
-    <div className="space-y-6">
-      <h1 className="text-2xl font-mono font-bold">New Scan</h1>
+    <div className="space-y-4">
+      <h1 className="text-sm font-semibold">New Scan</h1>
 
-      <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Target */}
+      <form onSubmit={handleSubmit} className="space-y-4">
         <Card>
           <CardHeader>
             <CardTitle>Target</CardTitle>
@@ -80,32 +79,31 @@ export default function NewScanPage() {
           </CardContent>
         </Card>
 
-        {/* Module Selection */}
         <Card>
           <CardHeader>
             <CardTitle>Modules</CardTitle>
             <CardDescription>Select scanner modules to run</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+            <div className="grid grid-cols-2 lg:grid-cols-3 gap-2">
               {allModules.map((mod) => (
                 <label
                   key={mod.name}
-                  className={`flex items-center gap-3 p-3 rounded-md border cursor-pointer transition-colors ${
+                  className={`flex items-center gap-2 p-2 rounded border cursor-pointer transition-colors text-xs ${
                     selectedModules.includes(mod.name)
-                      ? "border-primary bg-primary/5"
-                      : "border-border hover:bg-muted"
+                      ? "border-primary/30 bg-primary/5 text-primary"
+                      : "border-border hover:bg-muted/50 text-foreground"
                   }`}
                 >
                   <input
                     type="checkbox"
                     checked={selectedModules.includes(mod.name)}
                     onChange={() => toggleModule(mod.name)}
-                    className="accent-primary"
+                    className="accent-primary h-3 w-3"
                   />
-                  <div>
-                    <p className="text-sm font-mono font-medium">{mod.display_name}</p>
-                    <p className="text-xs text-muted-foreground">{mod.category}</p>
+                  <div className="min-w-0">
+                    <p className="font-medium truncate">{mod.display_name}</p>
+                    <p className="text-[11px] text-muted-foreground truncate">{mod.category}</p>
                   </div>
                 </label>
               ))}
@@ -113,19 +111,18 @@ export default function NewScanPage() {
           </CardContent>
         </Card>
 
-        {/* Quality Gate */}
         <Card>
           <CardHeader>
             <CardTitle>Quality Gate</CardTitle>
             <CardDescription>Configure when the quality gate should fail</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-3">
             <div>
-              <label className="text-sm font-mono text-muted-foreground">Fail on Severity</label>
+              <label className="text-[11px] text-muted-foreground">Fail on Severity</label>
               <select
                 value={failOn}
                 onChange={(e) => setFailOn(e.target.value)}
-                className="mt-1 flex h-10 w-full rounded-md border border-border bg-input px-3 py-2 text-sm font-mono text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                className="mt-0.5 flex h-8 w-full rounded border border-border bg-input px-2.5 py-1.5 text-xs text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1"
               >
                 <option value="critical">Critical</option>
                 <option value="high">High</option>
@@ -135,27 +132,26 @@ export default function NewScanPage() {
               </select>
             </div>
             <div>
-              <label className="text-sm font-mono text-muted-foreground">Timeout (seconds)</label>
+              <label className="text-[11px] text-muted-foreground">Timeout (seconds)</label>
               <Input
                 type="number"
                 value={timeout}
                 onChange={(e) => setTimeout_(Number(e.target.value))}
                 min={5}
                 max={300}
-                className="mt-1"
+                className="mt-0.5"
               />
             </div>
           </CardContent>
         </Card>
 
-        {/* Submit */}
         <Button
           type="submit"
           disabled={!target || selectedModules.length === 0 || mutation.isPending}
           size="lg"
           className="w-full"
         >
-          <ScanSearch className="h-4 w-4 mr-2" />
+          <ScanSearch className="h-3.5 w-3.5" />
           {mutation.isPending ? "Starting..." : "Start Scan"}
         </Button>
       </form>

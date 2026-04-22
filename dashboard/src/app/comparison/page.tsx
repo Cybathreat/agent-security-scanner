@@ -30,45 +30,34 @@ export default function ComparisonPage() {
   const scans = scansList ?? [];
   const completedScans = scans.filter((s) => s.status === "completed");
 
-  return (
-    <div className="space-y-6">
-      <h1 className="text-2xl font-mono font-bold">Scan Comparison</h1>
+  const selectClass = "mt-0.5 flex h-8 w-full rounded border border-border bg-input px-2.5 py-1.5 text-xs text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1";
 
-      {/* Scan Selection */}
+  return (
+    <div className="space-y-4">
+      <h1 className="text-sm font-semibold">Comparison</h1>
+
       <Card>
         <CardHeader>
           <CardTitle>Select Scans</CardTitle>
           <CardDescription>Compare two completed scans side-by-side</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="text-sm font-mono text-muted-foreground">Scan A</label>
-              <select
-                value={leftScanId}
-                onChange={(e) => setLeftScanId(e.target.value)}
-                className="mt-1 flex h-10 w-full rounded-md border border-border bg-input px-3 py-2 text-sm font-mono text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-              >
+              <label className="text-[11px] text-muted-foreground">Scan A</label>
+              <select value={leftScanId} onChange={(e) => setLeftScanId(e.target.value)} className={selectClass}>
                 <option value="">Select a scan...</option>
                 {completedScans.map((s) => (
-                  <option key={s.scan_id} value={s.scan_id}>
-                    {s.target} ({s.scan_id.slice(0, 8)})
-                  </option>
+                  <option key={s.scan_id} value={s.scan_id}>{s.target} ({s.scan_id.slice(0, 8)})</option>
                 ))}
               </select>
             </div>
             <div>
-              <label className="text-sm font-mono text-muted-foreground">Scan B</label>
-              <select
-                value={rightScanId}
-                onChange={(e) => setRightScanId(e.target.value)}
-                className="mt-1 flex h-10 w-full rounded-md border border-border bg-input px-3 py-2 text-sm font-mono text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-              >
+              <label className="text-[11px] text-muted-foreground">Scan B</label>
+              <select value={rightScanId} onChange={(e) => setRightScanId(e.target.value)} className={selectClass}>
                 <option value="">Select a scan...</option>
                 {completedScans.map((s) => (
-                  <option key={s.scan_id} value={s.scan_id}>
-                    {s.target} ({s.scan_id.slice(0, 8)})
-                  </option>
+                  <option key={s.scan_id} value={s.scan_id}>{s.target} ({s.scan_id.slice(0, 8)})</option>
                 ))}
               </select>
             </div>
@@ -76,26 +65,13 @@ export default function ComparisonPage() {
         </CardContent>
       </Card>
 
-      {/* Comparison Results */}
       {leftScanId && rightScanId && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Left Scan */}
-          {leftLoading ? (
-            <Skeleton className="h-64 w-full" />
-          ) : leftScan ? (
-            <ScanComparisonCard label="Scan A" scan={leftScan} />
-          ) : null}
-
-          {/* Right Scan */}
-          {rightLoading ? (
-            <Skeleton className="h-64 w-full" />
-          ) : rightScan ? (
-            <ScanComparisonCard label="Scan B" scan={rightScan} />
-          ) : null}
+        <div className="grid grid-cols-2 gap-4">
+          {leftLoading ? <Skeleton className="h-48 w-full" /> : leftScan ? <ScanCard label="A" scan={leftScan} /> : null}
+          {rightLoading ? <Skeleton className="h-48 w-full" /> : rightScan ? <ScanCard label="B" scan={rightScan} /> : null}
         </div>
       )}
 
-      {/* Diff Summary */}
       {leftScan && rightScan && (
         <Card>
           <CardHeader>
@@ -107,118 +83,79 @@ export default function ComparisonPage() {
         </Card>
       )}
 
-      {/* Empty State */}
       {!leftScanId && !rightScanId && (
-        <div className="text-center py-12">
-          <GitCompare className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-          <p className="text-muted-foreground font-mono">Select two scans to compare</p>
+        <div className="text-center py-10">
+          <GitCompare className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
+          <p className="text-xs text-muted-foreground">Select two scans to compare</p>
         </div>
       )}
     </div>
   );
 }
 
-function ScanComparisonCard({
-  label,
-  scan,
-}: {
-  label: string;
-  scan: import("@/lib/types").ScanDetailResponse;
-}) {
+function ScanCard({ label, scan }: { label: string; scan: import("@/lib/types").ScanDetailResponse }) {
   return (
     <Card>
-      <CardHeader>
-        <CardTitle>{label}</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
+      <CardHeader><CardTitle>Scan {label}</CardTitle></CardHeader>
+      <CardContent className="space-y-3">
         <div>
-          <p className="text-sm font-mono font-medium">{scan.target}</p>
-          <p className="text-xs text-muted-foreground">{formatDate(scan.started_at)}</p>
+          <p className="text-xs font-medium">{scan.target}</p>
+          <p className="text-[11px] text-muted-foreground">{formatDate(scan.started_at)}</p>
         </div>
-
-        {/* Severity Breakdown */}
-        <div className="space-y-2">
+        <div className="space-y-1.5">
           {(["critical", "high", "medium", "low", "info"] as const).map((sev) => (
             <div key={sev} className="flex items-center gap-2">
-              <span className="text-xs font-mono uppercase w-20 text-muted-foreground">{sev}</span>
-              <div className="flex-1 h-3 bg-muted rounded-full overflow-hidden">
+              <span className="text-[11px] uppercase w-14 text-muted-foreground">{sev}</span>
+              <div className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden">
                 <div
                   className={`h-full rounded-full ${
                     sev === "critical" ? "bg-severity-critical" :
                     sev === "high" ? "bg-severity-high" :
                     sev === "medium" ? "bg-severity-medium" :
-                    sev === "low" ? "bg-severity-low" :
-                    "bg-severity-info"
+                    sev === "low" ? "bg-severity-low" : "bg-severity-info"
                   }`}
                   style={{ width: `${Math.min(100, (scan.summary[sev] / Math.max(scan.summary.total, 1)) * 100)}%` }}
                 />
               </div>
-              <span className="text-sm font-mono w-8 text-right">{scan.summary[sev]}</span>
+              <span className="text-xs tabular-nums w-6 text-right">{scan.summary[sev]}</span>
             </div>
           ))}
         </div>
-
-        {/* Gate Status */}
         <div className="flex items-center justify-between pt-2 border-t border-border">
-          <span className="text-sm text-muted-foreground">Quality Gate</span>
-          <Badge variant={scan.gate_passed ? "success" : "destructive"}>
-            {scan.gate_passed ? "PASS" : "FAIL"}
-          </Badge>
+          <span className="text-[11px] text-muted-foreground">Gate</span>
+          <Badge variant={scan.gate_passed ? "success" : "destructive"}>{scan.gate_passed ? "PASS" : "FAIL"}</Badge>
         </div>
         <div className="flex items-center justify-between">
-          <span className="text-sm text-muted-foreground">Risk Score</span>
-          <span className="font-mono font-bold">{scan.summary.risk_score}</span>
+          <span className="text-[11px] text-muted-foreground">Risk</span>
+          <span className="text-xs font-semibold tabular-nums">{scan.summary.risk_score}</span>
         </div>
       </CardContent>
     </Card>
   );
 }
 
-function DiffTable({
-  left,
-  right,
-}: {
-  left: import("@/lib/types").ScanDetailResponse;
-  right: import("@/lib/types").ScanDetailResponse;
-}) {
+function DiffTable({ left, right }: { left: import("@/lib/types").ScanDetailResponse; right: import("@/lib/types").ScanDetailResponse }) {
   const leftIds = new Set(left.findings.map((f) => f.id));
   const rightIds = new Set(right.findings.map((f) => f.id));
-
   const newFindings = right.findings.filter((f) => !leftIds.has(f.id));
   const resolvedFindings = left.findings.filter((f) => !rightIds.has(f.id));
   const unchanged = left.findings.filter((f) => rightIds.has(f.id));
 
   return (
-    <div className="space-y-4">
-      <div className="grid grid-cols-3 gap-4">
-        <Card>
-          <CardContent className="pt-6 text-center">
-            <p className="text-2xl font-mono font-bold text-primary">{resolvedFindings.length}</p>
-            <p className="text-xs text-muted-foreground">Resolved</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6 text-center">
-            <p className="text-2xl font-mono font-bold text-foreground">{unchanged.length}</p>
-            <p className="text-xs text-muted-foreground">Unchanged</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6 text-center">
-            <p className="text-2xl font-mono font-bold text-destructive">{newFindings.length}</p>
-            <p className="text-xs text-muted-foreground">New</p>
-          </CardContent>
-        </Card>
+    <div className="space-y-3">
+      <div className="grid grid-cols-3 gap-2">
+        <Card><CardContent className="pt-2.5 pb-2 text-center"><p className="text-base font-semibold text-primary tabular-nums">{resolvedFindings.length}</p><p className="text-[11px] text-muted-foreground">Resolved</p></CardContent></Card>
+        <Card><CardContent className="pt-2.5 pb-2 text-center"><p className="text-base font-semibold tabular-nums">{unchanged.length}</p><p className="text-[11px] text-muted-foreground">Unchanged</p></CardContent></Card>
+        <Card><CardContent className="pt-2.5 pb-2 text-center"><p className="text-base font-semibold text-destructive tabular-nums">{newFindings.length}</p><p className="text-[11px] text-muted-foreground">New</p></CardContent></Card>
       </div>
-
       {newFindings.length > 0 && (
         <div>
-          <h3 className="text-sm font-mono font-semibold text-destructive mb-2">New Findings</h3>
+          <p className="text-xs font-semibold text-destructive mb-1">New Findings</p>
           {newFindings.map((f) => (
-            <div key={f.id} className="flex items-center gap-2 p-2 text-sm">
-              <Badge variant="destructive" className="text-xs">NEW</Badge>
-              <span className="font-mono">{f.title}</span>
-              <span className="text-xs text-muted-foreground ml-auto">{f.severity}</span>
+            <div key={f.id} className="flex items-center gap-1.5 py-1 text-xs">
+              <Badge variant="destructive" className="text-[10px]">NEW</Badge>
+              <span className="truncate">{f.title}</span>
+              <span className="text-[11px] text-muted-foreground ml-auto shrink-0">{f.severity}</span>
             </div>
           ))}
         </div>

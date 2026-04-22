@@ -11,14 +11,8 @@ import { Settings, Copy, Check } from "lucide-react";
 
 export default function SettingsPage() {
   const queryClient = useQueryClient();
-  const { data: config, isLoading } = useQuery({
-    queryKey: ["config"],
-    queryFn: getConfig,
-  });
-  const { data: modules } = useQuery({
-    queryKey: ["modules"],
-    queryFn: listModules,
-  });
+  const { data: config, isLoading } = useQuery({ queryKey: ["config"], queryFn: getConfig });
+  const { data: modules } = useQuery({ queryKey: ["modules"], queryFn: listModules });
 
   const [failOn, setFailOn] = useState("critical");
   const [maxFindings, setMaxFindings] = useState("");
@@ -39,22 +33,17 @@ export default function SettingsPage() {
   });
 
   const handleSave = () => {
-    const updates: Record<string, unknown> = {
+    updateMutation.mutate({
       quality_gate: {
         fail_on_severity: failOn,
         ...(maxFindings ? { max_findings: parseInt(maxFindings) } : {}),
         ...(maxRiskScore ? { max_risk_score: parseInt(maxRiskScore) } : {}),
       },
-    };
-    updateMutation.mutate(updates);
+    });
   };
 
   const handleModuleToggle = (moduleName: string, enabled: boolean) => {
-    updateMutation.mutate({
-      modules: {
-        [moduleName]: { enabled },
-      },
-    });
+    updateMutation.mutate({ modules: { [moduleName]: { enabled } } });
   };
 
   const copyToClipboard = (text: string, id: string) => {
@@ -103,35 +92,32 @@ jobs:
   --format both \\
   --output reports/`;
 
+  const selectClass = "mt-0.5 flex h-8 w-full rounded border border-border bg-input px-2.5 py-1.5 text-xs text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1";
+
   return (
-    <div className="space-y-6">
-      <h1 className="text-2xl font-mono font-bold flex items-center gap-2">
-        <Settings className="h-6 w-6" />
+    <div className="space-y-4">
+      <h1 className="text-sm font-semibold flex items-center gap-1.5">
+        <Settings className="h-4 w-4" />
         Settings
       </h1>
 
       {isLoading ? (
-        <div className="space-y-4">
-          <Skeleton className="h-32 w-full" />
+        <div className="space-y-3">
+          <Skeleton className="h-24 w-full" />
+          <Skeleton className="h-36 w-full" />
           <Skeleton className="h-48 w-full" />
-          <Skeleton className="h-64 w-full" />
         </div>
       ) : (
         <>
-          {/* Quality Gate Config */}
           <Card>
             <CardHeader>
               <CardTitle>Quality Gate</CardTitle>
-              <CardDescription>Configure quality gate thresholds</CardDescription>
+              <CardDescription>Configure thresholds</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-3">
               <div>
-                <label className="text-sm font-mono text-muted-foreground">Fail on Severity</label>
-                <select
-                  value={failOn}
-                  onChange={(e) => setFailOn(e.target.value)}
-                  className="mt-1 flex h-10 w-full rounded-md border border-border bg-input px-3 py-2 text-sm font-mono text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                >
+                <label className="text-[11px] text-muted-foreground">Fail on Severity</label>
+                <select value={failOn} onChange={(e) => setFailOn(e.target.value)} className={selectClass}>
                   <option value="critical">Critical</option>
                   <option value="high">High</option>
                   <option value="medium">Medium</option>
@@ -139,57 +125,41 @@ jobs:
                   <option value="info">Info</option>
                 </select>
               </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-sm font-mono text-muted-foreground">Max Findings</label>
-                  <Input
-                    type="number"
-                    placeholder="No limit"
-                    value={maxFindings}
-                    onChange={(e) => setMaxFindings(e.target.value)}
-                    className="mt-1"
-                  />
+                  <label className="text-[11px] text-muted-foreground">Max Findings</label>
+                  <Input type="number" placeholder="No limit" value={maxFindings} onChange={(e) => setMaxFindings(e.target.value)} className="mt-0.5" />
                 </div>
                 <div>
-                  <label className="text-sm font-mono text-muted-foreground">Max Risk Score</label>
-                  <Input
-                    type="number"
-                    placeholder="No limit"
-                    value={maxRiskScore}
-                    onChange={(e) => setMaxRiskScore(e.target.value)}
-                    className="mt-1"
-                  />
+                  <label className="text-[11px] text-muted-foreground">Max Risk Score</label>
+                  <Input type="number" placeholder="No limit" value={maxRiskScore} onChange={(e) => setMaxRiskScore(e.target.value)} className="mt-0.5" />
                 </div>
               </div>
-
-              <Button onClick={handleSave} disabled={updateMutation.isPending}>
-                {updateMutation.isPending ? "Saving..." : "Save Configuration"}
+              <Button onClick={handleSave} disabled={updateMutation.isPending} size="sm">
+                {updateMutation.isPending ? "Saving..." : "Save"}
               </Button>
             </CardContent>
           </Card>
 
-          {/* Modules */}
           <Card>
             <CardHeader>
-              <CardTitle>Scanner Modules</CardTitle>
-              <CardDescription>Available scanning modules</CardDescription>
+              <CardTitle>Modules</CardTitle>
+              <CardDescription>Scanner modules</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+              <div className="grid grid-cols-2 lg:grid-cols-3 gap-2">
                 {(modules ?? []).map((mod) => (
-                  <div
-                    key={mod.name}
-                    className="flex items-center justify-between p-3 rounded-md border border-border"
-                  >
-                    <div>
-                      <p className="text-sm font-mono font-medium">{mod.display_name}</p>
-                      <p className="text-xs text-muted-foreground">{mod.category}</p>
+                  <div key={mod.name} className={`flex items-center justify-between p-2 rounded border text-xs transition-colors ${
+                    mod.enabled ? "border-primary/30 bg-primary/5" : "border-border"
+                  }`}>
+                    <div className="min-w-0">
+                      <p className="font-medium truncate">{mod.display_name}</p>
+                      <p className="text-[11px] text-muted-foreground truncate">{mod.category}</p>
                     </div>
                     <button
                       onClick={() => handleModuleToggle(mod.name, !mod.enabled)}
-                      className={`px-2 py-1 text-xs rounded cursor-pointer ${
-                        mod.enabled ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground"
+                      className={`px-2 py-0.5 text-[11px] rounded font-medium ${
+                        mod.enabled ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"
                       }`}
                     >
                       {mod.enabled ? "ON" : "OFF"}
@@ -200,62 +170,42 @@ jobs:
             </CardContent>
           </Card>
 
-          {/* CI/CD Integration */}
           <Card>
             <CardHeader>
               <CardTitle>CI/CD Integration</CardTitle>
-              <CardDescription>Copy-paste pipeline configurations</CardDescription>
+              <CardDescription>Pipeline configurations</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
-              {/* GitHub Actions */}
+            <CardContent className="space-y-3">
               <div>
-                <div className="flex items-center justify-between mb-2">
-                  <h3 className="text-sm font-mono font-medium">GitHub Actions</h3>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => copyToClipboard(githubActionsYaml, "github")}
-                  >
+                <div className="flex items-center justify-between mb-1">
+                  <p className="text-xs font-medium">GitHub Actions</p>
+                  <Button variant="ghost" size="sm" onClick={() => copyToClipboard(githubActionsYaml, "github")}>
                     {copiedYaml === "github" ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
                   </Button>
                 </div>
-                <div className="terminal-output text-xs">{githubActionsYaml}</div>
+                <div className="terminal-output">{githubActionsYaml}</div>
               </div>
-
-              {/* GitLab CI */}
               <div>
-                <div className="flex items-center justify-between mb-2">
-                  <h3 className="text-sm font-mono font-medium">GitLab CI</h3>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => copyToClipboard(gitlabCiYaml, "gitlab")}
-                  >
+                <div className="flex items-center justify-between mb-1">
+                  <p className="text-xs font-medium">GitLab CI</p>
+                  <Button variant="ghost" size="sm" onClick={() => copyToClipboard(gitlabCiYaml, "gitlab")}>
                     {copiedYaml === "gitlab" ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
                   </Button>
                 </div>
-                <div className="terminal-output text-xs">{gitlabCiYaml}</div>
+                <div className="terminal-output">{gitlabCiYaml}</div>
               </div>
-
-              {/* CLI Command */}
               <div>
-                <div className="flex items-center justify-between mb-2">
-                  <h3 className="text-sm font-mono font-medium">CLI Command</h3>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => copyToClipboard(cliCommand, "cli")}
-                  >
+                <div className="flex items-center justify-between mb-1">
+                  <p className="text-xs font-medium">CLI</p>
+                  <Button variant="ghost" size="sm" onClick={() => copyToClipboard(cliCommand, "cli")}>
                     {copiedYaml === "cli" ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
                   </Button>
                 </div>
-                <div className="terminal-output text-xs">{cliCommand}</div>
+                <div className="terminal-output">{cliCommand}</div>
               </div>
-
-              {/* Apply Gate Settings */}
               <div className="pt-2 border-t border-border">
-                <Button onClick={handleSave} disabled={updateMutation.isPending}>
-                  {updateMutation.isPending ? "Applying..." : "Apply Gate Settings"}
+                <Button onClick={handleSave} disabled={updateMutation.isPending} size="sm">
+                  {updateMutation.isPending ? "Applying..." : "Apply"}
                 </Button>
               </div>
             </CardContent>

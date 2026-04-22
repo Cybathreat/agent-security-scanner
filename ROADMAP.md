@@ -118,49 +118,55 @@ Configurable quality gates for CI/CD integration:
 - Pre-commit hooks for ruff (lint + format) and mypy
 - CI pipeline with ruff, mypy, coverage enforcement (70% threshold), security gate demo
 
-### 3.2 Web Dashboard (Planned)
+### 3.2 Web Dashboard ✅ Done
 
-**Stack:** React / Next.js frontend + FastAPI backend, WebSocket for real-time updates.
+**Stack:** Next.js 16 + React 19 + Tailwind CSS 4 + FastAPI + WebSocket.
 
-| View | Features |
-|------|----------|
-| Scan Dashboard | Real-time scan progress with animated attack tree visualization, live finding feed |
-| Attack Surface Map | Interactive graph showing all endpoints, tools, data flows — click to drill into findings |
-| Finding Explorer | Filterable / sortable table with severity, CWE, OWASP mapping, evidence, and remediation |
-| Comparison View | Side-by-side diff of scan results over time — track regression / improvement |
-| Replay Console | Replay any attack payload interactively, modify parameters, re-test in real time |
-| Report Builder | Drag-and-drop report customization, export to PDF / HTML / JSON, executive summary generator |
-| CI/CD Integration Panel | Configure GitHub Actions / GitLab CI hooks, set quality gates (fail build on CRITICAL) |
+| View | Status |
+|------|--------|
+| Scan Dashboard | ✅ Done |
+| Attack Surface Map | ✅ Done |
+| Finding Explorer | ✅ Done |
+| Comparison View | ✅ Done |
+| Replay Console | ✅ Done |
+| Report Builder | ✅ Done |
+| Settings & CI/CD Integration | ✅ Done |
 
-**Interactive features:**
-- Live attack visualization — watch payloads flow through the system in real time
-- Finding annotation — mark as false positive, add notes, assign to team members
-- Remediation tracking — link findings to fix PRs, track resolution status
-- Dark mode
+**Features implemented:**
+- Real-time scan progress via WebSocket
+- Interactive attack surface graph (React Flow)
+- Finding annotations (false positive, notes, assigned_to, status)
+- Scan comparison with diff summary
+- Replay attacks with editable parameters
+- Drag-and-drop report builder with PDF/HTML/JSON export
+- CI/CD integration panel with copy-paste configs
+- Quality gate configuration
 
 ---
 
-## Phase 4 — Web Dashboard (Final Phase)
+## Phase 4 — Web Dashboard ✅ Done
 
-**Goal:** Replace CLI-only workflow with an interactive dashboard for teams.
+**Stack:** Next.js 16 + React 19 + Tailwind CSS 4 frontend, FastAPI + aiosqlite + WebSocket backend.
 
-**Stack:** React / Next.js frontend + FastAPI backend, WebSocket for real-time updates.
+| View | Status |
+|------|--------|
+| Scan Dashboard | ✅ Done |
+| Attack Surface Map | ✅ Done |
+| Finding Explorer | ✅ Done |
+| Comparison View | ✅ Done |
+| Replay Console | ✅ Done |
+| Report Builder | ✅ Done |
+| Settings & CI/CD Integration | ✅ Done |
 
-| View | Features |
-|------|----------|
-| Scan Dashboard | Real-time scan progress with animated attack tree visualization, live finding feed |
-| Attack Surface Map | Interactive graph showing all endpoints, tools, data flows — click to drill into findings |
-| Finding Explorer | Filterable / sortable table with severity, CWE, OWASP mapping, evidence, and remediation |
-| Comparison View | Side-by-side diff of scan results over time — track regression / improvement |
-| Replay Console | Replay any attack payload interactively, modify parameters, re-test in real time |
-| Report Builder | Drag-and-drop report customization, export to PDF / HTML / JSON, executive summary generator |
-| CI/CD Integration Panel | Configure GitHub Actions / GitLab CI hooks, set quality gates (fail build on CRITICAL) |
-
-**Interactive features:**
-- Live attack visualization — watch payloads flow through the system in real time
-- Finding annotation — mark as false positive, add notes, assign to team members
-- Remediation tracking — link findings to fix PRs, track resolution status
-- Dark mode
+**Features implemented:**
+- Real-time scan progress via WebSocket
+- Interactive attack surface graph (React Flow)
+- Finding annotations (false positive, notes, assigned_to, status)
+- Scan comparison with diff summary
+- Replay attacks with editable parameters
+- Drag-and-drop report builder with PDF/HTML/JSON export
+- CI/CD integration panel with copy-paste configs
+- Quality gate configuration
 
 ---
 
@@ -193,7 +199,7 @@ Configurable quality gates for CI/CD integration:
 25. ~~Canary token detection~~ — ✅ Done (3 token discovery + 3 neutralization + 3 bypass payloads)
 26. ~~Output filter probing~~ — ✅ Done (3 filter mapping + 3 boundary testing + 3 encoding bypass payloads)
 27. ~~CI/CD integration~~ — ✅ Done (quality gates: --fail-on, --max-findings, --max-risk-score; pre-commit hooks; ruff/mypy in CI; coverage enforcement)
-28. Web dashboard with real-time visualization — massive UX improvement (final phase)
+28. ~~Web dashboard with real-time visualization~~ — ✅ Done (Next.js 16 + React 19 + FastAPI + WebSocket)
 
 ---
 

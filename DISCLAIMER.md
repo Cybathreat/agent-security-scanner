@@ -98,7 +98,7 @@ For questions about this disclaimer or proper use:
 
 ## Version
 
-**v0.2** — Last updated: 2026-04-16
+**v0.2** — Last updated: 2026-04-23
 
 ---
 

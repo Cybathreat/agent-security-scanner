@@ -33,120 +33,68 @@ export function FindingDetail({ finding }: FindingDetailProps) {
   });
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-start justify-between gap-4">
+    <div className="space-y-3">
+      <div className="flex items-start justify-between gap-3">
         <div>
           <SeverityBadge severity={finding.severity} />
-          <h2 className="mt-2 text-lg font-mono font-semibold">{finding.title}</h2>
-          <p className="text-sm text-muted-foreground mt-1">{finding.description}</p>
+          <p className="mt-1 text-xs font-semibold">{finding.title}</p>
+          <p className="text-[11px] text-muted-foreground mt-0.5">{finding.description}</p>
         </div>
         <Badge variant="outline">{finding.category}</Badge>
       </div>
 
-      {/* Framework Mappings */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Framework Mappings</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {finding.cwe && (
-              <div>
-                <p className="text-xs text-muted-foreground font-mono">CWE</p>
-                <p className="font-mono text-sm">{finding.cwe}</p>
-              </div>
-            )}
-            {finding.owasp_ref && (
-              <div>
-                <p className="text-xs text-muted-foreground font-mono">OWASP</p>
-                <p className="font-mono text-sm">{finding.owasp_ref}</p>
-              </div>
-            )}
-            {finding.mitre_ref && (
-              <div>
-                <p className="text-xs text-muted-foreground font-mono">MITRE ATLAS</p>
-                <p className="font-mono text-sm">{finding.mitre_ref}</p>
-              </div>
-            )}
-          </div>
-        </CardContent>
-      </Card>
+      {finding.cwe || finding.owasp_ref || finding.mitre_ref ? (
+        <div className="flex gap-4">
+          {finding.cwe && <div><p className="text-[10px] text-muted-foreground">CWE</p><p className="text-xs font-medium">{finding.cwe}</p></div>}
+          {finding.owasp_ref && <div><p className="text-[10px] text-muted-foreground">OWASP</p><p className="text-xs font-medium">{finding.owasp_ref}</p></div>}
+          {finding.mitre_ref && <div><p className="text-[10px] text-muted-foreground">MITRE</p><p className="text-xs font-medium">{finding.mitre_ref}</p></div>}
+        </div>
+      ) : null}
 
-      {/* Evidence */}
       {finding.evidence && finding.evidence.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Evidence</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="terminal-output text-xs">
-              {finding.evidence.map((e, i) => (
-                <div key={i}>{e}</div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+        <div className="terminal-output">
+          {finding.evidence.map((e, i) => (
+            <div key={i}>{e}</div>
+          ))}
+        </div>
       )}
 
-      {/* Recommendation */}
       {finding.recommendation && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Recommendation</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm">{finding.recommendation}</p>
-          </CardContent>
-        </Card>
+        <p className="text-xs text-muted-foreground">{finding.recommendation}</p>
       )}
 
-      {/* Meta */}
-      <div className="flex gap-4 text-xs text-muted-foreground font-mono">
-        {finding.location && <span>Location: {finding.location}</span>}
+      <div className="flex gap-3 text-[11px] text-muted-foreground">
+        {finding.location && <span>{finding.location}</span>}
         <span>Confidence: {finding.confidence}</span>
-        {finding.timestamp && <span>{finding.timestamp}</span>}
       </div>
 
-      {/* Annotations */}
-      <div className="border-t border-border pt-4 space-y-3">
-        <h3 className="text-sm font-medium">Annotations</h3>
-        <div className="flex items-center gap-2">
-          <label className="flex items-center gap-1 text-sm cursor-pointer">
-            <input
-              type="checkbox"
-              checked={isFalsePositive}
-              onChange={(e) => setIsFalsePositive(e.target.checked)}
-              className="accent-primary"
-            />
-            False Positive
-          </label>
-        </div>
-        <div className="flex gap-2">
+      <div className="border-t border-border pt-3 space-y-2">
+        <p className="text-[11px] font-medium text-muted-foreground">Annotations</p>
+        <label className="flex items-center gap-1.5 text-xs cursor-pointer">
+          <input type="checkbox" checked={isFalsePositive} onChange={(e) => setIsFalsePositive(e.target.checked)} className="accent-primary h-3 w-3" />
+          False Positive
+        </label>
+        <div className="flex gap-1.5">
           <select
             value={status}
             onChange={(e) => setStatus(e.target.value as "open" | "confirmed" | "resolved" | "accepted")}
-            className="bg-muted text-sm rounded px-2 py-1 border border-border"
+            className="bg-input text-xs rounded border border-border px-2 py-1"
           >
             <option value="open">Open</option>
             <option value="confirmed">Confirmed</option>
             <option value="resolved">Resolved</option>
             <option value="accepted">Accepted</option>
           </select>
-          <Input
-            placeholder="Assign to..."
-            value={assignedTo}
-            onChange={(e) => setAssignedTo(e.target.value)}
-            className="flex-1"
-          />
+          <Input placeholder="Assign to..." value={assignedTo} onChange={(e) => setAssignedTo(e.target.value)} className="flex-1" />
         </div>
         <textarea
-          placeholder="Add notes..."
+          placeholder="Notes..."
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
-          className="w-full bg-muted text-sm rounded p-2 border border-border min-h-[60px]"
+          className="w-full bg-input text-xs rounded border border-border p-1.5 min-h-[40px] resize-y placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         />
         <Button size="sm" onClick={() => annotateMutation.mutate()} disabled={annotateMutation.isPending}>
-          Save Annotation
+          Save
         </Button>
       </div>
     </div>

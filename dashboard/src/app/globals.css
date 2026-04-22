@@ -1,45 +1,45 @@
 @import "tailwindcss";
 
 /* ---------------------------------------------------------------------------
-   Singularity — Cyberpunk Design System
-   Dark-mode-only security dashboard with neon accents
+   Singularity — Professional Dark Dashboard
+   Clean, understated, data-dense. Inspired by Linear, Vercel, GitHub.
    --------------------------------------------------------------------------- */
 
 :root {
   /* Core palette */
-  --background: #020617;
-  --foreground: #F8FAFC;
-  --card: #0F172A;
-  --card-foreground: #F8FAFC;
-  --muted: #1A1E2F;
-  --muted-foreground: #94A3B8;
-  --border: #334155;
-  --input: #1E293B;
-  --ring: #22C55E;
+  --background: #09090b;
+  --foreground: #fafafa;
+  --card: #0a0a0c;
+  --card-foreground: #fafafa;
+  --muted: #18181b;
+  --muted-foreground: #71717a;
+  --border: #27272a;
+  --input: #0a0a0c;
+  --ring: #3b82f6;
 
-  /* Semantic colors */
-  --primary: #22C55E;
-  --primary-foreground: #020617;
-  --destructive: #EF4444;
-  --destructive-foreground: #F8FAFC;
-  --warning: #F59E0B;
-  --warning-foreground: #020617;
-  --info: #3B82F6;
-  --info-foreground: #F8FAFC;
+  /* Semantic colors — restrained, professional */
+  --primary: #3b82f6;
+  --primary-foreground: #fafafa;
+  --destructive: #ef4444;
+  --destructive-foreground: #fafafa;
+  --warning: #f59e0b;
+  --warning-foreground: #09090b;
+  --info: #6366f1;
+  --info-foreground: #fafafa;
 
   /* Severity palette */
-  --severity-critical: #EF4444;
-  --severity-high: #F59E0B;
-  --severity-medium: #3B82F6;
-  --severity-low: #22C55E;
-  --severity-info: #94A3B8;
+  --severity-critical: #ef4444;
+  --severity-high: #f59e0b;
+  --severity-medium: #3b82f6;
+  --severity-low: #22c55e;
+  --severity-info: #71717a;
 
   /* Radius */
-  --radius: 0.5rem;
+  --radius: 0.375rem;
 
   /* Font families */
-  --font-sans: "Fira Sans", ui-sans-serif, system-ui, sans-serif;
-  --font-mono: "Fira Code", ui-monospace, monospace;
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "Cascadia Code", monospace;
 }
 
 @theme inline {
@@ -65,9 +65,9 @@
   --color-severity-medium: var(--severity-medium);
   --color-severity-low: var(--severity-low);
   --color-severity-info: var(--severity-info);
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-lg: var(--radius);
+  --radius-sm: calc(var(--radius) - 2px);
+  --radius-md: var(--radius);
+  --radius-lg: calc(var(--radius) + 2px);
   --radius-xl: calc(var(--radius) + 4px);
   --font-sans: var(--font-sans);
   --font-mono: var(--font-mono);
@@ -78,76 +78,86 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans);
+  font-size: 13px;
+  line-height: 1.5;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Scrollbar styling */
+/* Scrollbar */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 4px;
+  height: 4px;
 }
 
 ::-webkit-scrollbar-track {
-  background: var(--background);
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
   background: var(--border);
-  border-radius: 3px;
+  border-radius: 2px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
   background: var(--muted-foreground);
 }
 
-/* Neon glow effects */
-.glow-green {
-  box-shadow: 0 0 15px rgba(34, 197, 94, 0.3), 0 0 45px rgba(34, 197, 94, 0.1);
+/* Skeleton shimmer */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
 }
 
-.glow-red {
-  box-shadow: 0 0 15px rgba(239, 68, 68, 0.3), 0 0 45px rgba(239, 68, 68, 0.1);
+.animate-shimmer {
+  background: linear-gradient(
+    90deg,
+    var(--muted) 25%,
+    #1f1f23 50%,
+    var(--muted) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 2s ease-in-out infinite;
 }
 
-.glow-amber {
-  box-shadow: 0 0 15px rgba(245, 158, 11, 0.3), 0 0 45px rgba(245, 158, 11, 0.1);
-}
-
-.glow-blue {
-  box-shadow: 0 0 15px rgba(59, 130, 246, 0.3), 0 0 45px rgba(59, 130, 246, 0.1);
-}
-
-/* Terminal-style output */
+/* Terminal / code output */
 .terminal-output {
   font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 1.6;
   background: var(--background);
   border: 1px solid var(--border);
-  padding: 1rem;
+  padding: 0.75rem;
   border-radius: var(--radius);
   white-space: pre-wrap;
   word-break: break-all;
-  line-height: 1.6;
+  color: var(--muted-foreground);
 }
 
-/* Subtle scanline overlay */
-.scanlines {
-  background: repeating-linear-gradient(
-    0deg,
-    transparent,
-    transparent 2px,
-    rgba(0, 0, 0, 0.03) 2px,
-    rgba(0, 0, 0, 0.03) 4px
-  );
-  pointer-events: none;
+/* Severity status dot */
+.severity-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.severity-dot-critical { background: var(--severity-critical); }
+.severity-dot-high { background: var(--severity-high); }
+.severity-dot-medium { background: var(--severity-medium); }
+.severity-dot-low { background: var(--severity-low); }
+.severity-dot-info { background: var(--severity-info); }
+
+/* Focus ring */
+.focus-ring:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 1px;
 }
 
 /* Reduced motion */
 @media (prefers-reduced-motion: reduce) {
-  .glow-green,
-  .glow-red,
-  .glow-amber,
-  .glow-blue {
-    box-shadow: none;
+  .animate-shimmer {
+    animation: none;
   }
 }

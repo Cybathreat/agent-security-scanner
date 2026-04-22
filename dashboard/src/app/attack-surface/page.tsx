@@ -59,95 +59,68 @@ export default function AttackSurfacePage() {
       const pos = NODE_POSITIONS[node.type] || { x: 0, y: 0 };
       const offset = typeIndex[node.type] || 0;
       typeIndex[node.type] = offset + 1;
-      return {
-        id: node.id,
-        type: "attackNode",
-        position: { x: pos.x + offset * 250, y: pos.y },
-        data: node as unknown as Record<string, unknown>,
-      };
+      return { id: node.id, type: "attackNode", position: { x: pos.x + offset * 250, y: pos.y }, data: node as unknown as Record<string, unknown> };
     });
   }, [surface]);
 
   const edges: Edge[] = useMemo(() => {
     if (!surface) return [];
     return surface.edges.map((edge) => ({
-      id: edge.id,
-      source: edge.source,
-      target: edge.target,
+      id: edge.id, source: edge.source, target: edge.target,
       label: `${edge.label} (${edge.finding_count})`,
       animated: true,
-      style: { stroke: "#22c55e" },
+      style: { stroke: "#3b82f6" },
     }));
   }, [surface]);
 
   const onNodeClick: NodeMouseHandler = useCallback((_: React.MouseEvent, node: Node) => {
     const surfaceNode = surface?.nodes.find((n) => n.id === node.id);
-    if (surfaceNode) {
-      setSelectedFindingIds(surfaceNode.finding_ids);
-    }
+    if (surfaceNode) setSelectedFindingIds(surfaceNode.finding_ids);
   }, [surface]);
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center gap-2">
-        <Network className="h-6 w-6 text-primary" />
-        <h1 className="text-2xl font-bold">Attack Surface Map</h1>
+    <div className="space-y-4">
+      <div className="flex items-center gap-1.5">
+        <Network className="h-4 w-4 text-muted-foreground" />
+        <h1 className="text-sm font-semibold">Attack Surface</h1>
       </div>
 
-      {/* Scan selector */}
       <select
         value={selectedScanId}
-        onChange={(e) => {
-          setSelectedScanId(e.target.value);
-          setSelectedFindingIds([]);
-        }}
-        className="w-full bg-muted border border-border rounded px-3 py-2 text-sm"
+        onChange={(e) => { setSelectedScanId(e.target.value); setSelectedFindingIds([]); }}
+        className="w-full bg-input border border-border rounded px-2.5 py-1.5 text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1"
       >
         <option value="">Select a scan...</option>
-        {scansList?.map((scan) => (
-          <option key={scan.scan_id} value={scan.scan_id}>
-            {scan.target} — {scan.status}
-          </option>
-        ))}
+        {scansList?.map((scan) => (<option key={scan.scan_id} value={scan.scan_id}>{scan.target} — {scan.status}</option>))}
       </select>
 
-      {/* Legend */}
-      <div className="flex gap-4 text-xs text-muted-foreground flex-wrap">
-        <span className="flex items-center gap-1"><span className="w-3 h-3 rounded border-2 border-blue-500 bg-blue-950/50 inline-block" /> Endpoint</span>
-        <span className="flex items-center gap-1"><span className="w-3 h-3 rounded border-2 border-green-500 bg-green-950/50 inline-block" /> Tool</span>
-        <span className="flex items-center gap-1"><span className="w-3 h-3 rounded border-2 border-amber-500 bg-amber-950/50 inline-block" /> Data Flow</span>
-        <span className="flex items-center gap-1"><span className="w-3 h-3 rounded border-2 border-purple-500 bg-purple-950/50 inline-block" /> Agent</span>
-        <span className="flex items-center gap-1"><span className="w-3 h-3 rounded border-2 border-red-500 bg-red-950/50 inline-block" /> External</span>
+      <div className="flex gap-3 text-[11px] text-muted-foreground flex-wrap">
+        <span className="flex items-center gap-1"><span className="severity-dot severity-dot-medium" /> Endpoint</span>
+        <span className="flex items-center gap-1"><span className="severity-dot severity-dot-low" /> Tool</span>
+        <span className="flex items-center gap-1"><span className="severity-dot severity-dot-high" /> Data Flow</span>
+        <span className="flex items-center gap-1"><span className="severity-dot" style={{background:"#a855f7"}} /> Agent</span>
+        <span className="flex items-center gap-1"><span className="severity-dot severity-dot-critical" /> External</span>
       </div>
 
-      {isLoading && <Skeleton className="h-[500px]" />}
+      {isLoading && <Skeleton className="h-[400px]" />}
 
       {surface && (
-        <div className="grid grid-cols-[1fr_300px] gap-4">
-          <div className="h-[500px] border border-border rounded bg-background">
-            <ReactFlow
-              nodes={nodes}
-              edges={edges}
-              nodeTypes={nodeTypes}
-              onNodeClick={onNodeClick}
-              fitView
-            >
-              <Background />
-              <Controls />
-              <MiniMap />
+        <div className="grid grid-cols-[1fr_260px] gap-3">
+          <div className="h-[400px] border border-border rounded bg-background overflow-hidden">
+            <ReactFlow nodes={nodes} edges={edges} nodeTypes={nodeTypes} onNodeClick={onNodeClick} fitView>
+              <Background color="#27272a" gap={36} />
+              <Controls className="!border-border !bg-card" />
+              <MiniMap className="!border-border !bg-card" nodeColor="#18181b" maskColor="rgba(9,9,11,0.8)" />
             </ReactFlow>
           </div>
-
-          <div className="space-y-4 overflow-auto max-h-[500px]">
+          <div className="space-y-3 overflow-auto max-h-[400px]">
             {selectedFindings && selectedFindings.length > 0 ? (
               <>
-                <h3 className="text-sm font-medium">Node Findings</h3>
-                {selectedFindings.map((f: FindingResponse) => (
-                  <FindingDetail key={f.id} finding={f} />
-                ))}
+                <p className="text-xs font-medium">Findings</p>
+                {selectedFindings.map((f: FindingResponse) => (<FindingDetail key={f.id} finding={f} />))}
               </>
             ) : (
-              <p className="text-sm text-muted-foreground">Click a node to view its findings</p>
+              <p className="text-xs text-muted-foreground">Click a node to view findings</p>
             )}
           </div>
         </div>

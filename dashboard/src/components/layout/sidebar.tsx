@@ -33,16 +33,15 @@ export function Sidebar() {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   const nav = (
-    <nav className="flex flex-col gap-1 p-3">
-      {/* Logo */}
-      <div className="flex items-center gap-2 px-3 py-4 mb-2">
-        <Shield className="h-7 w-7 text-primary" />
-        <span className="font-mono font-bold text-lg tracking-tight">
-          SGL
+    <nav className="flex flex-col gap-0.5 p-2">
+      <div className="flex items-center gap-2 px-2.5 py-3 mb-1">
+        <Shield className="h-4 w-4 text-primary" />
+        <span className="font-semibold text-sm tracking-tight">
+          Singularity
         </span>
       </div>
 
-      <div className="h-px bg-border mb-2" />
+      <div className="h-px bg-border mb-1.5" />
 
       {navItems.map(({ href, label, icon: Icon }) => {
         const active = pathname === href || (href !== "/" && pathname.startsWith(href));
@@ -52,13 +51,13 @@ export function Sidebar() {
             href={href}
             onClick={() => setMobileOpen(false)}
             className={cn(
-              "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-mono transition-colors",
+              "flex items-center gap-2 rounded px-2.5 py-1.5 text-[13px] font-medium transition-colors",
               active
-                ? "bg-primary/10 text-primary glow-green"
-                : "text-muted-foreground hover:text-foreground hover:bg-muted",
+                ? "bg-primary/10 text-primary"
+                : "text-muted-foreground hover:text-foreground hover:bg-muted/50",
             )}
           >
-            <Icon className="h-4 w-4" />
+            <Icon className="h-3.5 w-3.5" />
             {label}
           </Link>
         );
@@ -68,27 +67,24 @@ export function Sidebar() {
 
   return (
     <>
-      {/* Mobile toggle */}
       <button
-        className="fixed top-4 left-4 z-50 md:hidden bg-card border border-border rounded-md p-2"
+        className="fixed top-3 left-3 z-50 md:hidden bg-card border border-border rounded p-1.5"
         onClick={() => setMobileOpen(!mobileOpen)}
         aria-label="Toggle menu"
       >
-        {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+        {mobileOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
       </button>
 
-      {/* Mobile overlay */}
       {mobileOpen && (
         <div
-          className="fixed inset-0 z-40 bg-background/80 md:hidden"
+          className="fixed inset-0 z-40 bg-background/80 backdrop-blur-sm md:hidden"
           onClick={() => setMobileOpen(false)}
         />
       )}
 
-      {/* Sidebar */}
       <aside
         className={cn(
-          "fixed top-0 left-0 z-40 h-full w-56 bg-card border-r border-border transition-transform md:translate-x-0",
+          "fixed top-0 left-0 z-40 h-full w-52 bg-card border-r border-border transition-transform md:translate-x-0",
           mobileOpen ? "translate-x-0" : "-translate-x-full",
         )}
       >

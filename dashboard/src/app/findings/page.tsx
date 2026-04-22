@@ -33,22 +33,21 @@ export default function FindingsPage() {
   const allFindings = findings ?? [];
 
   return (
-    <div className="space-y-6">
-      <h1 className="text-2xl font-mono font-bold">Findings Explorer</h1>
+    <div className="space-y-4">
+      <h1 className="text-sm font-semibold">Findings</h1>
 
       {/* Filters */}
       <Card>
-        <CardContent className="pt-6 space-y-4">
-          {/* Severity Chips */}
-          <div className="flex flex-wrap gap-2">
+        <CardContent className="pt-3 space-y-3">
+          <div className="flex flex-wrap gap-1">
             {severityFilters.map((sev) => (
               <button
                 key={sev}
                 onClick={() => setSeverityFilter(severityFilter === sev ? "" : sev)}
-                className={`px-3 py-1 rounded-md border text-xs font-mono font-semibold uppercase transition-colors ${
+                className={`px-2 py-0.5 rounded border text-[11px] font-medium uppercase tracking-wider transition-colors ${
                   severityFilter === sev
-                    ? "border-primary bg-primary/10 text-primary"
-                    : "border-border text-muted-foreground hover:bg-muted"
+                    ? "border-primary/30 bg-primary/5 text-primary"
+                    : "border-border text-muted-foreground hover:bg-muted/50"
                 }`}
               >
                 {sev}
@@ -56,29 +55,28 @@ export default function FindingsPage() {
             ))}
           </div>
 
-          {/* Search + Category */}
-          <div className="flex gap-3">
+          <div className="flex gap-2">
             <div className="relative flex-1">
-              <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Search className="absolute left-2.5 top-2 h-3.5 w-3.5 text-muted-foreground" />
               <Input
                 placeholder="Search findings..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9"
+                className="pl-8"
               />
             </div>
             <Input
-              placeholder="Category filter"
+              placeholder="Category"
               value={categoryFilter}
               onChange={(e) => setCategoryFilter(e.target.value)}
-              className="w-48"
+              className="w-36"
             />
           </div>
         </CardContent>
       </Card>
 
-      <div className="flex gap-6">
-        {/* Findings Table */}
+      <div className="flex gap-4">
+        {/* Findings list */}
         <div className="flex-1">
           <Card>
             <CardHeader>
@@ -86,44 +84,41 @@ export default function FindingsPage() {
             </CardHeader>
             <CardContent>
               {isLoading ? (
-                <div className="space-y-3">
+                <div className="space-y-2">
                   {[1, 2, 3, 4, 5].map((i) => (
-                    <Skeleton key={i} className="h-14 w-full" />
+                    <Skeleton key={i} className="h-10 w-full" />
                   ))}
                 </div>
               ) : allFindings.length === 0 ? (
-                <p className="text-sm text-muted-foreground">No findings match your filters.</p>
+                <p className="text-xs text-muted-foreground">No findings match your filters.</p>
               ) : (
-                <div className="space-y-2">
+                <div className="space-y-0.5">
                   {allFindings.map((f) => (
                     <button
                       key={f.id}
                       onClick={() => setSelectedFinding(f)}
-                      className={`w-full text-left flex items-center justify-between p-3 rounded-md border transition-colors ${
+                      className={`w-full text-left flex items-center justify-between p-2 rounded border transition-colors ${
                         selectedFinding?.id === f.id
-                          ? "border-primary bg-primary/5"
-                          : "border-border hover:bg-muted"
+                          ? "border-primary/30 bg-primary/5"
+                          : "border-transparent hover:bg-muted/50"
                       }`}
                     >
-                      <div className="flex items-center gap-3 min-w-0">
+                      <div className="flex items-center gap-2 min-w-0">
                         <SeverityBadge severity={f.severity} />
                         <div className="min-w-0">
-                          <p className="text-sm font-mono font-medium truncate">{f.title}</p>
-                          <p className="text-xs text-muted-foreground truncate">{f.category}</p>
+                          <p className="text-xs font-medium truncate">{f.title}</p>
+                          <p className="text-[11px] text-muted-foreground truncate">{f.category}</p>
                         </div>
                       </div>
-                      <div className="flex items-center gap-2 shrink-0">
-                        {f.cwe && (
-                          <Badge variant="outline" className="text-xs">{f.cwe}</Badge>
-                        )}
-                      </div>
+                      {f.cwe && (
+                        <Badge variant="outline" className="text-[10px] shrink-0">{f.cwe}</Badge>
+                      )}
                     </button>
                   ))}
                 </div>
               )}
 
-              {/* Pagination */}
-              <div className="flex justify-center gap-2 mt-4">
+              <div className="flex justify-center gap-2 mt-3">
                 <Button
                   variant="outline"
                   size="sm"
@@ -145,17 +140,17 @@ export default function FindingsPage() {
           </Card>
         </div>
 
-        {/* Detail Panel */}
+        {/* Detail */}
         {selectedFinding && (
-          <div className="w-96 shrink-0">
-            <Card className="sticky top-6">
+          <div className="w-80 shrink-0">
+            <Card className="sticky top-4">
               <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle>Finding Detail</CardTitle>
+                <CardTitle>Detail</CardTitle>
                 <button
                   onClick={() => setSelectedFinding(null)}
-                  className="text-muted-foreground hover:text-foreground"
+                  className="text-muted-foreground hover:text-foreground transition-colors"
                 >
-                  <X className="h-4 w-4" />
+                  <X className="h-3.5 w-3.5" />
                 </button>
               </CardHeader>
               <CardContent>

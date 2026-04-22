@@ -10,6 +10,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 
+#### Web Dashboard
+- Full Next.js 16 + React 19 + Tailwind CSS 4 dashboard with FastAPI + WebSocket backend
+- Scan dashboard with KPI cards, recent scans, recent findings
+- New scan form with module selection and quality gate configuration
+- Scan detail page with severity breakdown, live progress (WebSocket), module status, quality gate result
+- Finding explorer with severity/category filter, search, and annotations (false positive, notes, assigned_to, status)
+- Scan comparison view with side-by-side severity breakdown and diff summary
+- Attack surface map using React Flow with interactive node graph
+- Replay console to re-run findings with editable parameters and live WebSocket output
+- Report builder with drag-and-drop section ordering, PDF/HTML/JSON export
+- Settings page with quality gate config, module toggles, and CI/CD snippet copy
+- Professional dark theme with Inter + JetBrains Mono typography
+
 #### CI/CD Quality Gates
 - `core/quality_gate.py` — `GateThreshold`, `GateResult` dataclasses, `evaluate()` function for configurable pass/fail evaluation
 - `QualityGateConfig` in `core/config.py` — `fail_on_severity`, `max_findings`, `max_risk_score` with YAML and `SINGULARITY_QUALITY_GATE_*` env var overrides

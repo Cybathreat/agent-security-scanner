@@ -1,24 +1,23 @@
 import { cn } from "@/lib/utils";
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: "default" | "destructive" | "outline" | "ghost" | "success";
+  variant?: "default" | "destructive" | "outline" | "ghost";
   size?: "sm" | "md" | "lg" | "icon";
   children: React.ReactNode;
 }
 
 const variantStyles: Record<string, string> = {
-  default: "bg-primary text-primary-foreground hover:bg-primary/90 glow-green",
+  default: "bg-primary text-primary-foreground hover:bg-primary/90",
   destructive: "bg-destructive text-destructive-foreground hover:bg-destructive/90",
   outline: "border border-border bg-transparent text-foreground hover:bg-muted",
   ghost: "bg-transparent text-foreground hover:bg-muted",
-  success: "bg-primary text-primary-foreground hover:bg-primary/90",
 };
 
 const sizeStyles: Record<string, string> = {
-  sm: "h-8 px-3 text-xs",
-  md: "h-10 px-4 text-sm",
-  lg: "h-12 px-6 text-base",
-  icon: "h-10 w-10",
+  sm: "h-7 px-2.5 text-xs gap-1",
+  md: "h-8 px-3 text-xs gap-1.5",
+  lg: "h-9 px-4 text-[13px] gap-1.5",
+  icon: "h-8 w-8",
 };
 
 export function Button({
@@ -31,7 +30,7 @@ export function Button({
   return (
     <button
       className={cn(
-        "inline-flex items-center justify-center rounded-md font-mono font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50",
+        "inline-flex items-center justify-center rounded font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-40",
         variantStyles[variant],
         sizeStyles[size],
         className,

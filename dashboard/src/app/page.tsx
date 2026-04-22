@@ -38,70 +38,62 @@ export default function DashboardPage() {
     : 0;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-mono font-bold">Dashboard</h1>
+        <h1 className="text-sm font-semibold">Dashboard</h1>
         <Link
           href="/scans"
-          className="flex items-center gap-1 text-sm font-mono text-primary hover:underline"
+          className="flex items-center gap-1 text-xs text-primary hover:underline underline-offset-2"
         >
-          New Scan <ArrowRight className="h-4 w-4" />
+          New scan <ArrowRight className="h-3 w-3" />
         </Link>
       </div>
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-md bg-primary/10">
-                <Activity className="h-5 w-5 text-primary" />
-              </div>
+          <CardContent className="pt-3 pb-3 px-3.5">
+            <div className="flex items-center gap-2">
+              <Activity className="h-3.5 w-3.5 text-muted-foreground" />
               <div>
-                <p className="text-2xl font-mono font-bold">{totalScans}</p>
-                <p className="text-xs text-muted-foreground">Total Scans</p>
+                <p className="text-lg font-semibold tabular-nums leading-none">{totalScans}</p>
+                <p className="text-[11px] text-muted-foreground mt-0.5">Scans</p>
               </div>
             </div>
           </CardContent>
         </Card>
 
         <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-md bg-destructive/10">
-                <AlertTriangle className="h-5 w-5 text-destructive" />
-              </div>
+          <CardContent className="pt-3 pb-3 px-3.5">
+            <div className="flex items-center gap-2">
+              <AlertTriangle className="h-3.5 w-3.5 text-destructive" />
               <div>
-                <p className="text-2xl font-mono font-bold text-destructive">{criticalCount}</p>
-                <p className="text-xs text-muted-foreground">Critical Findings</p>
+                <p className="text-lg font-semibold text-destructive tabular-nums leading-none">{criticalCount}</p>
+                <p className="text-[11px] text-muted-foreground mt-0.5">Critical</p>
               </div>
             </div>
           </CardContent>
         </Card>
 
         <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-md bg-warning/10">
-                <AlertTriangle className="h-5 w-5 text-warning" />
-              </div>
+          <CardContent className="pt-3 pb-3 px-3.5">
+            <div className="flex items-center gap-2">
+              <AlertTriangle className="h-3.5 w-3.5 text-warning" />
               <div>
-                <p className="text-2xl font-mono font-bold text-warning">{highCount}</p>
-                <p className="text-xs text-muted-foreground">High Findings</p>
+                <p className="text-lg font-semibold text-warning tabular-nums leading-none">{highCount}</p>
+                <p className="text-[11px] text-muted-foreground mt-0.5">High</p>
               </div>
             </div>
           </CardContent>
         </Card>
 
         <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-md bg-primary/10">
-                <CheckCircle className="h-5 w-5 text-primary" />
-              </div>
+          <CardContent className="pt-3 pb-3 px-3.5">
+            <div className="flex items-center gap-2">
+              <CheckCircle className="h-3.5 w-3.5 text-primary" />
               <div>
-                <p className="text-2xl font-mono font-bold">{passRate}%</p>
-                <p className="text-xs text-muted-foreground">Gate Pass Rate</p>
+                <p className="text-lg font-semibold tabular-nums leading-none">{passRate}%</p>
+                <p className="text-[11px] text-muted-foreground mt-0.5">Pass rate</p>
               </div>
             </div>
           </CardContent>
@@ -115,37 +107,35 @@ export default function DashboardPage() {
         </CardHeader>
         <CardContent>
           {scansLoading ? (
-            <div className="space-y-3">
+            <div className="space-y-2">
               {[1, 2, 3].map((i) => (
-                <Skeleton key={i} className="h-12 w-full" />
+                <Skeleton key={i} className="h-9 w-full" />
               ))}
             </div>
           ) : recentScans.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No scans yet. Start your first scan!</p>
+            <p className="text-xs text-muted-foreground">No scans yet.</p>
           ) : (
-            <div className="space-y-2">
+            <div className="space-y-0.5">
               {recentScans.slice(0, 5).map((scan) => (
                 <Link
                   key={scan.scan_id}
                   href={`/scans/${scan.scan_id}`}
-                  className="flex items-center justify-between p-3 rounded-md hover:bg-muted transition-colors"
+                  className="flex items-center justify-between p-2 rounded hover:bg-muted/50 transition-colors"
                 >
-                  <div className="flex items-center gap-3">
-                    <div className={`h-2 w-2 rounded-full ${
-                      scan.status === "completed" ? "bg-primary" :
-                      scan.status === "running" ? "bg-info" :
-                      scan.status === "failed" ? "bg-destructive" :
-                      "bg-muted-foreground"
+                  <div className="flex items-center gap-2">
+                    <div className={`severity-dot ${
+                      scan.status === "completed" ? "severity-dot-low" :
+                      scan.status === "running" ? "severity-dot-medium" :
+                      scan.status === "failed" ? "severity-dot-critical" :
+                      "severity-dot-info"
                     }`} />
                     <div>
-                      <p className="text-sm font-mono">{scan.target}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {formatDate(scan.started_at)}
-                      </p>
+                      <p className="text-xs font-medium">{scan.target}</p>
+                      <p className="text-[11px] text-muted-foreground">{formatDate(scan.started_at)}</p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-3">
-                    <span className="text-xs font-mono text-muted-foreground">
+                  <div className="flex items-center gap-2">
+                    <span className="text-[11px] text-muted-foreground tabular-nums">
                       {scan.summary.total} findings
                     </span>
                     {scan.gate_passed !== null && (
@@ -168,26 +158,26 @@ export default function DashboardPage() {
         </CardHeader>
         <CardContent>
           {findingsLoading ? (
-            <div className="space-y-3">
+            <div className="space-y-2">
               {[1, 2, 3].map((i) => (
-                <Skeleton key={i} className="h-10 w-full" />
+                <Skeleton key={i} className="h-8 w-full" />
               ))}
             </div>
           ) : recentFindings.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No findings yet.</p>
+            <p className="text-xs text-muted-foreground">No findings yet.</p>
           ) : (
-            <div className="space-y-2">
+            <div className="space-y-0.5">
               {recentFindings.slice(0, 5).map((f) => (
                 <Link
                   key={f.id}
                   href={`/findings?search=${f.id}`}
-                  className="flex items-center justify-between p-3 rounded-md hover:bg-muted transition-colors"
+                  className="flex items-center justify-between p-2 rounded hover:bg-muted/50 transition-colors"
                 >
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-2">
                     <SeverityBadge severity={f.severity} />
-                    <span className="text-sm font-mono">{f.title}</span>
+                    <span className="text-xs">{f.title}</span>
                   </div>
-                  <span className="text-xs text-muted-foreground font-mono">{f.category}</span>
+                  <span className="text-[11px] text-muted-foreground">{f.category}</span>
                 </Link>
               ))}
             </div>

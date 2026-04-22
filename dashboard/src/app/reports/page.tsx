@@ -14,7 +14,6 @@ import type { ScanDetailResponse } from "@/lib/types";
 import { DndContext, closestCenter, type DragEndEvent } from "@dnd-kit/core";
 import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-// html2pdf.js uses `self` which doesn't exist during SSR — lazy load it
 
 interface Section {
   id: string;
@@ -35,17 +34,14 @@ function SortableSection({ section, onToggle }: { section: Section; onToggle: (i
   const style = { transform: CSS.Transform.toString(transform), transition };
 
   return (
-    <div ref={setNodeRef} style={style} className="flex items-center gap-2 p-2 border border-border rounded bg-card">
+    <div ref={setNodeRef} style={style} className={`flex items-center gap-2 p-2 border rounded text-xs transition-colors ${
+      section.enabled ? "border-primary/30 bg-primary/5" : "border-border"
+    }`}>
       <span {...attributes} {...listeners} className="cursor-grab text-muted-foreground hover:text-foreground">
-        <GripVertical className="h-4 w-4" />
+        <GripVertical className="h-3.5 w-3.5" />
       </span>
-      <input
-        type="checkbox"
-        checked={section.enabled}
-        onChange={() => onToggle(section.id)}
-        className="accent-primary"
-      />
-      <span className="text-sm">{section.label}</span>
+      <input type="checkbox" checked={section.enabled} onChange={() => onToggle(section.id)} className="accent-primary h-3 w-3" />
+      <span>{section.label}</span>
     </div>
   );
 }
@@ -66,9 +62,7 @@ export default function ReportsPage() {
   const completedScans = scans.filter((s) => s.status === "completed");
 
   const toggleSection = (id: string) => {
-    setSections((prev) =>
-      prev.map((s) => (s.id === id ? { ...s, enabled: !s.enabled } : s)),
-    );
+    setSections((prev) => prev.map((s) => (s.id === id ? { ...s, enabled: !s.enabled } : s)));
   };
 
   const handleDragEnd = (event: DragEndEvent) => {
@@ -86,15 +80,7 @@ export default function ReportsPage() {
     const element = document.getElementById("report-preview");
     if (!element) return;
     const html2pdf = (await import("html2pdf.js")).default;
-    html2pdf()
-      .set({
-        margin: 10,
-        filename: `security-report-${selectedScanId}.pdf`,
-        html2canvas: { scale: 2 },
-        jsPDF: { unit: "mm" as const, format: "a4" as const, orientation: "portrait" as const },
-      })
-      .from(element)
-      .save();
+    html2pdf().set({ margin: 10, filename: `security-report-${selectedScanId}.pdf`, html2canvas: { scale: 2 }, jsPDF: { unit: "mm" as const, format: "a4" as const, orientation: "portrait" as const } }).from(element).save();
   };
 
   const downloadHtml = () => {
@@ -103,11 +89,7 @@ export default function ReportsPage() {
     const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Security Report</title><style>body{font-family:system-ui,sans-serif;max-width:800px;margin:0 auto;padding:20px;color:#e0e0e0;background:#0a0a0a;}table{border-collapse:collapse;width:100%;}th,td{border:1px solid #333;padding:8px;text-align:left;}th{background:#1a1a1a;}</style></head><body>${element.innerHTML}</body></html>`;
     const blob = new Blob([html], { type: "text/html" });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `security-report-${selectedScanId}.html`;
-    a.click();
-    URL.revokeObjectURL(url);
+    const a = document.createElement("a"); a.href = url; a.download = `security-report-${selectedScanId}.html`; a.click(); URL.revokeObjectURL(url);
   };
 
   const generateExecutiveSummary = (scan: ScanDetailResponse): string => {
@@ -116,188 +98,111 @@ export default function ReportsPage() {
     const critical = findings.filter((f) => f.severity === "CRITICAL").length;
     const high = findings.filter((f) => f.severity === "HIGH").length;
     const categories = [...new Set(findings.map((f) => f.category))];
-    const topCategory = categories.length
-      ? categories.reduce((a, b) =>
-          findings.filter((f) => f.category === a).length >=
-          findings.filter((f) => f.category === b).length ? a : b
-        )
-      : "N/A";
+    const topCategory = categories.length ? categories.reduce((a, b) => findings.filter((f) => f.category === a).length >= findings.filter((f) => f.category === b).length ? a : b) : "N/A";
     const gateStatus = scan.gate_passed ? "PASSED" : "FAILED";
-
-    return `## Executive Summary\n\n**Scan Target:** ${scan.target}\n**Quality Gate:** ${gateStatus}\n**Total Findings:** ${total} (${critical} Critical, ${high} High)\n**Risk Score:** ${scan.summary?.risk_score ?? "N/A"}\n**Top Category:** ${topCategory}\n\n${total === 0 ? "No security findings were identified during this scan." : `This scan identified ${total} security finding(s), with ${critical} critical and ${high} high severity issues. The most affected category is ${topCategory}. The quality gate ${gateStatus.toLowerCase()}.`}`;
+    return `## Executive Summary\n\n**Target:** ${scan.target}\n**Gate:** ${gateStatus}\n**Findings:** ${total} (${critical} Critical, ${high} High)\n**Risk Score:** ${scan.summary?.risk_score ?? "N/A"}\n**Top Category:** ${topCategory}\n\n${total === 0 ? "No security findings." : `Identified ${total} finding(s), ${critical} critical, ${high} high. Top category: ${topCategory}. Gate ${gateStatus.toLowerCase()}.`}`;
   };
 
   const generateReport = () => {
     if (!scan) return;
     const enabled = sections.filter((s) => s.enabled);
     const lines: string[] = [];
-
     lines.push(`# Singularity Report`);
     lines.push(``);
     lines.push(`**Target:** ${scan.target}`);
     lines.push(`**Date:** ${formatDate(scan.started_at)}`);
     lines.push(`**Scan ID:** ${scan.scan_id}`);
     lines.push(``);
-
     for (const section of enabled) {
       switch (section.id) {
-        case "summary":
-          lines.push(generateExecutiveSummary(scan));
-          lines.push(``);
-          break;
-
+        case "summary": lines.push(generateExecutiveSummary(scan)); lines.push(``); break;
         case "findings":
-          lines.push(`## Findings`);
-          lines.push(``);
-          if (scan.findings.length === 0) {
-            lines.push(`No findings discovered.`);
-          } else {
-            lines.push(`| Severity | Category | Title | CWE |`);
-            lines.push(`|----------|----------|-------|-----|`);
-            for (const f of scan.findings) {
-              lines.push(`| ${f.severity} | ${f.category} | ${f.title} | ${f.cwe || "-"} |`);
-            }
-          }
-          lines.push(``);
-          break;
-
-        case "modules":
-          lines.push(`## Module Status`);
-          lines.push(``);
-          lines.push(`Modules: ${scan.modules.join(", ")}`);
-          lines.push(``);
-          break;
-
+          lines.push(`## Findings`); lines.push(``);
+          if (scan.findings.length === 0) { lines.push(`No findings discovered.`); }
+          else { lines.push(`| Severity | Category | Title | CWE |`); lines.push(`|----------|----------|-------|-----|`); for (const f of scan.findings) { lines.push(`| ${f.severity} | ${f.category} | ${f.title} | ${f.cwe || "-"} |`); } }
+          lines.push(``); break;
+        case "modules": lines.push(`## Module Status`); lines.push(``); lines.push(`Modules: ${scan.modules.join(", ")}`); lines.push(``); break;
         case "frameworks":
-          lines.push(`## Framework Mappings`);
-          lines.push(``);
-          for (const f of scan.findings) {
-            if (f.cwe || f.owasp_ref || f.mitre_ref) {
-              lines.push(`### ${f.title}`);
-              if (f.cwe) lines.push(`- CWE: ${f.cwe}`);
-              if (f.owasp_ref) lines.push(`- OWASP: ${f.owasp_ref}`);
-              if (f.mitre_ref) lines.push(`- MITRE: ${f.mitre_ref}`);
-              lines.push(``);
-            }
-          }
+          lines.push(`## Framework Mappings`); lines.push(``);
+          for (const f of scan.findings) { if (f.cwe || f.owasp_ref || f.mitre_ref) { lines.push(`### ${f.title}`); if (f.cwe) lines.push(`- CWE: ${f.cwe}`); if (f.owasp_ref) lines.push(`- OWASP: ${f.owasp_ref}`); if (f.mitre_ref) lines.push(`- MITRE: ${f.mitre_ref}`); lines.push(``); } }
           break;
-
         case "quality_gate":
-          lines.push(`## Quality Gate`);
-          lines.push(``);
-          lines.push(`Result: **${scan.gate_passed ? "PASSED" : "FAILED"}**`);
+          lines.push(`## Quality Gate`); lines.push(``); lines.push(`Result: **${scan.gate_passed ? "PASSED" : "FAILED"}**`);
           if (scan.gate_reason) lines.push(`Reason: ${scan.gate_reason}`);
-          lines.push(`Risk Score: ${scan.summary.risk_score}`);
-          lines.push(``);
-          break;
+          lines.push(`Risk Score: ${scan.summary.risk_score}`); lines.push(``); break;
       }
     }
-
     setReportText(lines.join("\n"));
   };
 
   const downloadReport = (format: "md" | "json") => {
-    const content = format === "json"
-      ? JSON.stringify(scan, null, 2)
-      : reportText;
+    const content = format === "json" ? JSON.stringify(scan, null, 2) : reportText;
     const blob = new Blob([content], { type: format === "json" ? "application/json" : "text/markdown" });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `security-report-${selectedScanId.slice(0, 8)}.${format}`;
-    a.click();
-    URL.revokeObjectURL(url);
+    const a = document.createElement("a"); a.href = url; a.download = `security-report-${selectedScanId.slice(0, 8)}.${format}`; a.click(); URL.revokeObjectURL(url);
   };
 
-  return (
-    <div className="space-y-6">
-      <h1 className="text-2xl font-mono font-bold">Report Builder</h1>
+  const selectClass = "flex h-8 w-full rounded border border-border bg-input px-2.5 py-1.5 text-xs text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1";
 
-      {/* Scan Selection */}
+  return (
+    <div className="space-y-4">
+      <h1 className="text-sm font-semibold">Reports</h1>
+
       <Card>
         <CardHeader>
           <CardTitle>Select Scan</CardTitle>
           <CardDescription>Choose a scan to generate a report</CardDescription>
         </CardHeader>
         <CardContent>
-          <select
-            value={selectedScanId}
-            onChange={(e) => setSelectedScanId(e.target.value)}
-            className="flex h-10 w-full rounded-md border border-border bg-input px-3 py-2 text-sm font-mono text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-          >
+          <select value={selectedScanId} onChange={(e) => setSelectedScanId(e.target.value)} className={selectClass}>
             <option value="">Select a completed scan...</option>
-            {completedScans.map((s) => (
-              <option key={s.scan_id} value={s.scan_id}>
-                {s.target} ({s.scan_id.slice(0, 8)})
-              </option>
-            ))}
+            {completedScans.map((s) => (<option key={s.scan_id} value={s.scan_id}>{s.target} ({s.scan_id.slice(0, 8)})</option>))}
           </select>
         </CardContent>
       </Card>
 
       {scan && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Section Config */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <Card>
             <CardHeader>
-              <CardTitle>Report Sections</CardTitle>
-              <CardDescription>Toggle and arrange sections</CardDescription>
+              <CardTitle>Sections</CardTitle>
+              <CardDescription>Toggle and arrange</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-2">
+            <CardContent className="space-y-1">
               <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
                 <SortableContext items={sections.map((s) => s.id)} strategy={verticalListSortingStrategy}>
-                  {sections.map((section) => (
-                    <SortableSection key={section.id} section={section} onToggle={toggleSection} />
-                  ))}
+                  {sections.map((section) => (<SortableSection key={section.id} section={section} onToggle={toggleSection} />))}
                 </SortableContext>
               </DndContext>
-              <Button className="w-full mt-4" onClick={generateReport}>
-                Generate Preview
-              </Button>
+              <Button className="w-full mt-2" size="sm" onClick={generateReport}>Generate</Button>
             </CardContent>
           </Card>
 
-          {/* Preview */}
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle>Preview</CardTitle>
-              <div className="flex gap-2">
-                <Button variant="outline" size="sm" onClick={() => downloadReport("md")} disabled={!reportText}>
-                  <Download className="h-3 w-3 mr-1" />
-                  .md
-                </Button>
-                <Button variant="outline" size="sm" onClick={() => downloadReport("json")} disabled={!scan}>
-                  <Download className="h-3 w-3 mr-1" />
-                  .json
-                </Button>
-                <Button size="sm" variant="outline" onClick={downloadPdf} disabled={!reportText}>
-                  <Download className="h-3 w-3 mr-1" /> PDF
-                </Button>
-                <Button size="sm" variant="outline" onClick={downloadHtml} disabled={!reportText}>
-                  <Download className="h-3 w-3 mr-1" /> HTML
-                </Button>
+              <div className="flex gap-1">
+                <Button variant="outline" size="sm" onClick={() => downloadReport("md")} disabled={!reportText}><Download className="h-3 w-3 mr-1" />MD</Button>
+                <Button variant="outline" size="sm" onClick={() => downloadReport("json")} disabled={!scan}><Download className="h-3 w-3 mr-1" />JSON</Button>
+                <Button size="sm" variant="outline" onClick={downloadPdf} disabled={!reportText}><Download className="h-3 w-3 mr-1" />PDF</Button>
+                <Button size="sm" variant="outline" onClick={downloadHtml} disabled={!reportText}><Download className="h-3 w-3 mr-1" />HTML</Button>
               </div>
             </CardHeader>
             <CardContent>
               {reportText ? (
-                <div id="report-preview" className="terminal-output text-xs max-h-96 overflow-y-auto">
-                  {reportText}
-                </div>
+                <div id="report-preview" className="terminal-output max-h-80 overflow-y-auto">{reportText}</div>
               ) : (
-                <p className="text-sm text-muted-foreground">
-                  Click &quot;Generate Preview&quot; to see the report
-                </p>
+                <p className="text-xs text-muted-foreground">Click &quot;Generate&quot; to see the report</p>
               )}
             </CardContent>
           </Card>
         </div>
       )}
 
-      {/* Empty State */}
       {!selectedScanId && (
-        <div className="text-center py-12">
-          <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-          <p className="text-muted-foreground font-mono">Select a scan to build a report</p>
+        <div className="text-center py-10">
+          <FileText className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
+          <p className="text-xs text-muted-foreground">Select a scan to build a report</p>
         </div>
       )}
     </div>

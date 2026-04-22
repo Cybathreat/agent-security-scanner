@@ -17,15 +17,15 @@ export default function RootLayout({
     <html lang="en" className="dark h-full">
       <head>
         <link
-          href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600;700&family=Fira+Sans:wght@400;500;600;700&display=swap"
+          href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap"
           rel="stylesheet"
         />
       </head>
-      <body className="min-h-full bg-background text-foreground font-sans antialiased">
+      <body className="min-h-full bg-background text-foreground font-sans antialiased text-[13px]">
         <Providers>
           <div className="flex h-full">
             <Sidebar />
-            <main className="flex-1 md:ml-56 p-6">
+            <main className="flex-1 md:ml-52 p-5 overflow-auto">
               {children}
             </main>
           </div>
