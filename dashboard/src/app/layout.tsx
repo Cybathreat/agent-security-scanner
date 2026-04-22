@@ -4,7 +4,7 @@ import { Sidebar } from "@/components/layout/sidebar";
 import { Providers } from "@/components/layout/providers";
 
 export const metadata: Metadata = {
-  title: "Agent Security Scanner",
+  title: "Singularity",
   description: "Security scanning dashboard for AI agents, RAG pipelines, and agent frameworks",
 };
 

@@ -11,13 +11,13 @@ Run: pytest tests/unit/test_multilingual.py -v
 import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from agent_security_scanner.modules.prompt_injection_submodules.multilingual import (
+from singularity.modules.prompt_injection_submodules.multilingual import (
     ATTACK_GOALS,
     GOAL_TITLES,
     MultilingualConfig,
     MultilingualScanner,
 )
-from agent_security_scanner.modules.base import Severity
+from singularity.modules.base import Severity
 
 
 class TestMultilingualConfig:

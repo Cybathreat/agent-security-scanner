@@ -1,4 +1,4 @@
-# Agent Security Scanner — Progress Report
+# Singularity — Progress Report
 
 > Last updated: 2026-04-16
 

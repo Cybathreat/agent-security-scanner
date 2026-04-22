@@ -9,7 +9,7 @@ Run: pytest tests/unit/test_base.py -v
 import pytest
 from datetime import datetime
 
-from agent_security_scanner.modules.base import (
+from singularity.modules.base import (
     Severity,
     Finding,
     ScanResult,

@@ -9,10 +9,10 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from agent_security_scanner.cli import _build_gate_threshold, main, parse_args
-from agent_security_scanner.core.config import QualityGateConfig
-from agent_security_scanner.core.quality_gate import GateThreshold
-from agent_security_scanner.modules.base import Finding, ScanResult, Severity
+from singularity.cli import _build_gate_threshold, main, parse_args
+from singularity.core.config import QualityGateConfig
+from singularity.core.quality_gate import GateThreshold
+from singularity.modules.base import Finding, ScanResult, Severity
 
 
 # ---------------------------------------------------------------------------
@@ -184,10 +184,10 @@ class TestBuildGateThreshold:
 class TestMainExitCodes:
     """Test main() returns correct exit codes for quality gate scenarios."""
 
-    @patch("agent_security_scanner.cli.generate_reports")
-    @patch("agent_security_scanner.cli.evaluate_gate")
-    @patch("agent_security_scanner.cli.load_config")
-    @patch("agent_security_scanner.cli.run_scan")
+    @patch("singularity.cli.generate_reports")
+    @patch("singularity.cli.evaluate_gate")
+    @patch("singularity.cli.load_config")
+    @patch("singularity.cli.run_scan")
     def test_exit_0_no_findings(self, mock_scan, mock_config, mock_eval, mock_reports):
         mock_scan.return_value = []
         mock_config.return_value = MagicMock(quality_gate=QualityGateConfig())
@@ -199,10 +199,10 @@ class TestMainExitCodes:
         exit_code = main(["scan", "--target", "https://x"])
         assert exit_code == 0
 
-    @patch("agent_security_scanner.cli.generate_reports")
-    @patch("agent_security_scanner.cli.evaluate_gate")
-    @patch("agent_security_scanner.cli.load_config")
-    @patch("agent_security_scanner.cli.run_scan")
+    @patch("singularity.cli.generate_reports")
+    @patch("singularity.cli.evaluate_gate")
+    @patch("singularity.cli.load_config")
+    @patch("singularity.cli.run_scan")
     def test_exit_0_low_findings_default_critical_threshold(
         self, mock_scan, mock_config, mock_eval, mock_reports,
     ):
@@ -219,10 +219,10 @@ class TestMainExitCodes:
         exit_code = main(["scan", "--target", "https://x"])
         assert exit_code == 0
 
-    @patch("agent_security_scanner.cli.generate_reports")
-    @patch("agent_security_scanner.cli.evaluate_gate")
-    @patch("agent_security_scanner.cli.load_config")
-    @patch("agent_security_scanner.cli.run_scan")
+    @patch("singularity.cli.generate_reports")
+    @patch("singularity.cli.evaluate_gate")
+    @patch("singularity.cli.load_config")
+    @patch("singularity.cli.run_scan")
     def test_exit_2_critical_finding(self, mock_scan, mock_config, mock_eval, mock_reports):
         """CRITICAL finding with default fail_on=CRITICAL → gate fails → exit 2."""
         result = _make_result([_make_finding(Severity.CRITICAL)])
@@ -237,10 +237,10 @@ class TestMainExitCodes:
         exit_code = main(["scan", "--target", "https://x"])
         assert exit_code == 2
 
-    @patch("agent_security_scanner.cli.generate_reports")
-    @patch("agent_security_scanner.cli.evaluate_gate")
-    @patch("agent_security_scanner.cli.load_config")
-    @patch("agent_security_scanner.cli.run_scan")
+    @patch("singularity.cli.generate_reports")
+    @patch("singularity.cli.evaluate_gate")
+    @patch("singularity.cli.load_config")
+    @patch("singularity.cli.run_scan")
     def test_exit_2_high_finding_with_fail_on_high(
         self, mock_scan, mock_config, mock_eval, mock_reports,
     ):
@@ -257,20 +257,20 @@ class TestMainExitCodes:
         exit_code = main(["scan", "--target", "https://x", "--fail-on", "high"])
         assert exit_code == 2
 
-    @patch("agent_security_scanner.cli.generate_reports")
-    @patch("agent_security_scanner.cli.evaluate_gate")
-    @patch("agent_security_scanner.cli.load_config")
-    @patch("agent_security_scanner.cli.run_scan")
+    @patch("singularity.cli.generate_reports")
+    @patch("singularity.cli.evaluate_gate")
+    @patch("singularity.cli.load_config")
+    @patch("singularity.cli.run_scan")
     def test_exit_1_on_exception(self, mock_scan, mock_config, mock_eval, mock_reports):
         """Scan throws exception → exit 1."""
         mock_scan.side_effect = RuntimeError("connection refused")
         exit_code = main(["scan", "--target", "https://x"])
         assert exit_code == 1
 
-    @patch("agent_security_scanner.cli.generate_reports")
-    @patch("agent_security_scanner.cli.evaluate_gate")
-    @patch("agent_security_scanner.cli.load_config")
-    @patch("agent_security_scanner.cli.run_scan")
+    @patch("singularity.cli.generate_reports")
+    @patch("singularity.cli.evaluate_gate")
+    @patch("singularity.cli.load_config")
+    @patch("singularity.cli.run_scan")
     def test_exit_2_max_findings_exceeded(
         self, mock_scan, mock_config, mock_eval, mock_reports,
     ):

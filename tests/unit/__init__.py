@@ -1,3 +1,3 @@
 """
-Unit tests for Agent Security Scanner modules.
+Unit tests for Singularity modules.
 """

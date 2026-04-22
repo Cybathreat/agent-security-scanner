@@ -7,11 +7,11 @@ Run: pytest tests/unit/test_perplexity_evasion.py -v
 import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from agent_security_scanner.modules.prompt_injection_submodules.perplexity_evasion import (
+from singularity.modules.prompt_injection_submodules.perplexity_evasion import (
     PerplexityEvasionScannerConfig,
     PerplexityEvasionScanner,
 )
-from agent_security_scanner.modules.base import Severity
+from singularity.modules.base import Severity
 
 
 class TestPerplexityEvasionScannerConfig:

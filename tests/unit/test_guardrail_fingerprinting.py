@@ -11,11 +11,11 @@ Run: pytest tests/unit/test_guardrail_fingerprinting.py -v
 import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from agent_security_scanner.modules.prompt_injection_submodules.guardrail_fingerprinting import (
+from singularity.modules.prompt_injection_submodules.guardrail_fingerprinting import (
     GuardrailFingerprintingConfig,
     GuardrailFingerprintingScanner,
 )
-from agent_security_scanner.modules.base import Severity
+from singularity.modules.base import Severity
 
 
 class TestGuardrailFingerprintingConfig:
@@ -358,12 +358,12 @@ class TestScanMethod:
         scanner = GuardrailFingerprintingScanner(config)
 
         with patch(
-            "agent_security_scanner.modules.prompt_injection_submodules."
+            "singularity.modules.prompt_injection_submodules."
             "guardrail_fingerprinting.GuardrailFingerprintingScanner._fingerprint_guardrail",
             new=AsyncMock(return_value=[]),
         ):
             with patch(
-                "agent_security_scanner.modules.prompt_injection_submodules."
+                "singularity.modules.prompt_injection_submodules."
                 "guardrail_fingerprinting.GuardrailFingerprintingScanner._test_evasion",
                 new=AsyncMock(return_value=[]),
             ):

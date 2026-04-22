@@ -12,9 +12,9 @@ from pathlib import Path
 import pytest
 from fastapi.testclient import TestClient
 
-from agent_security_scanner.modules.base import Finding, ScanResult, Severity
-from agent_security_scanner.web.app import create_app
-from agent_security_scanner.web import db as db_module
+from singularity.modules.base import Finding, ScanResult, Severity
+from singularity.web.app import create_app
+from singularity.web import db as db_module
 
 
 @pytest.fixture(autouse=True)
@@ -196,8 +196,8 @@ class TestQualityGateAPI:
 
 
 class TestScanLifecycle:
-    @patch("agent_security_scanner.web.scan_manager.ScanEngine")
-    @patch("agent_security_scanner.web.scan_manager.load_config")
+    @patch("singularity.web.scan_manager.ScanEngine")
+    @patch("singularity.web.scan_manager.load_config")
     def test_start_scan(self, mock_load_config, mock_engine_cls, client):
         """Test starting a scan via the API."""
         mock_load_config.return_value = MagicMock()
@@ -234,7 +234,7 @@ class TestScanLifecycle:
 class TestAttackSurfaceAPI:
     def test_attack_surface_route_registered(self):
         """Verify attack-surface route is registered in the app."""
-        from agent_security_scanner.web.app import create_app
+        from singularity.web.app import create_app
 
         app = create_app()
         routes = [r.path for r in app.routes]
@@ -248,8 +248,8 @@ class TestAttackSurfaceAPI:
     @pytest.mark.asyncio
     async def test_attack_surface_with_findings(self, tmp_path):
         """Test attack surface graph generation with actual findings."""
-        from agent_security_scanner.web import db as db_module
-        from agent_security_scanner.web.app import create_app
+        from singularity.web import db as db_module
+        from singularity.web.app import create_app
 
         test_db = tmp_path / "test_attack.db"
         db_module.DB_PATH = test_db
@@ -347,8 +347,8 @@ class TestFindingAnnotationAPI:
     @pytest.mark.asyncio
     async def test_patch_finding_annotation(self, tmp_path):
         """Test PATCH /api/findings/{id} to annotate a finding."""
-        from agent_security_scanner.web import db as db_module
-        from agent_security_scanner.web.app import create_app
+        from singularity.web import db as db_module
+        from singularity.web.app import create_app
 
         test_db = tmp_path / "test_annotate.db"
         db_module.DB_PATH = test_db
@@ -408,8 +408,8 @@ class TestFindingAnnotationAPI:
     @pytest.mark.asyncio
     async def test_patch_finding_partial_annotation(self, tmp_path):
         """Test PATCH with only some fields updates only those fields."""
-        from agent_security_scanner.web import db as db_module
-        from agent_security_scanner.web.app import create_app
+        from singularity.web import db as db_module
+        from singularity.web.app import create_app
 
         test_db = tmp_path / "test_partial.db"
         db_module.DB_PATH = test_db
@@ -468,8 +468,8 @@ class TestFindingAnnotationAPI:
     @pytest.mark.asyncio
     async def test_get_finding_includes_annotations(self, tmp_path):
         """Test that GET /api/findings/{id} includes annotation fields."""
-        from agent_security_scanner.web import db as db_module
-        from agent_security_scanner.web.app import create_app
+        from singularity.web import db as db_module
+        from singularity.web.app import create_app
 
         test_db = tmp_path / "test_get_ann.db"
         db_module.DB_PATH = test_db
@@ -528,8 +528,8 @@ class TestReplayAPI:
     @pytest.mark.asyncio
     async def test_replay_nonexistent_finding(self, tmp_path):
         """Replaying a nonexistent finding returns 404."""
-        from agent_security_scanner.web import db as db_module
-        from agent_security_scanner.web.app import create_app
+        from singularity.web import db as db_module
+        from singularity.web.app import create_app
 
         test_db = tmp_path / "test_replay_404.db"
         db_module.DB_PATH = test_db
@@ -544,8 +544,8 @@ class TestReplayAPI:
     @pytest.mark.asyncio
     async def test_replay_finding_success(self, tmp_path):
         """Test POST /api/findings/{id}/replay starts a new scan."""
-        from agent_security_scanner.web import db as db_module
-        from agent_security_scanner.web.app import create_app
+        from singularity.web import db as db_module
+        from singularity.web.app import create_app
 
         test_db = tmp_path / "test_replay_ok.db"
         db_module.DB_PATH = test_db
@@ -582,8 +582,8 @@ class TestReplayAPI:
         db_module.DB_PATH = test_db
         app = create_app()
 
-        with patch("agent_security_scanner.web.scan_manager.ScanEngine"), \
-             patch("agent_security_scanner.web.scan_manager.load_config"):
+        with patch("singularity.web.scan_manager.ScanEngine"), \
+             patch("singularity.web.scan_manager.load_config"):
             with TestClient(app) as c:
                 response = c.post(
                     "/api/findings/FIND-replay-001/replay",

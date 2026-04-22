@@ -7,11 +7,11 @@ Run: pytest tests/unit/test_vector_db.py -v
 import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from agent_security_scanner.modules.rag_security_submodules.vector_db import (
+from singularity.modules.rag_security_submodules.vector_db import (
     VectorDBScannerConfig,
     VectorDBScanner,
 )
-from agent_security_scanner.modules.base import Severity
+from singularity.modules.base import Severity
 
 
 class TestVectorDBConfig:
@@ -44,9 +44,9 @@ class TestVectorDBScanner:
 
     def test_payloads_structure(self):
         scanner = VectorDBScanner()
-        for payload in scanner.AUTH_BYPASS_PAYLOADS:
+        for payload in scanner.AUTH_BYPSINGULARITY_PAYLOADS:
             assert "name" in payload and "payload" in payload
-        for payload in scanner.ENCRYPTION_BYPASS_PAYLOADS:
+        for payload in scanner.ENCRYPTION_BYPSINGULARITY_PAYLOADS:
             assert "name" in payload and "payload" in payload
         for payload in scanner.PUBLIC_ACCESS_PAYLOADS:
             assert "name" in payload and "payload" in payload

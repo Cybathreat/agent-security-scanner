@@ -13,9 +13,9 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from agent_security_scanner.core.config import PromptInjectionConfig
-from agent_security_scanner.modules.base import BaseModule, Finding, ScanResult, Severity
-from agent_security_scanner.modules.prompt_injection import PromptInjectionModule
+from singularity.core.config import PromptInjectionConfig
+from singularity.modules.base import BaseModule, Finding, ScanResult, Severity
+from singularity.modules.prompt_injection import PromptInjectionModule
 
 
 # ---------------------------------------------------------------------------
@@ -84,27 +84,27 @@ class TestPromptInjectionModule:
 class TestScanDelegation:
     """Test that submodules are called and results aggregated."""
 
-    @patch("agent_security_scanner.modules.prompt_injection.DirectInjectionScanner")
-    @patch("agent_security_scanner.modules.prompt_injection.ObfuscationScanner")
-    @patch("agent_security_scanner.modules.prompt_injection.MultiTurnScanner")
-    @patch("agent_security_scanner.modules.prompt_injection.CrescendoAttackScanner")
-    @patch("agent_security_scanner.modules.prompt_injection.ManyShotJailbreakingScanner")
-    @patch("agent_security_scanner.modules.prompt_injection.SkeletonKeyAttackScanner")
-    @patch("agent_security_scanner.modules.prompt_injection.AdaptiveGeneratorScanner")
-    @patch("agent_security_scanner.modules.prompt_injection.TAPAttackScanner")
-    @patch("agent_security_scanner.modules.prompt_injection.PayloadSplittingScanner")
-    @patch("agent_security_scanner.modules.prompt_injection.GuardrailFingerprintingScanner")
-    @patch("agent_security_scanner.modules.prompt_injection.VirtualizationScanner")
-    @patch("agent_security_scanner.modules.prompt_injection.EncodingBypassScanner")
-    @patch("agent_security_scanner.modules.prompt_injection.MultilingualScanner")
-    @patch("agent_security_scanner.modules.prompt_injection.TokenSmugglingScanner")
-    @patch("agent_security_scanner.modules.prompt_injection.GrammarConstrainedScanner")
-    @patch("agent_security_scanner.modules.prompt_injection.PerplexityEvasionScanner")
-    @patch("agent_security_scanner.modules.prompt_injection.TimingSidechannelsScanner")
-    @patch("agent_security_scanner.modules.prompt_injection.RateLimitEvasionScanner")
-    @patch("agent_security_scanner.modules.prompt_injection.WAFFingerprintingScanner")
-    @patch("agent_security_scanner.modules.prompt_injection.CanaryTokensScanner")
-    @patch("agent_security_scanner.modules.prompt_injection.OutputFilterProbingScanner")
+    @patch("singularity.modules.prompt_injection.DirectInjectionScanner")
+    @patch("singularity.modules.prompt_injection.ObfuscationScanner")
+    @patch("singularity.modules.prompt_injection.MultiTurnScanner")
+    @patch("singularity.modules.prompt_injection.CrescendoAttackScanner")
+    @patch("singularity.modules.prompt_injection.ManyShotJailbreakingScanner")
+    @patch("singularity.modules.prompt_injection.SkeletonKeyAttackScanner")
+    @patch("singularity.modules.prompt_injection.AdaptiveGeneratorScanner")
+    @patch("singularity.modules.prompt_injection.TAPAttackScanner")
+    @patch("singularity.modules.prompt_injection.PayloadSplittingScanner")
+    @patch("singularity.modules.prompt_injection.GuardrailFingerprintingScanner")
+    @patch("singularity.modules.prompt_injection.VirtualizationScanner")
+    @patch("singularity.modules.prompt_injection.EncodingBypassScanner")
+    @patch("singularity.modules.prompt_injection.MultilingualScanner")
+    @patch("singularity.modules.prompt_injection.TokenSmugglingScanner")
+    @patch("singularity.modules.prompt_injection.GrammarConstrainedScanner")
+    @patch("singularity.modules.prompt_injection.PerplexityEvasionScanner")
+    @patch("singularity.modules.prompt_injection.TimingSidechannelsScanner")
+    @patch("singularity.modules.prompt_injection.RateLimitEvasionScanner")
+    @patch("singularity.modules.prompt_injection.WAFFingerprintingScanner")
+    @patch("singularity.modules.prompt_injection.CanaryTokensScanner")
+    @patch("singularity.modules.prompt_injection.OutputFilterProbingScanner")
     def test_submodules_called_and_findings_aggregated(
         self,
         mock_output_filter_cls: MagicMock,
@@ -167,27 +167,27 @@ class TestScanDelegation:
         # 21 submodules * 1 finding each = 21 findings
         assert len(result.findings) == 21
 
-    @patch("agent_security_scanner.modules.prompt_injection.DirectInjectionScanner")
-    @patch("agent_security_scanner.modules.prompt_injection.ObfuscationScanner")
-    @patch("agent_security_scanner.modules.prompt_injection.MultiTurnScanner")
-    @patch("agent_security_scanner.modules.prompt_injection.CrescendoAttackScanner")
-    @patch("agent_security_scanner.modules.prompt_injection.ManyShotJailbreakingScanner")
-    @patch("agent_security_scanner.modules.prompt_injection.SkeletonKeyAttackScanner")
-    @patch("agent_security_scanner.modules.prompt_injection.AdaptiveGeneratorScanner")
-    @patch("agent_security_scanner.modules.prompt_injection.TAPAttackScanner")
-    @patch("agent_security_scanner.modules.prompt_injection.PayloadSplittingScanner")
-    @patch("agent_security_scanner.modules.prompt_injection.GuardrailFingerprintingScanner")
-    @patch("agent_security_scanner.modules.prompt_injection.VirtualizationScanner")
-    @patch("agent_security_scanner.modules.prompt_injection.EncodingBypassScanner")
-    @patch("agent_security_scanner.modules.prompt_injection.MultilingualScanner")
-    @patch("agent_security_scanner.modules.prompt_injection.TokenSmugglingScanner")
-    @patch("agent_security_scanner.modules.prompt_injection.GrammarConstrainedScanner")
-    @patch("agent_security_scanner.modules.prompt_injection.PerplexityEvasionScanner")
-    @patch("agent_security_scanner.modules.prompt_injection.TimingSidechannelsScanner")
-    @patch("agent_security_scanner.modules.prompt_injection.RateLimitEvasionScanner")
-    @patch("agent_security_scanner.modules.prompt_injection.WAFFingerprintingScanner")
-    @patch("agent_security_scanner.modules.prompt_injection.CanaryTokensScanner")
-    @patch("agent_security_scanner.modules.prompt_injection.OutputFilterProbingScanner")
+    @patch("singularity.modules.prompt_injection.DirectInjectionScanner")
+    @patch("singularity.modules.prompt_injection.ObfuscationScanner")
+    @patch("singularity.modules.prompt_injection.MultiTurnScanner")
+    @patch("singularity.modules.prompt_injection.CrescendoAttackScanner")
+    @patch("singularity.modules.prompt_injection.ManyShotJailbreakingScanner")
+    @patch("singularity.modules.prompt_injection.SkeletonKeyAttackScanner")
+    @patch("singularity.modules.prompt_injection.AdaptiveGeneratorScanner")
+    @patch("singularity.modules.prompt_injection.TAPAttackScanner")
+    @patch("singularity.modules.prompt_injection.PayloadSplittingScanner")
+    @patch("singularity.modules.prompt_injection.GuardrailFingerprintingScanner")
+    @patch("singularity.modules.prompt_injection.VirtualizationScanner")
+    @patch("singularity.modules.prompt_injection.EncodingBypassScanner")
+    @patch("singularity.modules.prompt_injection.MultilingualScanner")
+    @patch("singularity.modules.prompt_injection.TokenSmugglingScanner")
+    @patch("singularity.modules.prompt_injection.GrammarConstrainedScanner")
+    @patch("singularity.modules.prompt_injection.PerplexityEvasionScanner")
+    @patch("singularity.modules.prompt_injection.TimingSidechannelsScanner")
+    @patch("singularity.modules.prompt_injection.RateLimitEvasionScanner")
+    @patch("singularity.modules.prompt_injection.WAFFingerprintingScanner")
+    @patch("singularity.modules.prompt_injection.CanaryTokensScanner")
+    @patch("singularity.modules.prompt_injection.OutputFilterProbingScanner")
     def test_errors_aggregated(
         self,
         mock_output_filter_cls: MagicMock,
@@ -258,7 +258,7 @@ class TestScanDelegation:
 class TestScanDisabled:
     """Test that config flags gate submodule delegation."""
 
-    @patch("agent_security_scanner.modules.prompt_injection.ObfuscationScanner")
+    @patch("singularity.modules.prompt_injection.ObfuscationScanner")
     def test_detect_obfuscation_false_skips_obfuscation(
         self,
         mock_obfuscation_cls: MagicMock,
@@ -268,7 +268,7 @@ class TestScanDisabled:
         mod.scan("http://test")
         mock_obfuscation_cls.assert_not_called()
 
-    @patch("agent_security_scanner.modules.prompt_injection.CrescendoAttackScanner")
+    @patch("singularity.modules.prompt_injection.CrescendoAttackScanner")
     def test_test_crescendo_false_skips_crescendo(
         self,
         mock_crescendo_cls: MagicMock,
@@ -278,7 +278,7 @@ class TestScanDisabled:
         mod.scan("http://test")
         mock_crescendo_cls.assert_not_called()
 
-    @patch("agent_security_scanner.modules.prompt_injection.ManyShotJailbreakingScanner")
+    @patch("singularity.modules.prompt_injection.ManyShotJailbreakingScanner")
     def test_test_many_shot_false_skips_many_shot(
         self,
         mock_many_shot_cls: MagicMock,
@@ -288,7 +288,7 @@ class TestScanDisabled:
         mod.scan("http://test")
         mock_many_shot_cls.assert_not_called()
 
-    @patch("agent_security_scanner.modules.prompt_injection.SkeletonKeyAttackScanner")
+    @patch("singularity.modules.prompt_injection.SkeletonKeyAttackScanner")
     def test_test_skeleton_key_false_skips_skeleton_key(
         self,
         mock_skeleton_cls: MagicMock,

@@ -11,13 +11,13 @@ Run: pytest tests/unit/test_adaptive_generator.py -v
 import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from agent_security_scanner.modules.prompt_injection_submodules.adaptive_generator import (
+from singularity.modules.prompt_injection_submodules.adaptive_generator import (
     ATTACK_GOALS,
     GOAL_TITLES,
     AdaptiveGeneratorConfig,
     AdaptiveGeneratorScanner,
 )
-from agent_security_scanner.modules.base import Severity
+from singularity.modules.base import Severity
 
 
 class TestAdaptiveGeneratorConfig:

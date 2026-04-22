@@ -2,7 +2,7 @@
 
 ## Overview
 
-Complete the Agent Security Scanner web dashboard (ROADMAP #28, Phase 3/4). Strategy: fix all existing bugs first, complete all partial features, then add the missing Attack Surface Map. Approach: parallel frontend + backend work after bug fixes are in place.
+Complete the Singularity web dashboard (ROADMAP #28, Phase 3/4). Strategy: fix all existing bugs first, complete all partial features, then add the missing Attack Surface Map. Approach: parallel frontend + backend work after bug fixes are in place.
 
 ---
 
@@ -18,8 +18,8 @@ Fix all 10 identified bugs plus one missing implementation:
 6. **Quality gate wraps single aggregate ScanResult** — `quality_gate.py` creates one synthetic `ScanResult(module_name="aggregate")` instead of per-module results. Fix: reconstruct per-module ScanResult objects from stored JSON.
 7. **Missing timestamp on reconstructed Findings** — `quality_gate.py` discards the `timestamp` field from stored finding JSON when reconstructing Finding objects. Fix: pass `timestamp` through to Finding constructor.
 8. **WebSocket no catch-up** — clients connecting mid-scan miss earlier events. Fix: on connect, query DB for existing scan events/modules and replay them before subscribing to the live queue.
-9. **CORS hardcoded to localhost:3000** — `app.py` only allows `http://localhost:3000` and `http://127.0.0.1:3000`. Fix: read allowed origins from `ASS_CORS_ORIGINS` env var (comma-separated), fallback to localhost defaults.
-10. **DB path is relative** — `db.py` uses `Path("data")` which is CWD-dependent. Fix: resolve to absolute path using package directory or `ASS_DATA_DIR` env var.
+9. **CORS hardcoded to localhost:3000** — `app.py` only allows `http://localhost:3000` and `http://127.0.0.1:3000`. Fix: read allowed origins from `SINGULARITY_CORS_ORIGINS` env var (comma-separated), fallback to localhost defaults.
+10. **DB path is relative** — `db.py` uses `Path("data")` which is CWD-dependent. Fix: resolve to absolute path using package directory or `SINGULARITY_DATA_DIR` env var.
 11. **PATCH /api/config is a no-op** — endpoint accepts Dict but ignores input entirely. Fix: implement full config update — apply changes to running config and persist to YAML file.
 
 ---

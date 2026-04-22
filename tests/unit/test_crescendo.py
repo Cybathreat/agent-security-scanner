@@ -6,11 +6,11 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from agent_security_scanner.modules.prompt_injection_submodules.crescendo import (
+from singularity.modules.prompt_injection_submodules.crescendo import (
     CrescendoAttackScanner,
     CrescendoConfig,
 )
-from agent_security_scanner.modules.base import Severity
+from singularity.modules.base import Severity
 
 
 class TestCrescendoConfig:

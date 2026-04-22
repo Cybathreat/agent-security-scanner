@@ -8,11 +8,11 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from agent_security_scanner.modules.misconfig_submodules.info_disclosure_scanner import (
+from singularity.modules.misconfig_submodules.info_disclosure_scanner import (
     InfoDisclosureScanner,
     InfoDisclosureScannerConfig,
 )
-from agent_security_scanner.modules.base import Finding, ScanResult, Severity
+from singularity.modules.base import Finding, ScanResult, Severity
 
 
 # ---------------------------------------------------------------------------

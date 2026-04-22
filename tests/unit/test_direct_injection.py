@@ -8,11 +8,11 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from agent_security_scanner.modules.prompt_injection_submodules.direct_injection import (
+from singularity.modules.prompt_injection_submodules.direct_injection import (
     DirectInjectionScanner,
     DirectInjectionScannerConfig,
 )
-from agent_security_scanner.modules.base import ScanResult, Severity
+from singularity.modules.base import ScanResult, Severity
 
 
 class TestDirectInjectionScannerConfig:
@@ -51,7 +51,7 @@ class TestDirectInjectionScanner:
     def test_payload_structure(self):
         scanner = DirectInjectionScanner()
         for payloads in [
-            scanner.DIRECT_INJECTION_BYPASS_PAYLOADS,
+            scanner.DIRECT_INJECTION_BYPSINGULARITY_PAYLOADS,
             scanner.PROMPT_LEAKAGE_PAYLOADS,
             scanner.INSTRUCTION_HIJACKING_PAYLOADS,
         ]:

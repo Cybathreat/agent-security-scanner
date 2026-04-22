@@ -7,11 +7,11 @@ Run: pytest tests/unit/test_canary_tokens.py -v
 import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from agent_security_scanner.modules.prompt_injection_submodules.canary_tokens import (
+from singularity.modules.prompt_injection_submodules.canary_tokens import (
     CanaryTokensScannerConfig,
     CanaryTokensScanner,
 )
-from agent_security_scanner.modules.base import Severity
+from singularity.modules.base import Severity
 
 
 class TestCanaryTokensScannerConfig:
@@ -46,7 +46,7 @@ class TestCanaryTokensScanner:
             assert "name" in payload and "payload" in payload
         for payload in scanner.TOKEN_NEUTRALIZATION_PAYLOADS:
             assert "name" in payload and "payload" in payload
-        for payload in scanner.TOKEN_BYPASS_PAYLOADS:
+        for payload in scanner.TOKEN_BYPSINGULARITY_PAYLOADS:
             assert "name" in payload and "payload" in payload
 
 

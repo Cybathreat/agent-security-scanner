@@ -11,13 +11,13 @@ Run: pytest tests/unit/test_payload_splitting.py -v
 import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from agent_security_scanner.modules.prompt_injection_submodules.payload_splitting import (
+from singularity.modules.prompt_injection_submodules.payload_splitting import (
     GOALS,
     GOAL_TITLES,
     PayloadSplittingConfig,
     PayloadSplittingScanner,
 )
-from agent_security_scanner.modules.base import Severity
+from singularity.modules.base import Severity
 
 
 class TestPayloadSplittingConfig:

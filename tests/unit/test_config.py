@@ -11,7 +11,7 @@ import pytest
 import tempfile
 
 
-from agent_security_scanner.core.config import (
+from singularity.core.config import (
     Config,
     ScannerConfig,
     PromptInjectionConfig,
@@ -130,32 +130,32 @@ class TestEnvironmentOverrides:
     """Test environment variable overrides."""
 
     def test_scanner_timeout_override(self):
-        """Test ASS_SCANNER_TIMEOUT override."""
-        os.environ["ASS_SCANNER_TIMEOUT"] = "90"
+        """Test SINGULARITY_SCANNER_TIMEOUT override."""
+        os.environ["SINGULARITY_SCANNER_TIMEOUT"] = "90"
         config = Config.load()
         assert config.scanner.timeout == 90
-        del os.environ["ASS_SCANNER_TIMEOUT"]
+        del os.environ["SINGULARITY_SCANNER_TIMEOUT"]
 
     def test_log_level_override(self):
-        """Test ASS_LOG_LEVEL override."""
-        os.environ["ASS_LOG_LEVEL"] = "DEBUG"
+        """Test SINGULARITY_LOG_LEVEL override."""
+        os.environ["SINGULARITY_LOG_LEVEL"] = "DEBUG"
         config = Config.load()
         assert config.logging.level == "DEBUG"
-        del os.environ["ASS_LOG_LEVEL"]
+        del os.environ["SINGULARITY_LOG_LEVEL"]
 
     def test_output_format_override(self):
-        """Test ASS_OUTPUT_FORMAT override."""
-        os.environ["ASS_OUTPUT_FORMAT"] = "markdown"
+        """Test SINGULARITY_OUTPUT_FORMAT override."""
+        os.environ["SINGULARITY_OUTPUT_FORMAT"] = "markdown"
         config = Config.load()
         assert config.output.format == "markdown"
-        del os.environ["ASS_OUTPUT_FORMAT"]
+        del os.environ["SINGULARITY_OUTPUT_FORMAT"]
 
     def test_verify_ssl_override(self):
-        """Test ASS_SCANNER_VERIFY_SSL override."""
-        os.environ["ASS_SCANNER_VERIFY_SSL"] = "false"
+        """Test SINGULARITY_SCANNER_VERIFY_SSL override."""
+        os.environ["SINGULARITY_SCANNER_VERIFY_SSL"] = "false"
         config = Config.load()
         assert config.scanner.verify_ssl is False
-        del os.environ["ASS_SCANNER_VERIFY_SSL"]
+        del os.environ["SINGULARITY_SCANNER_VERIFY_SSL"]
 
 
 class TestConfigToDict:

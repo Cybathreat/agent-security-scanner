@@ -7,15 +7,15 @@ import pytest
 
 def test_db_path_is_absolute():
     """DB path should resolve to an absolute path, not relative."""
-    from agent_security_scanner.web.db import DB_PATH
+    from singularity.web.db import DB_PATH
     assert DB_PATH.is_absolute(), f"DB_PATH is relative: {DB_PATH}"
 
 
 def test_db_path_uses_env_var():
-    """DB_PATH should use ASS_DATA_DIR env var when set."""
-    with patch.dict(os.environ, {"ASS_DATA_DIR": "/tmp/test-data"}):
+    """DB_PATH should use SINGULARITY_DATA_DIR env var when set."""
+    with patch.dict(os.environ, {"SINGULARITY_DATA_DIR": "/tmp/test-data"}):
         import importlib
-        from agent_security_scanner import web
+        from singularity import web
         importlib.reload(web.db)
         assert web.db.DB_PATH == Path("/tmp/test-data/scan_history.db")
 
@@ -23,7 +23,7 @@ def test_db_path_uses_env_var():
 def test_scan_manager_uses_timezone_utc():
     """ScanManager should use datetime.now(timezone.utc) not utcnow()."""
     import inspect
-    from agent_security_scanner.web import scan_manager
+    from singularity.web import scan_manager
     source = inspect.getsource(scan_manager)
     assert "utcnow" not in source, "scan_manager.py still uses deprecated utcnow()"
 
@@ -31,7 +31,7 @@ def test_scan_manager_uses_timezone_utc():
 def test_ws_scan_progress_uses_timezone_utc():
     """WebSocket handler should use datetime.now(timezone.utc) not utcnow()."""
     import inspect
-    from agent_security_scanner.web.ws import scan_progress
+    from singularity.web.ws import scan_progress
     source = inspect.getsource(scan_progress)
     assert "utcnow" not in source, "scan_progress.py still uses deprecated utcnow()"
 
@@ -39,18 +39,18 @@ def test_ws_scan_progress_uses_timezone_utc():
 def test_models_uses_timezone_utc():
     """Models should use datetime.now(timezone.utc) not utcnow()."""
     import inspect
-    from agent_security_scanner.web import models
+    from singularity.web import models
     source = inspect.getsource(models)
     assert "utcnow" not in source, "models.py still uses deprecated utcnow()"
 
 
 def test_cors_uses_env_var():
-    """CORS origins should be configurable via ASS_CORS_ORIGINS env var."""
+    """CORS origins should be configurable via SINGULARITY_CORS_ORIGINS env var."""
     import os
-    with patch.dict(os.environ, {"ASS_CORS_ORIGINS": "https://prod.example.com,https://staging.example.com"}):
+    with patch.dict(os.environ, {"SINGULARITY_CORS_ORIGINS": "https://prod.example.com,https://staging.example.com"}):
         # Need to reimport to pick up env var
         import importlib
-        from agent_security_scanner.web import app as app_module
+        from singularity.web import app as app_module
         importlib.reload(app_module)
         # Check that the new app has the right origins
         new_app = app_module.create_app()
@@ -68,7 +68,7 @@ def test_cors_uses_env_var():
 def test_db_update_scan_status_no_fstring_sql():
     """update_scan_status should use allowlist-validated fields, not raw f-string SQL."""
     import inspect
-    from agent_security_scanner.web import db
+    from singularity.web import db
     source = inspect.getsource(db.update_scan_status)
     # The allowlist pattern validates field names before use in SQL
     assert "_ALLOWED_FIELDS" in source, "db.py missing _ALLOWED_FIELDS allowlist in update_scan_status"
@@ -78,8 +78,8 @@ def test_db_update_scan_status_no_fstring_sql():
 @pytest.mark.asyncio
 async def test_cancel_scan_sets_status():
     """Cancelling a scan should set status to cancelled."""
-    from agent_security_scanner.web.scan_manager import ScanManager
-    from agent_security_scanner.web.models import ScanStatus
+    from singularity.web.scan_manager import ScanManager
+    from singularity.web.models import ScanStatus
     mgr = ScanManager()
     scan_id = "test-cancel-123"
     mgr._active_scans[scan_id] = {
@@ -88,7 +88,7 @@ async def test_cancel_scan_sets_status():
         "modules": ["prompt_injection"],
         "started_at": "2026-01-01T00:00:00Z",
     }
-    with patch("agent_security_scanner.web.scan_manager.db") as mock_db:
+    with patch("singularity.web.scan_manager.db") as mock_db:
         mock_db.update_scan_status = AsyncMock()
         result = await mgr.cancel_scan(scan_id)
     assert result is True
@@ -98,7 +98,7 @@ async def test_cancel_scan_sets_status():
 def test_run_scan_checks_cancelled_status():
     """_run_scan should check cancelled status and abort if cancelled."""
     import inspect
-    from agent_security_scanner.web import scan_manager
+    from singularity.web import scan_manager
     source = inspect.getsource(scan_manager.ScanManager._run_scan)
     # Verify that the cancellation check exists in _run_scan
     assert "cancelled" in source, "_run_scan does not check for cancelled status"
@@ -107,7 +107,7 @@ def test_run_scan_checks_cancelled_status():
 def test_delete_scan_always_attempts_db_deletion():
     """Delete endpoint should cancel active scan AND delete from DB."""
     import inspect
-    from agent_security_scanner.web.api import scans
+    from singularity.web.api import scans
     source = inspect.getsource(scans.delete_scan)
     # The delete function should always call db.delete_scan, not skip it
     # when the scan was active
@@ -118,7 +118,7 @@ def test_delete_scan_always_attempts_db_deletion():
 @pytest.mark.asyncio
 async def test_get_active_scan_includes_modules():
     """GET /api/scans/{id} for running scan should include modules and module_statuses."""
-    from agent_security_scanner.web.scan_manager import ScanManager
+    from singularity.web.scan_manager import ScanManager
     mgr = ScanManager()
     scan_id = "test-active-789"
     mgr._active_scans[scan_id] = {
@@ -141,7 +141,7 @@ async def test_get_active_scan_includes_modules():
 def test_quality_gate_preserves_timestamp():
     """Reconstructed Findings should include the timestamp field."""
     import inspect
-    from agent_security_scanner.web.api import quality_gate
+    from singularity.web.api import quality_gate
     source = inspect.getsource(quality_gate)
     assert "timestamp" in source, "quality_gate.py doesn't pass timestamp to Finding"
 
@@ -149,7 +149,7 @@ def test_quality_gate_preserves_timestamp():
 def test_quality_gate_groups_by_category():
     """Quality gate should create per-module ScanResult objects."""
     import inspect
-    from agent_security_scanner.web.api import quality_gate
+    from singularity.web.api import quality_gate
     source = inspect.getsource(quality_gate)
     assert "findings_by_module" in source, "quality_gate.py doesn't group findings by module"
 
@@ -157,7 +157,7 @@ def test_quality_gate_groups_by_category():
 def test_ws_handler_has_catchup():
     """WebSocket handler should replay past events on connect."""
     import inspect
-    from agent_security_scanner.web.ws import scan_progress
+    from singularity.web.ws import scan_progress
     source = inspect.getsource(scan_progress)
     assert "catchup" in source.lower() or "replay" in source.lower() or "result_json" in source.lower(), \
         "WebSocket handler doesn't implement event catch-up"
@@ -166,7 +166,7 @@ def test_ws_handler_has_catchup():
 def test_config_patch_persists_changes():
     """PATCH /api/config should apply and persist config updates."""
     import inspect
-    from agent_security_scanner.web.api import config
+    from singularity.web.api import config
     source = inspect.getsource(config)
     # Should not have the old stub comment
     assert "full implementation would" not in source.lower(), "config.py PATCH is still a stub"

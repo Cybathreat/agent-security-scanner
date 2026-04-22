@@ -1,10 +1,10 @@
-# Agent Security Scanner
+# Singularity
 
 **v0.2** — Security auditing tool for LLM agents, RAG pipelines, and agent frameworks.
 
-[![CI](https://github.com/Cybathreat/agent-security-scanner/actions/workflows/ci.yml/badge.svg)](https://github.com/Cybathreat/agent-security-scanner/actions/workflows/ci.yml)
-[![codecov](https://codecov.io/gh/Cybathreat/agent-security-scanner/branch/main/graph/badge.svg)](https://codecov.io/gh/Cybathreat/agent-security-scanner)
-[![PyPI](https://img.shields.io/pypi/v/agent-security-scanner.svg)](https://pypi.org/project/agent-security-scanner/)
+[![CI](https://github.com/Cybathreat/singularity/actions/workflows/ci.yml/badge.svg)](https://github.com/Cybathreat/singularity/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/Cybathreat/singularity/branch/main/graph/badge.svg)](https://codecov.io/gh/Cybathreat/singularity)
+[![PyPI](https://img.shields.io/pypi/v/singularity.svg)](https://pypi.org/project/singularity/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![Security Research](https://img.shields.io/badge/Security-Research-red.svg)]()
@@ -13,7 +13,7 @@
 
 ## Overview
 
-Agent Security Scanner is an open-source security research tool designed to audit AI agents, LLM-powered applications, and RAG (Retrieval-Augmented Generation) pipelines for security misconfigurations and vulnerabilities.
+Singularity is an open-source security research tool designed to audit AI agents, LLM-powered applications, and RAG (Retrieval-Augmented Generation) pipelines for security misconfigurations and vulnerabilities.
 
 This tool helps security teams, developers, and researchers identify potential security risks in AI systems before they reach production.
 
@@ -84,14 +84,14 @@ This tool helps security teams, developers, and researchers identify potential s
 ### From PyPI
 
 ```bash
-pip install agent-security-scanner
+pip install singularity
 ```
 
 ### From Source
 
 ```bash
-git clone https://github.com/Cybathreat/agent-security-scanner.git
-cd agent-security-scanner
+git clone https://github.com/Cybathreat/singularity.git
+cd singularity
 
 python -m venv venv
 source venv/bin/activate  # Linux/macOS
@@ -106,22 +106,22 @@ pip install -r requirements.txt
 
 ```bash
 # Run a full scan (all modules)
-python -m agent_security_scanner.cli scan --target https://api.example.com/agent --output output/
+python -m singularity.cli scan --target https://api.example.com/agent --output output/
 
 # Run specific modules only
-python -m agent_security_scanner.cli scan --target https://api.example.com/agent --modules prompt_injection,rag_security
+python -m singularity.cli scan --target https://api.example.com/agent --modules prompt_injection,rag_security
 
 # JSON report only
-python -m agent_security_scanner.cli scan --target https://api.example.com/agent --format json --output output/
+python -m singularity.cli scan --target https://api.example.com/agent --format json --output output/
 
 # Markdown report only
-python -m agent_security_scanner.cli scan --target https://api.example.com/agent --format markdown --output output/
+python -m singularity.cli scan --target https://api.example.com/agent --format markdown --output output/
 
 # Quality gate: fail on HIGH severity or above
-python -m agent_security_scanner.cli scan --target https://api.example.com/agent --fail-on high
+python -m singularity.cli scan --target https://api.example.com/agent --fail-on high
 
 # Quality gate: fail if more than 10 findings or risk score exceeds 50
-python -m agent_security_scanner.cli scan --target https://api.example.com/agent --max-findings 10 --max-risk-score 50
+python -m singularity.cli scan --target https://api.example.com/agent --max-findings 10 --max-risk-score 50
 ```
 
 ---
@@ -131,7 +131,7 @@ python -m agent_security_scanner.cli scan --target https://api.example.com/agent
 ### Scan Command
 
 ```
-python -m agent_security_scanner.cli scan --target <url> [options]
+python -m singularity.cli scan --target <url> [options]
 
 Options:
   --target,  -t   Target URL or API endpoint (required)
@@ -157,7 +157,7 @@ Options:
 Generate a default config file:
 
 ```bash
-python -m agent_security_scanner.cli config --generate
+python -m singularity.cli config --generate
 ```
 
 Or create `config/config.yaml` manually:
@@ -209,16 +209,16 @@ logging:
 
 ### Environment Variable Overrides
 
-Configuration can be overridden via environment variables using the `ASS_` prefix:
+Configuration can be overridden via environment variables using the `SINGULARITY_` prefix:
 
 ```bash
-export ASS_SCANNER_TIMEOUT=60
-export ASS_SCANNER_VERIFY_SSL=false
-export ASS_LOG_LEVEL=DEBUG
-export ASS_OUTPUT_FORMAT=json
-export ASS_QUALITY_GATE_FAIL_ON_SEVERITY=high
-export ASS_QUALITY_GATE_MAX_FINDINGS=50
-export ASS_QUALITY_GATE_MAX_RISK_SCORE=100
+export SINGULARITY_SCANNER_TIMEOUT=60
+export SINGULARITY_SCANNER_VERIFY_SSL=false
+export SINGULARITY_LOG_LEVEL=DEBUG
+export SINGULARITY_OUTPUT_FORMAT=json
+export SINGULARITY_QUALITY_GATE_FAIL_ON_SEVERITY=high
+export SINGULARITY_QUALITY_GATE_MAX_FINDINGS=50
+export SINGULARITY_QUALITY_GATE_MAX_RISK_SCORE=100
 ```
 
 ---
@@ -226,7 +226,7 @@ export ASS_QUALITY_GATE_MAX_RISK_SCORE=100
 ## Architecture
 
 ```
-agent_security_scanner/
+singularity/
 ├── core/
 │   ├── engine.py                          # Scan orchestration — module selection and lifecycle
 │   ├── config.py                          # YAML + environment variable configuration loader
@@ -261,11 +261,11 @@ agent_security_scanner/
 
 ### ScanEngine
 
-The `ScanEngine` class in `agent_security_scanner/core/engine.py` can be used programmatically:
+The `ScanEngine` class in `singularity/core/engine.py` can be used programmatically:
 
 ```python
-from agent_security_scanner.core.config import load_config
-from agent_security_scanner.core.engine import ScanEngine
+from singularity.core.config import load_config
+from singularity.core.engine import ScanEngine
 
 config = load_config("config/config.yaml")
 engine = ScanEngine(config)
@@ -285,10 +285,10 @@ results = engine.run(
 
 ```json
 {
-  "$schema": "https://github.com/Cybathreat/agent-security-scanner/schema/report/v1",
+  "$schema": "https://github.com/Cybathreat/singularity/schema/report/v1",
   "report_id": "uuid",
   "generated_at": "2026-03-23T10:00:00Z",
-  "scanner": { "name": "Agent Security Scanner", "version": "0.2.0" },
+  "scanner": { "name": "Singularity", "version": "0.2.0" },
   "target": "https://api.example.com/agent",
   "summary": {
     "total": 5,
@@ -345,7 +345,7 @@ Reports include an executive summary, findings overview table, detailed findings
 
 ```bash
 # Run all tests with coverage
-pytest tests/ -v --cov=agent_security_scanner --cov-report=html
+pytest tests/ -v --cov=singularity --cov-report=html
 
 # Unit tests only
 pytest tests/unit/ -v
@@ -356,10 +356,10 @@ pytest tests/integration/ -v
 
 ### Adding New Modules
 
-1. Create a new class in `agent_security_scanner/modules/` inheriting from `BaseModule`
+1. Create a new class in `singularity/modules/` inheriting from `BaseModule`
 2. Implement the `scan(target, **kwargs) -> ScanResult` method
-3. Register it in `agent_security_scanner/core/engine.py` — add to `ALL_MODULES` and `_build_module()`
-4. Add the config dataclass in `agent_security_scanner/core/config.py`
+3. Register it in `singularity/core/engine.py` — add to `ALL_MODULES` and `_build_module()`
+4. Add the config dataclass in `singularity/core/config.py`
 5. Add unit and integration tests
 
 ---

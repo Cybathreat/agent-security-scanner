@@ -1,4 +1,4 @@
-# Contributing to Agent Security Scanner
+# Contributing to Singularity
 
 Thank you for your interest in contributing. This document covers how to get started, submit changes, and maintain code quality.
 
@@ -22,12 +22,12 @@ Thank you for your interest in contributing. This document covers how to get sta
 1. Fork the repository on GitHub
 2. Clone your fork:
    ```bash
-   git clone git@github.com:<your-username>/agent-security-scanner.git
-   cd agent-security-scanner
+   git clone git@github.com:<your-username>/singularity.git
+   cd singularity
    ```
 3. Add the upstream remote:
    ```bash
-   git remote add upstream git@github.com:Cybathreat/agent-security-scanner.git
+   git remote add upstream git@github.com:Cybathreat/singularity.git
    ```
 
 ---
@@ -53,7 +53,7 @@ pytest tests/ -v
 ## Project Structure
 
 ```
-agent_security_scanner/
+singularity/
 ├── core/
 │   ├── engine.py          # Scan orchestration
 │   ├── config.py          # Configuration loader (includes QualityGateConfig)
@@ -119,7 +119,7 @@ New security modules must follow the existing pattern:
 ### 1. Create the module class
 
 ```python
-# agent_security_scanner/modules/your_module.py
+# singularity/modules/your_module.py
 from .base import BaseModule, ScanResult, Severity
 
 class YourModule(BaseModule):
@@ -141,7 +141,7 @@ class YourModule(BaseModule):
 ### 2. Add a config dataclass
 
 ```python
-# agent_security_scanner/core/config.py
+# singularity/core/config.py
 @dataclass
 class YourModuleConfig:
     enabled: bool = True
@@ -153,7 +153,7 @@ Add it to `ModulesConfig` and `Config.to_dict()`.
 ### 3. Register in the engine
 
 ```python
-# agent_security_scanner/core/engine.py
+# singularity/core/engine.py
 ALL_MODULES = [..., "your_module"]
 
 # in _build_module():
@@ -164,7 +164,7 @@ registry["your_module"] = (YourModule, self.config.modules.your_module)
 ### 4. Export from the modules package
 
 ```python
-# agent_security_scanner/modules/__init__.py
+# singularity/modules/__init__.py
 from .your_module import YourModule
 ```
 
@@ -185,9 +185,9 @@ from .your_module import YourModule
 Lint and type check before submitting:
 
 ```bash
-ruff check agent_security_scanner/
-ruff format --check agent_security_scanner/
-mypy agent_security_scanner/ --ignore-missing-imports
+ruff check singularity/
+ruff format --check singularity/
+mypy singularity/ --ignore-missing-imports
 ```
 
 Pre-commit hooks are available:
@@ -206,7 +206,7 @@ pre-commit run --all-files   # Run manually on all files
 | `pytest tests/ -v` | Run all tests |
 | `pytest tests/unit/ -v` | Unit tests only |
 | `pytest tests/integration/ -v` | Integration tests only |
-| `pytest tests/ --cov=agent_security_scanner --cov-report=html` | Coverage report |
+| `pytest tests/ --cov=singularity --cov-report=html` | Coverage report |
 | `pytest tests/ --cov-fail-under=70` | CI coverage gate (70% minimum) |
 
 ### Quality Gates
@@ -215,10 +215,10 @@ The scanner supports CI/CD quality gates:
 
 ```bash
 # Fail on HIGH severity or above (default: critical)
-python -m agent_security_scanner.cli scan --target <url> --fail-on high
+python -m singularity.cli scan --target <url> --fail-on high
 
 # Fail if more than 10 findings or risk score exceeds 50
-python -m agent_security_scanner.cli scan --target <url> --max-findings 10 --max-risk-score 50
+python -m singularity.cli scan --target <url> --max-findings 10 --max-risk-score 50
 
 # Exit codes: 0 = pass, 1 = error, 2 = quality gate failed
 echo $?  # Check exit code

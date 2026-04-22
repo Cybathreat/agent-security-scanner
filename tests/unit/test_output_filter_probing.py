@@ -7,11 +7,11 @@ Run: pytest tests/unit/test_output_filter_probing.py -v
 import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from agent_security_scanner.modules.prompt_injection_submodules.output_filter_probing import (
+from singularity.modules.prompt_injection_submodules.output_filter_probing import (
     OutputFilterProbingScannerConfig,
     OutputFilterProbingScanner,
 )
-from agent_security_scanner.modules.base import Severity
+from singularity.modules.base import Severity
 
 
 class TestOutputFilterProbingScannerConfig:
@@ -46,7 +46,7 @@ class TestOutputFilterProbingScanner:
             assert "name" in payload and "payload" in payload
         for payload in scanner.BOUNDARY_TESTING_PAYLOADS:
             assert "name" in payload and "payload" in payload
-        for payload in scanner.ENCODING_BYPASS_PAYLOADS:
+        for payload in scanner.ENCODING_BYPSINGULARITY_PAYLOADS:
             assert "name" in payload and "payload" in payload
 
 

@@ -6,11 +6,11 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from agent_security_scanner.modules.prompt_injection_submodules.skeleton_key import (
+from singularity.modules.prompt_injection_submodules.skeleton_key import (
     SkeletonKeyAttackScanner,
     SkeletonKeyConfig,
 )
-from agent_security_scanner.modules.base import Severity
+from singularity.modules.base import Severity
 
 
 class TestSkeletonKeyConfig:
@@ -197,7 +197,7 @@ class TestScanMethod:
             config=SkeletonKeyConfig(disclaimer_modes=["warning_prefix"])
         )
 
-        from agent_security_scanner.modules.base import Finding, ScanResult, Severity
+        from singularity.modules.base import Finding, ScanResult, Severity
         mock_finding = Finding(
             id="FIND-test",
             severity=Severity.HIGH,

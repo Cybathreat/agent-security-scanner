@@ -7,25 +7,25 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from agent_security_scanner.core.config import MisconfigurationsConfig
-from agent_security_scanner.modules.base import Finding, ScanResult, Severity
-from agent_security_scanner.modules.misconfig_submodules.auth_scanner import (
+from singularity.core.config import MisconfigurationsConfig
+from singularity.modules.base import Finding, ScanResult, Severity
+from singularity.modules.misconfig_submodules.auth_scanner import (
     AuthScanner,
     AuthScannerConfig,
 )
-from agent_security_scanner.modules.misconfig_submodules.cors_scanner import (
+from singularity.modules.misconfig_submodules.cors_scanner import (
     CORSScanner,
     CORSScannerConfig,
 )
-from agent_security_scanner.modules.misconfig_submodules.info_disclosure_scanner import (
+from singularity.modules.misconfig_submodules.info_disclosure_scanner import (
     InfoDisclosureScanner,
     InfoDisclosureScannerConfig,
 )
-from agent_security_scanner.modules.misconfig_submodules.rate_limit_scanner import (
+from singularity.modules.misconfig_submodules.rate_limit_scanner import (
     RateLimitScanner,
     RateLimitScannerConfig,
 )
-from agent_security_scanner.modules.misconfigurations import MisconfigurationsModule
+from singularity.modules.misconfigurations import MisconfigurationsModule
 
 
 # ---------------------------------------------------------------------------

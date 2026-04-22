@@ -11,9 +11,9 @@ import json
 import tempfile
 from pathlib import Path
 
-from agent_security_scanner.modules.base import Finding, ScanResult, Severity
-from agent_security_scanner.output.json_report import JSONReport
-from agent_security_scanner.output.markdown_report import MarkdownReport
+from singularity.modules.base import Finding, ScanResult, Severity
+from singularity.output.json_report import JSONReport
+from singularity.output.markdown_report import MarkdownReport
 
 
 class TestJSONReport:

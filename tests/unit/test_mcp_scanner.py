@@ -7,11 +7,11 @@ Run: pytest tests/unit/test_mcp_scanner.py -v
 import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from agent_security_scanner.modules.tool_boundaries_submodules.mcp_scanner import (
+from singularity.modules.tool_boundaries_submodules.mcp_scanner import (
     MCPScannerConfig,
     MCPScanner,
 )
-from agent_security_scanner.modules.base import Severity
+from singularity.modules.base import Severity
 
 
 class TestMCPScannerConfig:
@@ -47,7 +47,7 @@ class TestMCPScanner:
             assert "name" in payload and "payload" in payload
         for payload in scanner.TOKEN_FORGERY_PAYLOADS:
             assert "name" in payload and "payload" in payload
-        for payload in scanner.AUTH_BYPASS_PAYLOADS:
+        for payload in scanner.AUTH_BYPSINGULARITY_PAYLOADS:
             assert "name" in payload and "payload" in payload
 
 

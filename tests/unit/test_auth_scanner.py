@@ -8,11 +8,11 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from agent_security_scanner.modules.misconfig_submodules.auth_scanner import (
+from singularity.modules.misconfig_submodules.auth_scanner import (
     AuthScanner,
     AuthScannerConfig,
 )
-from agent_security_scanner.modules.base import Finding, ScanResult, Severity
+from singularity.modules.base import Finding, ScanResult, Severity
 
 
 # ---------------------------------------------------------------------------

@@ -8,11 +8,11 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from agent_security_scanner.modules.rag_security_submodules.document_poisoning import (
+from singularity.modules.rag_security_submodules.document_poisoning import (
     DocumentPoisoningScanner,
     DocumentPoisoningScannerConfig,
 )
-from agent_security_scanner.modules.base import Finding, ScanResult, Severity
+from singularity.modules.base import Finding, ScanResult, Severity
 
 
 # ---------------------------------------------------------------------------

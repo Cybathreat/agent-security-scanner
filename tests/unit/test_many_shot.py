@@ -6,11 +6,11 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from agent_security_scanner.modules.prompt_injection_submodules.many_shot import (
+from singularity.modules.prompt_injection_submodules.many_shot import (
     ManyShotJailbreakingScanner,
     ManyShotConfig,
 )
-from agent_security_scanner.modules.base import Severity
+from singularity.modules.base import Severity
 
 
 class TestManyShotConfig:
@@ -155,7 +155,7 @@ class TestScanMethod:
             config=ManyShotConfig(num_shots=5)
         )
 
-        from agent_security_scanner.modules.base import Finding, ScanResult, Severity
+        from singularity.modules.base import Finding, ScanResult, Severity
         mock_finding = Finding(
             id="FIND-test",
             severity=Severity.HIGH,

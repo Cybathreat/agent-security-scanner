@@ -1,5 +1,5 @@
 /**
- * API client for the Agent Security Scanner backend.
+ * API client for the Singularity backend.
  */
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "";

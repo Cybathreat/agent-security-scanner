@@ -8,11 +8,11 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from agent_security_scanner.modules.tool_boundaries_submodules.tool_chains import (
+from singularity.modules.tool_boundaries_submodules.tool_chains import (
     ToolChainsScanner,
     ToolChainsScannerConfig,
 )
-from agent_security_scanner.modules.base import Finding, ScanResult, Severity
+from singularity.modules.base import Finding, ScanResult, Severity
 
 
 # ---------------------------------------------------------------------------

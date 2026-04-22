@@ -14,13 +14,13 @@ import codecs
 import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from agent_security_scanner.modules.prompt_injection_submodules.encoding_bypass import (
+from singularity.modules.prompt_injection_submodules.encoding_bypass import (
     ATTACK_GOALS,
     GOAL_TITLES,
     EncodingBypassConfig,
     EncodingBypassScanner,
 )
-from agent_security_scanner.modules.base import Severity
+from singularity.modules.base import Severity
 
 
 class TestEncodingBypassConfig:

@@ -71,10 +71,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Install scanner
-        run: pip install agent-security-scanner
+        run: pip install singularity
       - name: Run scan
         run: |
-          agent-security-scanner scan \\
+          singularity scan \\
             --target \${{ secrets.TARGET_URL }} \\
             --fail-on critical \\
             --format json \\
@@ -84,8 +84,8 @@ jobs:
   stage: test
   image: python:3.12
   script:
-    - pip install agent-security-scanner
-    - agent-security-scanner scan
+    - pip install singularity
+    - singularity scan
         --target $TARGET_URL
         --fail-on critical
         --format json
@@ -94,7 +94,7 @@ jobs:
     paths:
       - reports/`;
 
-  const cliCommand = `agent-security-scanner scan \\
+  const cliCommand = `singularity scan \\
   --target https://api.example.com \\
   --modules prompt_injection,rag_security \\
   --fail-on critical \\

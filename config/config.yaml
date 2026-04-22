@@ -303,5 +303,5 @@ scanner:
   proxy: null
   rate_limit: 10.0
   timeout: 30
-  user_agent: AgentSecurityScanner/0.1
+  user_agent: Singularity/0.1
   verify_ssl: true

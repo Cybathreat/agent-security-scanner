@@ -11,11 +11,11 @@ Run: pytest tests/unit/test_memory_poisoning.py -v
 import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from agent_security_scanner.modules.agent.memory_poisoning import (
+from singularity.modules.agent.memory_poisoning import (
     MemoryPoisoningScannerConfig,
     MemoryPoisoningScanner,
 )
-from agent_security_scanner.modules.base import Severity
+from singularity.modules.base import Severity
 
 
 class TestMemoryPoisoningConfig:

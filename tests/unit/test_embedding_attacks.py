@@ -7,11 +7,11 @@ Run: pytest tests/unit/test_embedding_attacks.py -v
 import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from agent_security_scanner.modules.rag_security_submodules.embedding_attacks import (
+from singularity.modules.rag_security_submodules.embedding_attacks import (
     EmbeddingAttacksScannerConfig,
     EmbeddingAttacksScanner,
 )
-from agent_security_scanner.modules.base import Severity
+from singularity.modules.base import Severity
 
 
 class TestEmbeddingAttacksConfig:

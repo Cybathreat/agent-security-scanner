@@ -7,11 +7,11 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from agent_security_scanner.modules.prompt_injection_submodules.multi_turn import (
+from singularity.modules.prompt_injection_submodules.multi_turn import (
     MultiTurnScanner,
     MultiTurnScannerConfig,
 )
-from agent_security_scanner.modules.base import Severity
+from singularity.modules.base import Severity
 
 
 class TestMultiTurnScannerConfig:

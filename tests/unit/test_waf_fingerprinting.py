@@ -11,11 +11,11 @@ Run: pytest tests/unit/test_waf_fingerprinting.py -v
 import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from agent_security_scanner.modules.prompt_injection_submodules.waf_fingerprinting import (
+from singularity.modules.prompt_injection_submodules.waf_fingerprinting import (
     WAFFingerprintingScannerConfig,
     WAFFingerprintingScanner,
 )
-from agent_security_scanner.modules.base import Severity
+from singularity.modules.base import Severity
 
 
 class TestWAFFingerprintingScannerConfig:
@@ -87,7 +87,7 @@ class TestWAFFingerprintingScanner:
     def test_bypass_testing_payloads_structure(self):
         """Test that each bypass testing payload has required keys."""
         scanner = WAFFingerprintingScanner()
-        for payload in scanner.BYPASS_TESTING_PAYLOADS:
+        for payload in scanner.BYPSINGULARITY_TESTING_PAYLOADS:
             assert "name" in payload, "Bypass testing payload missing name"
             assert "description" in payload, "Bypass testing payload missing description"
             assert "payload" in payload, "Bypass testing payload missing payload"
@@ -104,7 +104,7 @@ class TestWAFFingerprintingScanner:
         """Test that each payload category has exactly 3 payloads."""
         scanner = WAFFingerprintingScanner()
         assert len(scanner.WAF_DETECTION_PAYLOADS) == 3
-        assert len(scanner.BYPASS_TESTING_PAYLOADS) == 3
+        assert len(scanner.BYPSINGULARITY_TESTING_PAYLOADS) == 3
         assert len(scanner.ENCODING_TRICKS_PAYLOADS) == 3
 
 
@@ -293,17 +293,17 @@ class TestScanMethod:
         scanner = WAFFingerprintingScanner(config)
 
         with patch(
-            "agent_security_scanner.modules.prompt_injection_submodules."
+            "singularity.modules.prompt_injection_submodules."
             "waf_fingerprinting.WAFFingerprintingScanner._test_waf_detection",
             new=AsyncMock(return_value=[]),
         ):
             with patch(
-                "agent_security_scanner.modules.prompt_injection_submodules."
+                "singularity.modules.prompt_injection_submodules."
                 "waf_fingerprinting.WAFFingerprintingScanner._test_bypass_testing",
                 new=AsyncMock(return_value=[]),
             ):
                 with patch(
-                    "agent_security_scanner.modules.prompt_injection_submodules."
+                    "singularity.modules.prompt_injection_submodules."
                     "waf_fingerprinting.WAFFingerprintingScanner._test_encoding_tricks",
                     new=AsyncMock(return_value=[]),
                 ):

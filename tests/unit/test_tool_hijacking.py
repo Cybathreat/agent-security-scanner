@@ -11,11 +11,11 @@ Run: pytest tests/unit/test_tool_hijacking.py -v
 import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from agent_security_scanner.modules.agent.tool_hijacking import (
+from singularity.modules.agent.tool_hijacking import (
     ToolHijackingScannerConfig,
     ToolHijackingScanner,
 )
-from agent_security_scanner.modules.base import Severity
+from singularity.modules.base import Severity
 
 
 class TestToolHijackingConfig:

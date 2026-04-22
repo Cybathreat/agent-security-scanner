@@ -13,9 +13,9 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from agent_security_scanner.core.config import ToolBoundariesConfig
-from agent_security_scanner.modules.base import BaseModule, Finding, ScanResult, Severity
-from agent_security_scanner.modules.tool_boundaries import ToolBoundariesModule
+from singularity.core.config import ToolBoundariesConfig
+from singularity.modules.base import BaseModule, Finding, ScanResult, Severity
+from singularity.modules.tool_boundaries import ToolBoundariesModule
 
 
 # ---------------------------------------------------------------------------
@@ -72,11 +72,11 @@ class TestToolBoundariesModule:
 class TestScanDelegation:
     """Test that submodules are called and results aggregated."""
 
-    @patch("agent_security_scanner.modules.tool_boundaries.PermissionScanner")
-    @patch("agent_security_scanner.modules.tool_boundaries.SandboxScanner")
-    @patch("agent_security_scanner.modules.tool_boundaries.ToolChainsScanner")
-    @patch("agent_security_scanner.modules.tool_boundaries.MCPScanner")
-    @patch("agent_security_scanner.modules.tool_boundaries.ConfusedDeputyScanner")
+    @patch("singularity.modules.tool_boundaries.PermissionScanner")
+    @patch("singularity.modules.tool_boundaries.SandboxScanner")
+    @patch("singularity.modules.tool_boundaries.ToolChainsScanner")
+    @patch("singularity.modules.tool_boundaries.MCPScanner")
+    @patch("singularity.modules.tool_boundaries.ConfusedDeputyScanner")
     def test_submodules_called_and_findings_aggregated(
         self,
         mock_confused_deputy_cls: MagicMock,
@@ -111,11 +111,11 @@ class TestScanDelegation:
         # 5 submodules * 1 finding each = 5 findings
         assert len(result.findings) == 5
 
-    @patch("agent_security_scanner.modules.tool_boundaries.PermissionScanner")
-    @patch("agent_security_scanner.modules.tool_boundaries.SandboxScanner")
-    @patch("agent_security_scanner.modules.tool_boundaries.ToolChainsScanner")
-    @patch("agent_security_scanner.modules.tool_boundaries.MCPScanner")
-    @patch("agent_security_scanner.modules.tool_boundaries.ConfusedDeputyScanner")
+    @patch("singularity.modules.tool_boundaries.PermissionScanner")
+    @patch("singularity.modules.tool_boundaries.SandboxScanner")
+    @patch("singularity.modules.tool_boundaries.ToolChainsScanner")
+    @patch("singularity.modules.tool_boundaries.MCPScanner")
+    @patch("singularity.modules.tool_boundaries.ConfusedDeputyScanner")
     def test_errors_aggregated(
         self,
         mock_confused_deputy_cls: MagicMock,
@@ -157,8 +157,8 @@ class TestScanDelegation:
 class TestScanDisabled:
     """Test that config flags gate submodule delegation."""
 
-    @patch("agent_security_scanner.modules.tool_boundaries.PermissionScanner")
-    @patch("agent_security_scanner.modules.tool_boundaries.SandboxScanner")
+    @patch("singularity.modules.tool_boundaries.PermissionScanner")
+    @patch("singularity.modules.tool_boundaries.SandboxScanner")
     def test_check_permissions_false_skips_permission_scanner(
         self,
         mock_sandbox_cls: MagicMock,
@@ -176,8 +176,8 @@ class TestScanDisabled:
 
         mock_permission_cls.assert_not_called()
 
-    @patch("agent_security_scanner.modules.tool_boundaries.PermissionScanner")
-    @patch("agent_security_scanner.modules.tool_boundaries.SandboxScanner")
+    @patch("singularity.modules.tool_boundaries.PermissionScanner")
+    @patch("singularity.modules.tool_boundaries.SandboxScanner")
     def test_audit_sandbox_false_skips_sandbox_scanner(
         self,
         mock_sandbox_cls: MagicMock,

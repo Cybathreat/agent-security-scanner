@@ -13,9 +13,9 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from agent_security_scanner.core.config import RAGSecurityConfig
-from agent_security_scanner.modules.base import BaseModule, Finding, ScanResult, Severity
-from agent_security_scanner.modules.rag_security import RAGSecurityModule
+from singularity.core.config import RAGSecurityConfig
+from singularity.modules.base import BaseModule, Finding, ScanResult, Severity
+from singularity.modules.rag_security import RAGSecurityModule
 
 
 # ---------------------------------------------------------------------------
@@ -78,13 +78,13 @@ class TestRAGSecurityModule:
 class TestScanDelegation:
     """Test that submodules are called and results aggregated."""
 
-    @patch("agent_security_scanner.modules.rag_security.DocumentPoisoningScanner")
-    @patch("agent_security_scanner.modules.rag_security.ExfiltrationScanner")
-    @patch("agent_security_scanner.modules.rag_security.VectorDBScanner")
-    @patch("agent_security_scanner.modules.rag_security.EmbeddingAttacksScanner")
-    @patch("agent_security_scanner.modules.rag_security.MultiTenantScanner")
-    @patch("agent_security_scanner.modules.rag_security.PhantomDocumentScanner")
-    @patch("agent_security_scanner.modules.rag_security.ChunkBoundaryScanner")
+    @patch("singularity.modules.rag_security.DocumentPoisoningScanner")
+    @patch("singularity.modules.rag_security.ExfiltrationScanner")
+    @patch("singularity.modules.rag_security.VectorDBScanner")
+    @patch("singularity.modules.rag_security.EmbeddingAttacksScanner")
+    @patch("singularity.modules.rag_security.MultiTenantScanner")
+    @patch("singularity.modules.rag_security.PhantomDocumentScanner")
+    @patch("singularity.modules.rag_security.ChunkBoundaryScanner")
     def test_submodules_called_and_findings_aggregated(
         self,
         mock_chunk_cls: MagicMock,
@@ -117,13 +117,13 @@ class TestScanDelegation:
         # 7 submodules * 1 finding each = 7 findings
         assert len(result.findings) == 7
 
-    @patch("agent_security_scanner.modules.rag_security.DocumentPoisoningScanner")
-    @patch("agent_security_scanner.modules.rag_security.ExfiltrationScanner")
-    @patch("agent_security_scanner.modules.rag_security.VectorDBScanner")
-    @patch("agent_security_scanner.modules.rag_security.EmbeddingAttacksScanner")
-    @patch("agent_security_scanner.modules.rag_security.MultiTenantScanner")
-    @patch("agent_security_scanner.modules.rag_security.PhantomDocumentScanner")
-    @patch("agent_security_scanner.modules.rag_security.ChunkBoundaryScanner")
+    @patch("singularity.modules.rag_security.DocumentPoisoningScanner")
+    @patch("singularity.modules.rag_security.ExfiltrationScanner")
+    @patch("singularity.modules.rag_security.VectorDBScanner")
+    @patch("singularity.modules.rag_security.EmbeddingAttacksScanner")
+    @patch("singularity.modules.rag_security.MultiTenantScanner")
+    @patch("singularity.modules.rag_security.PhantomDocumentScanner")
+    @patch("singularity.modules.rag_security.ChunkBoundaryScanner")
     def test_errors_aggregated(
         self,
         mock_chunk_cls: MagicMock,
@@ -164,7 +164,7 @@ class TestScanDelegation:
 class TestScanDisabled:
     """Test that config flags gate submodule delegation."""
 
-    @patch("agent_security_scanner.modules.rag_security.DocumentPoisoningScanner")
+    @patch("singularity.modules.rag_security.DocumentPoisoningScanner")
     def test_check_poisoning_false_skips_poisoning_scanner(
         self,
         mock_poison_cls: MagicMock,
@@ -174,7 +174,7 @@ class TestScanDisabled:
         mod.scan("http://test")
         mock_poison_cls.assert_not_called()
 
-    @patch("agent_security_scanner.modules.rag_security.ExfiltrationScanner")
+    @patch("singularity.modules.rag_security.ExfiltrationScanner")
     def test_check_exfiltration_false_skips_exfiltration_scanner(
         self,
         mock_exfil_cls: MagicMock,
@@ -184,7 +184,7 @@ class TestScanDisabled:
         mod.scan("http://test")
         mock_exfil_cls.assert_not_called()
 
-    @patch("agent_security_scanner.modules.rag_security.VectorDBScanner")
+    @patch("singularity.modules.rag_security.VectorDBScanner")
     def test_vector_db_scan_false_skips_vector_db_scanner(
         self,
         mock_vector_cls: MagicMock,

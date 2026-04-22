@@ -3,7 +3,7 @@ requires = ["setuptools>=68", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "agent-security-scanner"
+name = "singularity"
 version = "0.2.0"
 description = "Security auditing tool for LLM agents, RAG pipelines, and agent frameworks"
 readme = "README.md"
@@ -57,17 +57,17 @@ dev = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/Cybathreat/agent-security-scanner"
-Repository = "https://github.com/Cybathreat/agent-security-scanner"
-Issues = "https://github.com/Cybathreat/agent-security-scanner/issues"
-Changelog = "https://github.com/Cybathreat/agent-security-scanner/blob/main/CHANGELOG.md"
+Homepage = "https://github.com/Cybathreat/singularity"
+Repository = "https://github.com/Cybathreat/singularity"
+Issues = "https://github.com/Cybathreat/singularity/issues"
+Changelog = "https://github.com/Cybathreat/singularity/blob/main/CHANGELOG.md"
 
 [project.scripts]
-agent-security-scanner = "agent_security_scanner.cli:main"
+singularity = "singularity.cli:main"
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["agent_security_scanner*"]
+include = ["singularity*"]
 
 [tool.ruff]
 line-length = 100

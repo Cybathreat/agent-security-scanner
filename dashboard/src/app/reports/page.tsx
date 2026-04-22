@@ -132,7 +132,7 @@ export default function ReportsPage() {
     const enabled = sections.filter((s) => s.enabled);
     const lines: string[] = [];
 
-    lines.push(`# Agent Security Scanner Report`);
+    lines.push(`# Singularity Report`);
     lines.push(``);
     lines.push(`**Target:** ${scan.target}`);
     lines.push(`**Date:** ${formatDate(scan.started_at)}`);

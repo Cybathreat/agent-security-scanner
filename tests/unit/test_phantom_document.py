@@ -10,11 +10,11 @@ Run: pytest tests/unit/test_phantom_document.py -v
 import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from agent_security_scanner.modules.rag_security_submodules.phantom_document import (
+from singularity.modules.rag_security_submodules.phantom_document import (
     PhantomDocumentScannerConfig,
     PhantomDocumentScanner,
 )
-from agent_security_scanner.modules.base import Severity
+from singularity.modules.base import Severity
 
 
 class TestPhantomDocumentScannerConfig:

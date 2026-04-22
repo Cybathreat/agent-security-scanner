@@ -10,11 +10,11 @@ Run: pytest tests/unit/test_confused_deputy.py -v
 import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from agent_security_scanner.modules.tool_boundaries_submodules.confused_deputy import (
+from singularity.modules.tool_boundaries_submodules.confused_deputy import (
     ConfusedDeputyScannerConfig,
     ConfusedDeputyScanner,
 )
-from agent_security_scanner.modules.base import Severity
+from singularity.modules.base import Severity
 
 
 class TestConfusedDeputyScannerConfig:

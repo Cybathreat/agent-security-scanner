@@ -11,15 +11,15 @@ import pytest
 from contextlib import ExitStack
 from unittest.mock import AsyncMock, patch
 
-from agent_security_scanner.modules import (
+from singularity.modules import (
     MisconfigurationsModule,
     PromptInjectionModule,
     ToolBoundariesModule,
     RAGSecurityModule,
 )
-from agent_security_scanner.modules.base import Finding, ScanResult, Severity
-from agent_security_scanner.output.json_report import JSONReport
-from agent_security_scanner.output.markdown_report import MarkdownReport
+from singularity.modules.base import Finding, ScanResult, Severity
+from singularity.output.json_report import JSONReport
+from singularity.output.markdown_report import MarkdownReport
 
 
 def _empty_scan_result(module_name: str, target: str) -> ScanResult:
@@ -32,52 +32,52 @@ def _empty_scan_result(module_name: str, target: str) -> ScanResult:
 # --- Submodule patch paths for each delegator ---
 
 MISCONFIG_SUBMODULE_PATCHES = [
-    "agent_security_scanner.modules.misconfig_submodules.auth_scanner.AuthScanner.scan",
-    "agent_security_scanner.modules.misconfig_submodules.cors_scanner.CORSScanner.scan",
-    "agent_security_scanner.modules.misconfig_submodules.rate_limit_scanner.RateLimitScanner.scan",
-    "agent_security_scanner.modules.misconfig_submodules.info_disclosure_scanner.InfoDisclosureScanner.scan",
+    "singularity.modules.misconfig_submodules.auth_scanner.AuthScanner.scan",
+    "singularity.modules.misconfig_submodules.cors_scanner.CORSScanner.scan",
+    "singularity.modules.misconfig_submodules.rate_limit_scanner.RateLimitScanner.scan",
+    "singularity.modules.misconfig_submodules.info_disclosure_scanner.InfoDisclosureScanner.scan",
 ]
 
 PROMPT_INJECTION_SUBMODULE_PATCHES = [
-    "agent_security_scanner.modules.prompt_injection_submodules.direct_injection.DirectInjectionScanner.scan",
-    "agent_security_scanner.modules.prompt_injection_submodules.obfuscation.ObfuscationScanner.scan",
-    "agent_security_scanner.modules.prompt_injection_submodules.multi_turn.MultiTurnScanner.scan",
-    "agent_security_scanner.modules.prompt_injection_submodules.crescendo.CrescendoAttackScanner.scan",
-    "agent_security_scanner.modules.prompt_injection_submodules.many_shot.ManyShotJailbreakingScanner.scan",
-    "agent_security_scanner.modules.prompt_injection_submodules.skeleton_key.SkeletonKeyAttackScanner.scan",
-    "agent_security_scanner.modules.prompt_injection_submodules.adaptive_generator.AdaptiveGeneratorScanner.scan",
-    "agent_security_scanner.modules.prompt_injection_submodules.tap.TAPAttackScanner.scan",
-    "agent_security_scanner.modules.prompt_injection_submodules.payload_splitting.PayloadSplittingScanner.scan",
-    "agent_security_scanner.modules.prompt_injection_submodules.guardrail_fingerprinting.GuardrailFingerprintingScanner.scan",
-    "agent_security_scanner.modules.prompt_injection_submodules.virtualization.VirtualizationScanner.scan",
-    "agent_security_scanner.modules.prompt_injection_submodules.encoding_bypass.EncodingBypassScanner.scan",
-    "agent_security_scanner.modules.prompt_injection_submodules.multilingual.MultilingualScanner.scan",
-    "agent_security_scanner.modules.prompt_injection_submodules.token_smuggling.TokenSmugglingScanner.scan",
-    "agent_security_scanner.modules.prompt_injection_submodules.grammar_constrained.GrammarConstrainedScanner.scan",
-    "agent_security_scanner.modules.prompt_injection_submodules.perplexity_evasion.PerplexityEvasionScanner.scan",
-    "agent_security_scanner.modules.prompt_injection_submodules.timing_sidechannels.TimingSidechannelsScanner.scan",
-    "agent_security_scanner.modules.prompt_injection_submodules.rate_limit_evasion.RateLimitEvasionScanner.scan",
-    "agent_security_scanner.modules.prompt_injection_submodules.waf_fingerprinting.WAFFingerprintingScanner.scan",
-    "agent_security_scanner.modules.prompt_injection_submodules.canary_tokens.CanaryTokensScanner.scan",
-    "agent_security_scanner.modules.prompt_injection_submodules.output_filter_probing.OutputFilterProbingScanner.scan",
+    "singularity.modules.prompt_injection_submodules.direct_injection.DirectInjectionScanner.scan",
+    "singularity.modules.prompt_injection_submodules.obfuscation.ObfuscationScanner.scan",
+    "singularity.modules.prompt_injection_submodules.multi_turn.MultiTurnScanner.scan",
+    "singularity.modules.prompt_injection_submodules.crescendo.CrescendoAttackScanner.scan",
+    "singularity.modules.prompt_injection_submodules.many_shot.ManyShotJailbreakingScanner.scan",
+    "singularity.modules.prompt_injection_submodules.skeleton_key.SkeletonKeyAttackScanner.scan",
+    "singularity.modules.prompt_injection_submodules.adaptive_generator.AdaptiveGeneratorScanner.scan",
+    "singularity.modules.prompt_injection_submodules.tap.TAPAttackScanner.scan",
+    "singularity.modules.prompt_injection_submodules.payload_splitting.PayloadSplittingScanner.scan",
+    "singularity.modules.prompt_injection_submodules.guardrail_fingerprinting.GuardrailFingerprintingScanner.scan",
+    "singularity.modules.prompt_injection_submodules.virtualization.VirtualizationScanner.scan",
+    "singularity.modules.prompt_injection_submodules.encoding_bypass.EncodingBypassScanner.scan",
+    "singularity.modules.prompt_injection_submodules.multilingual.MultilingualScanner.scan",
+    "singularity.modules.prompt_injection_submodules.token_smuggling.TokenSmugglingScanner.scan",
+    "singularity.modules.prompt_injection_submodules.grammar_constrained.GrammarConstrainedScanner.scan",
+    "singularity.modules.prompt_injection_submodules.perplexity_evasion.PerplexityEvasionScanner.scan",
+    "singularity.modules.prompt_injection_submodules.timing_sidechannels.TimingSidechannelsScanner.scan",
+    "singularity.modules.prompt_injection_submodules.rate_limit_evasion.RateLimitEvasionScanner.scan",
+    "singularity.modules.prompt_injection_submodules.waf_fingerprinting.WAFFingerprintingScanner.scan",
+    "singularity.modules.prompt_injection_submodules.canary_tokens.CanaryTokensScanner.scan",
+    "singularity.modules.prompt_injection_submodules.output_filter_probing.OutputFilterProbingScanner.scan",
 ]
 
 TOOL_BOUNDARIES_SUBMODULE_PATCHES = [
-    "agent_security_scanner.modules.tool_boundaries_submodules.permission_scanner.PermissionScanner.scan",
-    "agent_security_scanner.modules.tool_boundaries_submodules.sandbox_scanner.SandboxScanner.scan",
-    "agent_security_scanner.modules.tool_boundaries_submodules.tool_chains.ToolChainsScanner.scan",
-    "agent_security_scanner.modules.tool_boundaries_submodules.mcp_scanner.MCPScanner.scan",
-    "agent_security_scanner.modules.tool_boundaries_submodules.confused_deputy.ConfusedDeputyScanner.scan",
+    "singularity.modules.tool_boundaries_submodules.permission_scanner.PermissionScanner.scan",
+    "singularity.modules.tool_boundaries_submodules.sandbox_scanner.SandboxScanner.scan",
+    "singularity.modules.tool_boundaries_submodules.tool_chains.ToolChainsScanner.scan",
+    "singularity.modules.tool_boundaries_submodules.mcp_scanner.MCPScanner.scan",
+    "singularity.modules.tool_boundaries_submodules.confused_deputy.ConfusedDeputyScanner.scan",
 ]
 
 RAG_SECURITY_SUBMODULE_PATCHES = [
-    "agent_security_scanner.modules.rag_security_submodules.document_poisoning.DocumentPoisoningScanner.scan",
-    "agent_security_scanner.modules.rag_security_submodules.exfiltration.ExfiltrationScanner.scan",
-    "agent_security_scanner.modules.rag_security_submodules.vector_db.VectorDBScanner.scan",
-    "agent_security_scanner.modules.rag_security_submodules.embedding_attacks.EmbeddingAttacksScanner.scan",
-    "agent_security_scanner.modules.rag_security_submodules.multi_tenant.MultiTenantScanner.scan",
-    "agent_security_scanner.modules.rag_security_submodules.phantom_document.PhantomDocumentScanner.scan",
-    "agent_security_scanner.modules.rag_security_submodules.chunk_boundary.ChunkBoundaryScanner.scan",
+    "singularity.modules.rag_security_submodules.document_poisoning.DocumentPoisoningScanner.scan",
+    "singularity.modules.rag_security_submodules.exfiltration.ExfiltrationScanner.scan",
+    "singularity.modules.rag_security_submodules.vector_db.VectorDBScanner.scan",
+    "singularity.modules.rag_security_submodules.embedding_attacks.EmbeddingAttacksScanner.scan",
+    "singularity.modules.rag_security_submodules.multi_tenant.MultiTenantScanner.scan",
+    "singularity.modules.rag_security_submodules.phantom_document.PhantomDocumentScanner.scan",
+    "singularity.modules.rag_security_submodules.chunk_boundary.ChunkBoundaryScanner.scan",
 ]
 
 
@@ -101,7 +101,7 @@ class TestMisconfigurationsModuleIntegration:
 
     def test_scan_missing_auth(self):
         """Test detection of missing authentication."""
-        from agent_security_scanner.core.config import MisconfigurationsConfig
+        from singularity.core.config import MisconfigurationsConfig
         module = MisconfigurationsModule(MisconfigurationsConfig())
 
         auth_result = ScanResult(module_name="auth", target="https://api.test.com/agent")
@@ -132,7 +132,7 @@ class TestMisconfigurationsModuleIntegration:
 
     def test_scan_cors_wildcard(self):
         """Test detection of wildcard CORS."""
-        from agent_security_scanner.core.config import MisconfigurationsConfig
+        from singularity.core.config import MisconfigurationsConfig
         module = MisconfigurationsModule(MisconfigurationsConfig())
 
         cors_result = ScanResult(module_name="cors", target="https://api.test.com/agent")
@@ -162,7 +162,7 @@ class TestMisconfigurationsModuleIntegration:
 
     def test_scan_missing_rate_limit(self):
         """Test detection of missing rate limiting."""
-        from agent_security_scanner.core.config import MisconfigurationsConfig
+        from singularity.core.config import MisconfigurationsConfig
         module = MisconfigurationsModule(MisconfigurationsConfig())
 
         rate_result = ScanResult(module_name="rate_limit", target="https://api.test.com/agent")
@@ -196,7 +196,7 @@ class TestPromptInjectionModuleIntegration:
 
     def test_scan_direct_injection(self):
         """Test detection of direct prompt injection."""
-        from agent_security_scanner.core.config import PromptInjectionConfig
+        from singularity.core.config import PromptInjectionConfig
         module = PromptInjectionModule(PromptInjectionConfig())
 
         direct_result = ScanResult(module_name="direct_injection", target="https://api.test.com/agent")
@@ -227,7 +227,7 @@ class TestPromptInjectionModuleIntegration:
 
     def test_scan_prompt_leaking(self):
         """Test detection of prompt leakage."""
-        from agent_security_scanner.core.config import PromptInjectionConfig
+        from singularity.core.config import PromptInjectionConfig
         module = PromptInjectionModule(PromptInjectionConfig())
 
         leak_result = ScanResult(module_name="direct_injection", target="https://api.test.com/agent")
@@ -261,7 +261,7 @@ class TestToolBoundariesModuleIntegration:
 
     def test_scan_dangerous_tools(self):
         """Test detection of dangerous tools without auth."""
-        from agent_security_scanner.core.config import ToolBoundariesConfig
+        from singularity.core.config import ToolBoundariesConfig
         module = ToolBoundariesModule(ToolBoundariesConfig())
 
         perm_result = ScanResult(module_name="permission_scanner", target="https://api.test.com/tools/config")
@@ -293,7 +293,7 @@ class TestToolBoundariesModuleIntegration:
 
     def test_scan_tool_chain(self):
         """Test detection of dangerous tool chains."""
-        from agent_security_scanner.core.config import ToolBoundariesConfig
+        from singularity.core.config import ToolBoundariesConfig
         module = ToolBoundariesModule(ToolBoundariesConfig())
 
         chain_result = ScanResult(module_name="tool_chains", target="https://api.test.com/tools/config")
@@ -328,7 +328,7 @@ class TestRAGSecurityModuleIntegration:
 
     def test_scan_document_poisoning(self):
         """Test detection of document poisoning vulnerability."""
-        from agent_security_scanner.core.config import RAGSecurityConfig
+        from singularity.core.config import RAGSecurityConfig
         module = RAGSecurityModule(RAGSecurityConfig())
 
         poison_result = ScanResult(module_name="document_poisoning", target="https://api.test.com/rag/config")
@@ -358,7 +358,7 @@ class TestRAGSecurityModuleIntegration:
 
     def test_scan_exfiltration_risk(self):
         """Test detection of exfiltration risk."""
-        from agent_security_scanner.core.config import RAGSecurityConfig
+        from singularity.core.config import RAGSecurityConfig
         module = RAGSecurityModule(RAGSecurityConfig())
 
         exfil_result = ScanResult(module_name="exfiltration", target="https://api.test.com/rag/config")
@@ -392,7 +392,7 @@ class TestFullScanWorkflow:
 
     def test_full_scan_all_modules(self):
         """Test running all modules on a target."""
-        from agent_security_scanner.core.config import (
+        from singularity.core.config import (
             MisconfigurationsConfig,
             PromptInjectionConfig,
             ToolBoundariesConfig,

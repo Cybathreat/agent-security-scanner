@@ -11,13 +11,13 @@ Run: pytest tests/unit/test_virtualization.py -v
 import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from agent_security_scanner.modules.prompt_injection_submodules.virtualization import (
+from singularity.modules.prompt_injection_submodules.virtualization import (
     ATTACK_GOALS,
     GOAL_TITLES,
     VirtualizationConfig,
     VirtualizationScanner,
 )
-from agent_security_scanner.modules.base import Severity
+from singularity.modules.base import Severity
 
 
 class TestVirtualizationConfig:

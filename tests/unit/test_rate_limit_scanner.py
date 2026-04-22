@@ -8,11 +8,11 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from agent_security_scanner.modules.misconfig_submodules.rate_limit_scanner import (
+from singularity.modules.misconfig_submodules.rate_limit_scanner import (
     RateLimitScanner,
     RateLimitScannerConfig,
 )
-from agent_security_scanner.modules.base import Finding, ScanResult, Severity
+from singularity.modules.base import Finding, ScanResult, Severity
 
 
 # ---------------------------------------------------------------------------

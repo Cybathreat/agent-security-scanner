@@ -7,11 +7,11 @@ Run: pytest tests/unit/test_plugin_security.py -v
 import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from agent_security_scanner.modules.infrastructure.plugin_security import (
+from singularity.modules.infrastructure.plugin_security import (
     PluginSecurityScannerConfig,
     PluginSecurityScanner,
 )
-from agent_security_scanner.modules.base import Severity
+from singularity.modules.base import Severity
 
 
 class TestPluginSecurityConfig:

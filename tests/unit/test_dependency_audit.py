@@ -7,11 +7,11 @@ Run: pytest tests/unit/test_dependency_audit.py -v
 import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from agent_security_scanner.modules.infrastructure.dependency_audit import (
+from singularity.modules.infrastructure.dependency_audit import (
     DependencyAuditScannerConfig,
     DependencyAuditScanner,
 )
-from agent_security_scanner.modules.base import Severity
+from singularity.modules.base import Severity
 
 
 class TestDependencyAuditConfig:

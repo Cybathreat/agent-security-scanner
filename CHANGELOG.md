@@ -12,7 +12,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 #### CI/CD Quality Gates
 - `core/quality_gate.py` — `GateThreshold`, `GateResult` dataclasses, `evaluate()` function for configurable pass/fail evaluation
-- `QualityGateConfig` in `core/config.py` — `fail_on_severity`, `max_findings`, `max_risk_score` with YAML and `ASS_QUALITY_GATE_*` env var overrides
+- `QualityGateConfig` in `core/config.py` — `fail_on_severity`, `max_findings`, `max_risk_score` with YAML and `SINGULARITY_QUALITY_GATE_*` env var overrides
 - CLI flags: `--fail-on` (critical/high/medium/low/info), `--max-findings`, `--max-risk-score`
 - Exit codes: 0 (pass), 1 (error), 2 (quality gate failed) — backward compatible with previous behavior
 - Quality gate results in JSON reports (`quality_gate` section with passed, exit_code, reason, summary, risk_score)
@@ -49,9 +49,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Added
 
 #### Core
-- `ScanEngine` class in `agent_security_scanner/core/engine.py` — orchestrates module selection, instantiation, and result aggregation
-- `Config` dataclass hierarchy in `agent_security_scanner/core/config.py` — hierarchical configuration loading from YAML files and `ASS_*` environment variable overrides
-- Structured logging setup via loguru in `agent_security_scanner/core/logging.py`
+- `ScanEngine` class in `singularity/core/engine.py` — orchestrates module selection, instantiation, and result aggregation
+- `Config` dataclass hierarchy in `singularity/core/config.py` — hierarchical configuration loading from YAML files and `SINGULARITY_*` environment variable overrides
+- Structured logging setup via loguru in `singularity/core/logging.py`
 
 #### Security Modules
 - `MisconfigurationsModule` — detects missing authentication, CORS misconfigurations, missing rate limiting, information disclosure, and exposed debug endpoints
@@ -68,8 +68,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - `config --generate` command to generate a default `config.yaml`
 
 #### Project
-- `pyproject.toml` — PyPI packaging, entry point (`agent-security-scanner` CLI command), and build configuration
-- Published to PyPI: `pip install agent-security-scanner`
+- `pyproject.toml` — PyPI packaging, entry point (`singularity` CLI command), and build configuration
+- Published to PyPI: `pip install singularity`
 - MIT License
 - README with usage, architecture, output examples, and PyPI install instructions
 - Contributing guide

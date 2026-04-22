@@ -9,12 +9,12 @@ from datetime import datetime
 
 import pytest
 
-from agent_security_scanner.core.quality_gate import (
+from singularity.core.quality_gate import (
     GateResult,
     GateThreshold,
     evaluate,
 )
-from agent_security_scanner.modules.base import (
+from singularity.modules.base import (
     Finding,
     ScanResult,
     Severity,

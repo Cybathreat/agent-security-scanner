@@ -11,13 +11,13 @@ Run: pytest tests/unit/test_token_smuggling.py -v
 import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from agent_security_scanner.modules.prompt_injection_submodules.token_smuggling import (
+from singularity.modules.prompt_injection_submodules.token_smuggling import (
     ATTACK_GOALS,
     GOAL_TITLES,
     TokenSmugglingConfig,
     TokenSmugglingScanner,
 )
-from agent_security_scanner.modules.base import Severity
+from singularity.modules.base import Severity
 
 
 class TestTokenSmugglingConfig:

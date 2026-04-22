@@ -13,17 +13,17 @@
 ## File Structure
 
 ### Backend files modified
-- `agent_security_scanner/web/app.py` — CORS config from env var
-- `agent_security_scanner/web/db.py` — absolute DB path, SQL allowlist, new annotation columns
-- `agent_security_scanner/web/scan_manager.py` — cancel check, datetime fix
-- `agent_security_scanner/web/models.py` — new annotation fields, new replay/attack-surface models, datetime fix
-- `agent_security_scanner/web/api/scans.py` — fix delete logic, fix active scan response
-- `agent_security_scanner/web/api/findings.py` — add PATCH endpoint, add POST replay endpoint
-- `agent_security_scanner/web/api/config.py` — implement PATCH persistence
-- `agent_security_scanner/web/api/quality_gate.py` — fix ScanResult reconstruction, fix timestamp
-- `agent_security_scanner/web/ws/scan_progress.py` — catch-up replay, datetime fix
-- `agent_security_scanner/web/api/attack_surface.py` — new file: attack surface graph endpoint
-- `agent_security_scanner/web/api/__init__.py` — register new routers
+- `singularity/web/app.py` — CORS config from env var
+- `singularity/web/db.py` — absolute DB path, SQL allowlist, new annotation columns
+- `singularity/web/scan_manager.py` — cancel check, datetime fix
+- `singularity/web/models.py` — new annotation fields, new replay/attack-surface models, datetime fix
+- `singularity/web/api/scans.py` — fix delete logic, fix active scan response
+- `singularity/web/api/findings.py` — add PATCH endpoint, add POST replay endpoint
+- `singularity/web/api/config.py` — implement PATCH persistence
+- `singularity/web/api/quality_gate.py` — fix ScanResult reconstruction, fix timestamp
+- `singularity/web/ws/scan_progress.py` — catch-up replay, datetime fix
+- `singularity/web/api/attack_surface.py` — new file: attack surface graph endpoint
+- `singularity/web/api/__init__.py` — register new routers
 
 ### Frontend files modified
 - `dashboard/package.json` — add @xyflow/react, @dnd-kit/core, @dnd-kit/sortable, html2pdf.js
@@ -48,10 +48,10 @@
 ## Task 1: Fix backend — datetime.utcnow() and DB path
 
 **Files:**
-- Modify: `agent_security_scanner/web/scan_manager.py:14`
-- Modify: `agent_security_scanner/web/ws/scan_progress.py:12`
-- Modify: `agent_security_scanner/web/models.py:9`
-- Modify: `agent_security_scanner/web/db.py:11,18-19`
+- Modify: `singularity/web/scan_manager.py:14`
+- Modify: `singularity/web/ws/scan_progress.py:12`
+- Modify: `singularity/web/models.py:9`
+- Modify: `singularity/web/db.py:11,18-19`
 - Test: `tests/unit/test_web_bugfixes.py`
 
 - [ ] **Step 1: Write the failing test**
@@ -67,17 +67,17 @@ import pytest
 
 def test_db_path_is_absolute():
     """DB path should resolve to an absolute path, not relative."""
-    from agent_security_scanner.web.db import DB_PATH
+    from singularity.web.db import DB_PATH
 
     assert DB_PATH.is_absolute(), f"DB_PATH is relative: {DB_PATH}"
 
 
 def test_db_path_uses_env_var():
-    """DB_PATH should use ASS_DATA_DIR env var when set."""
-    with patch.dict(os.environ, {"ASS_DATA_DIR": "/tmp/test-data"}):
+    """DB_PATH should use SINGULARITY_DATA_DIR env var when set."""
+    with patch.dict(os.environ, {"SINGULARITY_DATA_DIR": "/tmp/test-data"}):
         # Re-import to pick up env var
         import importlib
-        from agent_security_scanner import web
+        from singularity import web
         importlib.reload(web.db)
         assert web.db.DB_PATH == Path("/tmp/test-data/scan_history.db")
 
@@ -85,7 +85,7 @@ def test_db_path_uses_env_var():
 def test_scan_manager_uses_timezone_utc():
     """ScanManager should use datetime.now(timezone.utc) not utcnow()."""
     import inspect
-    from agent_security_scanner.web import scan_manager
+    from singularity.web import scan_manager
 
     source = inspect.getsource(scan_manager)
     assert "utcnow" not in source, "scan_manager.py still uses deprecated utcnow()"
@@ -94,7 +94,7 @@ def test_scan_manager_uses_timezone_utc():
 def test_ws_scan_progress_uses_timezone_utc():
     """WebSocket handler should use datetime.now(timezone.utc) not utcnow()."""
     import inspect
-    from agent_security_scanner.web.ws import scan_progress
+    from singularity.web.ws import scan_progress
 
     source = inspect.getsource(scan_progress)
     assert "utcnow" not in source, "scan_progress.py still uses deprecated utcnow()"
@@ -103,7 +103,7 @@ def test_ws_scan_progress_uses_timezone_utc():
 def test_models_uses_timezone_utc():
     """Models should use datetime.now(timezone.utc) not utcnow()."""
     import inspect
-    from agent_security_scanner.web import models
+    from singularity.web import models
 
     source = inspect.getsource(models)
     assert "utcnow" not in source, "models.py still uses deprecated utcnow()"
@@ -116,7 +116,7 @@ Expected: FAIL — DB_PATH is relative and utcnow() is still in source.
 
 - [ ] **Step 3: Fix db.py — absolute path and env var**
 
-In `agent_security_scanner/web/db.py`, replace lines 11-19:
+In `singularity/web/db.py`, replace lines 11-19:
 
 ```python
 # Replace:
@@ -139,14 +139,14 @@ from typing import Any, Dict, List, Optional
 import aiosqlite
 from loguru import logger
 
-_ASS_DATA_DIR = os.environ.get("ASS_DATA_DIR")
-DB_DIR = Path(_ASS_DATA_DIR) if _ASS_DATA_DIR else Path(__file__).resolve().parent.parent.parent.parent / "data"
+_SINGULARITY_DATA_DIR = os.environ.get("SINGULARITY_DATA_DIR")
+DB_DIR = Path(_SINGULARITY_DATA_DIR) if _SINGULARITY_DATA_DIR else Path(__file__).resolve().parent.parent.parent.parent / "data"
 DB_PATH = DB_DIR / "scan_history.db"
 ```
 
 - [ ] **Step 4: Fix scan_manager.py — replace datetime.utcnow()**
 
-In `agent_security_scanner/web/scan_manager.py`, replace line 14:
+In `singularity/web/scan_manager.py`, replace line 14:
 
 ```python
 # Replace:
@@ -160,7 +160,7 @@ Then replace all `datetime.utcnow()` calls (lines 52, 166) with `datetime.now(ti
 
 - [ ] **Step 5: Fix ws/scan_progress.py — replace datetime.utcnow()**
 
-In `agent_security_scanner/web/ws/scan_progress.py`, replace line 12:
+In `singularity/web/ws/scan_progress.py`, replace line 12:
 
 ```python
 # Replace:
@@ -174,7 +174,7 @@ Then replace all `datetime.utcnow()` calls (lines 41, 54, 68, 87) with `datetime
 
 - [ ] **Step 6: Fix models.py — replace datetime.utcnow()**
 
-In `agent_security_scanner/web/models.py`, replace line 9:
+In `singularity/web/models.py`, replace line 9:
 
 ```python
 # Replace:
@@ -194,7 +194,7 @@ Expected: All 5 tests PASS.
 - [ ] **Step 8: Commit**
 
 ```bash
-git add agent_security_scanner/web/db.py agent_security_scanner/web/scan_manager.py agent_security_scanner/web/ws/scan_progress.py agent_security_scanner/web/models.py tests/unit/test_web_bugfixes.py
+git add singularity/web/db.py singularity/web/scan_manager.py singularity/web/ws/scan_progress.py singularity/web/models.py tests/unit/test_web_bugfixes.py
 git commit -m "fix: replace deprecated datetime.utcnow() and resolve DB path to absolute"
 ```
 
@@ -203,8 +203,8 @@ git commit -m "fix: replace deprecated datetime.utcnow() and resolve DB path to 
 ## Task 2: Fix backend — CORS from env var and SQL f-string
 
 **Files:**
-- Modify: `agent_security_scanner/web/app.py:50-59`
-- Modify: `agent_security_scanner/web/db.py:170`
+- Modify: `singularity/web/app.py:50-59`
+- Modify: `singularity/web/db.py:170`
 - Test: `tests/unit/test_web_bugfixes.py`
 
 - [ ] **Step 1: Write the failing tests**
@@ -213,10 +213,10 @@ Append to `tests/unit/test_web_bugfixes.py`:
 
 ```python
 def test_cors_uses_env_var():
-    """CORS origins should be configurable via ASS_CORS_ORIGINS env var."""
+    """CORS origins should be configurable via SINGULARITY_CORS_ORIGINS env var."""
     import os
-    with patch.dict(os.environ, {"ASS_CORS_ORIGINS": "https://prod.example.com,https://staging.example.com"}):
-        from agent_security_scanner.web.app import create_app
+    with patch.dict(os.environ, {"SINGULARITY_CORS_ORIGINS": "https://prod.example.com,https://staging.example.com"}):
+        from singularity.web.app import create_app
         app = create_app()
         # Find CORSMiddleware in app middleware stack
         for mw in app.user_middleware:
@@ -233,7 +233,7 @@ def test_cors_uses_env_var():
 def test_db_update_scan_status_no_fstring_sql():
     """update_scan_status should not use f-string SQL construction."""
     import inspect
-    from agent_security_scanner.web import db
+    from singularity.web import db
 
     source = inspect.getsource(db.update_scan_status)
     # Should not have f"UPDATE scans SET {', '.join(sets)}"
@@ -247,7 +247,7 @@ Expected: FAIL.
 
 - [ ] **Step 3: Fix app.py — CORS from env var**
 
-In `agent_security_scanner/web/app.py`, replace lines 50-59:
+In `singularity/web/app.py`, replace lines 50-59:
 
 ```python
 # Replace:
@@ -262,7 +262,7 @@ app.add_middleware(
 # With:
 import os
 
-_cors_env = os.environ.get("ASS_CORS_ORIGINS", "")
+_cors_env = os.environ.get("SINGULARITY_CORS_ORIGINS", "")
 if _cors_env:
     _allowed_origins = [o.strip() for o in _cors_env.split(",") if o.strip()]
 else:
@@ -281,7 +281,7 @@ Move the `import os` to the top-level imports section (after line 7).
 
 - [ ] **Step 4: Fix db.py — SQL allowlist pattern**
 
-In `agent_security_scanner/web/db.py`, replace the `update_scan_status` function body (lines 129-172):
+In `singularity/web/db.py`, replace the `update_scan_status` function body (lines 129-172):
 
 ```python
 async def update_scan_status(
@@ -340,7 +340,7 @@ Expected: All tests PASS.
 - [ ] **Step 6: Commit**
 
 ```bash
-git add agent_security_scanner/web/app.py agent_security_scanner/web/db.py tests/unit/test_web_bugfixes.py
+git add singularity/web/app.py singularity/web/db.py tests/unit/test_web_bugfixes.py
 git commit -m "fix: configurable CORS origins and safe SQL construction in update_scan_status"
 ```
 
@@ -349,8 +349,8 @@ git commit -m "fix: configurable CORS origins and safe SQL construction in updat
 ## Task 3: Fix backend — scan cancellation and delete logic
 
 **Files:**
-- Modify: `agent_security_scanner/web/scan_manager.py:103-200,298-305`
-- Modify: `agent_security_scanner/web/api/scans.py:137-146`
+- Modify: `singularity/web/scan_manager.py:103-200,298-305`
+- Modify: `singularity/web/api/scans.py:137-146`
 - Test: `tests/unit/test_web_bugfixes.py`
 
 - [ ] **Step 1: Write the failing tests**
@@ -361,7 +361,7 @@ Append to `tests/unit/test_web_bugfixes.py`:
 @pytest.mark.asyncio
 async def test_cancel_scan_aborts_running_scan():
     """Cancelling a scan should stop the _run_scan thread."""
-    from agent_security_scanner.web.scan_manager import ScanManager
+    from singularity.web.scan_manager import ScanManager
 
     mgr = ScanManager()
     scan_id = "test-cancel-123"
@@ -382,7 +382,7 @@ async def test_cancel_scan_aborts_running_scan():
 @pytest.mark.asyncio
 async def test_delete_scan_removes_from_db_even_if_active():
     """DELETE should cancel active scans AND remove from DB."""
-    from agent_security_scanner.web.scan_manager import ScanManager
+    from singularity.web.scan_manager import ScanManager
 
     mgr = ScanManager()
     scan_id = "test-delete-456"
@@ -406,7 +406,7 @@ Expected: PASS (cancel_scan already sets status, but _run_scan doesn't check it)
 
 - [ ] **Step 3: Fix scan_manager.py — add cancellation check in _run_scan**
 
-In `agent_security_scanner/web/scan_manager.py`, inside the `_run_scan` method, add a cancellation check after each module completes. Insert after the existing module completion loop (around line 163):
+In `singularity/web/scan_manager.py`, inside the `_run_scan` method, add a cancellation check after each module completes. Insert after the existing module completion loop (around line 163):
 
 ```python
 # Add at the start of _run_scan, after the try block begins:
@@ -440,7 +440,7 @@ async def cancel_scan(self, scan_id: str) -> bool:
 
 - [ ] **Step 4: Fix scans.py — delete logic: cancel then delete**
 
-In `agent_security_scanner/web/api/scans.py`, replace the `delete_scan` endpoint (lines 137-146):
+In `singularity/web/api/scans.py`, replace the `delete_scan` endpoint (lines 137-146):
 
 ```python
 @router.delete("/{scan_id}", status_code=204)
@@ -461,7 +461,7 @@ Expected: All tests PASS.
 - [ ] **Step 6: Commit**
 
 ```bash
-git add agent_security_scanner/web/scan_manager.py agent_security_scanner/web/api/scans.py tests/unit/test_web_bugfixes.py
+git add singularity/web/scan_manager.py singularity/web/api/scans.py tests/unit/test_web_bugfixes.py
 git commit -m "fix: scan cancellation aborts running scan and delete always removes from DB"
 ```
 
@@ -470,7 +470,7 @@ git commit -m "fix: scan cancellation aborts running scan and delete always remo
 ## Task 4: Fix backend — active scan response and module_statuses
 
 **Files:**
-- Modify: `agent_security_scanner/web/api/scans.py:76-134`
+- Modify: `singularity/web/api/scans.py:76-134`
 - Test: `tests/unit/test_web_bugfixes.py`
 
 - [ ] **Step 1: Write the failing test**
@@ -481,7 +481,7 @@ Append to `tests/unit/test_web_bugfixes.py`:
 @pytest.mark.asyncio
 async def test_get_active_scan_includes_modules():
     """GET /api/scans/{id} for a running scan should include modules list."""
-    from agent_security_scanner.web.scan_manager import ScanManager
+    from singularity.web.scan_manager import ScanManager
 
     mgr = ScanManager()
     scan_id = "test-active-789"
@@ -511,7 +511,7 @@ Expected: FAIL — `get_scan_status` returns the raw dict but the `get_scan` end
 
 - [ ] **Step 3: Fix scans.py — populate modules and module_statuses for active scans**
 
-In `agent_security_scanner/web/api/scans.py`, replace the `get_scan` endpoint fallback section (around lines 110-134). The key change is using `scan_status` data to populate the response when the DB result isn't available yet:
+In `singularity/web/api/scans.py`, replace the `get_scan` endpoint fallback section (around lines 110-134). The key change is using `scan_status` data to populate the response when the DB result isn't available yet:
 
 ```python
 @router.get("/{scan_id}", response_model=ScanDetailResponse)
@@ -558,7 +558,7 @@ Expected: PASS.
 - [ ] **Step 5: Commit**
 
 ```bash
-git add agent_security_scanner/web/api/scans.py tests/unit/test_web_bugfixes.py
+git add singularity/web/api/scans.py tests/unit/test_web_bugfixes.py
 git commit -m "fix: populate modules and module_statuses in active scan API response"
 ```
 
@@ -567,8 +567,8 @@ git commit -m "fix: populate modules and module_statuses in active scan API resp
 ## Task 5: Fix backend — quality gate reconstruction and WebSocket catch-up
 
 **Files:**
-- Modify: `agent_security_scanner/web/api/quality_gate.py:59-85`
-- Modify: `agent_security_scanner/web/ws/scan_progress.py:22-97`
+- Modify: `singularity/web/api/quality_gate.py:59-85`
+- Modify: `singularity/web/ws/scan_progress.py:22-97`
 - Test: `tests/unit/test_web_bugfixes.py`
 
 - [ ] **Step 1: Write the failing tests**
@@ -579,7 +579,7 @@ Append to `tests/unit/test_web_bugfixes.py`:
 def test_quality_gate_preserves_timestamp():
     """Reconstructed Findings should include the timestamp field."""
     import inspect
-    from agent_security_scanner.web.api import quality_gate
+    from singularity.web.api import quality_gate
 
     source = inspect.getsource(quality_gate)
     # The Finding constructor call should include timestamp
@@ -589,7 +589,7 @@ def test_quality_gate_preserves_timestamp():
 def test_ws_handler_has_catchup():
     """WebSocket handler should replay past events on connect."""
     import inspect
-    from agent_security_scanner.web.ws import scan_progress
+    from singularity.web.ws import scan_progress
 
     source = inspect.getsource(scan_progress)
     # Should reference catching up on past events
@@ -604,7 +604,7 @@ Expected: FAIL.
 
 - [ ] **Step 3: Fix quality_gate.py — per-module ScanResult with timestamp**
 
-In `agent_security_scanner/web/api/quality_gate.py`, replace the finding reconstruction (around lines 59-85):
+In `singularity/web/api/quality_gate.py`, replace the finding reconstruction (around lines 59-85):
 
 ```python
 # Group findings by module_name
@@ -645,7 +645,7 @@ gate_result = evaluate_gate(scan_results, threshold)
 
 - [ ] **Step 4: Fix ws/scan_progress.py — catch-up on connect**
 
-In `agent_security_scanner/web/ws/scan_progress.py`, add catch-up logic after accepting the WebSocket and before subscribing. Insert after line 32 (subscribe):
+In `singularity/web/ws/scan_progress.py`, add catch-up logic after accepting the WebSocket and before subscribing. Insert after line 32 (subscribe):
 
 ```python
 @router.websocket("/scans/{scan_id}/progress")
@@ -703,7 +703,7 @@ Expected: All tests PASS.
 - [ ] **Step 6: Commit**
 
 ```bash
-git add agent_security_scanner/web/api/quality_gate.py agent_security_scanner/web/ws/scan_progress.py tests/unit/test_web_bugfixes.py
+git add singularity/web/api/quality_gate.py singularity/web/ws/scan_progress.py tests/unit/test_web_bugfixes.py
 git commit -m "fix: per-module ScanResult in quality gate and WebSocket catch-up on connect"
 ```
 
@@ -712,7 +712,7 @@ git commit -m "fix: per-module ScanResult in quality gate and WebSocket catch-up
 ## Task 6: Implement PATCH /api/config persistence
 
 **Files:**
-- Modify: `agent_security_scanner/web/api/config.py:33-44`
+- Modify: `singularity/web/api/config.py:33-44`
 - Test: `tests/unit/test_web_bugfixes.py`
 
 - [ ] **Step 1: Write the failing test**
@@ -723,7 +723,7 @@ Append to `tests/unit/test_web_bugfixes.py`:
 def test_config_patch_persists_changes():
     """PATCH /api/config should apply and persist config updates."""
     import inspect
-    from agent_security_scanner.web.api import config
+    from singularity.web.api import config
 
     source = inspect.getsource(config)
     # Should not have the stub comment about "full implementation"
@@ -737,7 +737,7 @@ Expected: FAIL.
 
 - [ ] **Step 3: Implement PATCH config persistence**
 
-Replace the `update_config` endpoint in `agent_security_scanner/web/api/config.py`:
+Replace the `update_config` endpoint in `singularity/web/api/config.py`:
 
 ```python
 import os
@@ -772,7 +772,7 @@ async def update_config(updates: Dict[str, Any]) -> ConfigResponse:
                         setattr(mod_config, key, value)
 
     # Persist to YAML
-    config_path = os.environ.get("ASS_CONFIG_PATH", "config/config.yaml")
+    config_path = os.environ.get("SINGULARITY_CONFIG_PATH", "config/config.yaml")
     config_path_resolved = Path(config_path)
     config_path_resolved.parent.mkdir(parents=True, exist_ok=True)
 
@@ -796,7 +796,7 @@ Expected: PASS.
 - [ ] **Step 5: Commit**
 
 ```bash
-git add agent_security_scanner/web/api/config.py tests/unit/test_web_bugfixes.py
+git add singularity/web/api/config.py tests/unit/test_web_bugfixes.py
 git commit -m "feat: implement PATCH /api/config with persistence to YAML"
 ```
 
@@ -805,9 +805,9 @@ git commit -m "feat: implement PATCH /api/config with persistence to YAML"
 ## Task 7: Add DB annotation columns and PATCH findings endpoint
 
 **Files:**
-- Modify: `agent_security_scanner/web/db.py` — SCHEMA and new functions
-- Modify: `agent_security_scanner/web/models.py` — new models
-- Modify: `agent_security_scanner/web/api/findings.py` — PATCH endpoint
+- Modify: `singularity/web/db.py` — SCHEMA and new functions
+- Modify: `singularity/web/models.py` — new models
+- Modify: `singularity/web/api/findings.py` — PATCH endpoint
 - Test: `tests/unit/test_web_api.py`
 
 - [ ] **Step 1: Write the failing test**
@@ -818,7 +818,7 @@ Append to `tests/unit/test_web_api.py` (or create if not existing):
 @pytest.mark.asyncio
 async def test_patch_finding_annotation():
     """PATCH /api/findings/{id} should update annotation fields."""
-    from agent_security_scanner.web.db import init_db, save_scan, save_findings, update_finding_annotation, get_finding
+    from singularity.web.db import init_db, save_scan, save_findings, update_finding_annotation, get_finding
 
     await init_db()
     scan_id = "test-annotation-scan"
@@ -844,7 +844,7 @@ Expected: FAIL — `update_finding_annotation` doesn't exist yet.
 
 - [ ] **Step 3: Add annotation columns to DB schema**
 
-In `agent_security_scanner/web/db.py`, add to the SCHEMA `findings` table definition:
+In `singularity/web/db.py`, add to the SCHEMA `findings` table definition:
 
 ```sql
 -- Add these columns to the findings CREATE TABLE:
@@ -917,7 +917,7 @@ Also update `get_finding` to include the new columns in SELECT.
 
 - [ ] **Step 4: Add FindingAnnotationRequest model and PATCH endpoint**
 
-In `agent_security_scanner/web/models.py`, add:
+In `singularity/web/models.py`, add:
 
 ```python
 class FindingAnnotationRequest(BaseModel):
@@ -938,7 +938,7 @@ class FindingResponse(BaseModel):
     status: str = "open"
 ```
 
-In `agent_security_scanner/web/api/findings.py`, add:
+In `singularity/web/api/findings.py`, add:
 
 ```python
 from ..models import FindingAnnotationRequest
@@ -967,7 +967,7 @@ Expected: PASS.
 - [ ] **Step 6: Commit**
 
 ```bash
-git add agent_security_scanner/web/db.py agent_security_scanner/web/models.py agent_security_scanner/web/api/findings.py tests/unit/test_web_api.py
+git add singularity/web/db.py singularity/web/models.py singularity/web/api/findings.py tests/unit/test_web_api.py
 git commit -m "feat: add finding annotations (false_positive, notes, assigned_to, status)"
 ```
 
@@ -976,10 +976,10 @@ git commit -m "feat: add finding annotations (false_positive, notes, assigned_to
 ## Task 8: Add POST /api/findings/{id}/replay endpoint
 
 **Files:**
-- Create: `agent_security_scanner/web/api/replay.py`
-- Modify: `agent_security_scanner/web/api/__init__.py`
-- Modify: `agent_security_scanner/web/models.py`
-- Modify: `agent_security_scanner/web/app.py`
+- Create: `singularity/web/api/replay.py`
+- Modify: `singularity/web/api/__init__.py`
+- Modify: `singularity/web/models.py`
+- Modify: `singularity/web/app.py`
 - Test: `tests/unit/test_web_api.py`
 
 - [ ] **Step 1: Write the failing test**
@@ -990,7 +990,7 @@ Append to `tests/unit/test_web_api.py`:
 @pytest.mark.asyncio
 async def test_replay_endpoint_exists():
     """POST /api/findings/{id}/replay should be a registered route."""
-    from agent_security_scanner.web.app import create_app
+    from singularity.web.app import create_app
 
     app = create_app()
     routes = [r.path for r in app.routes]
@@ -1004,7 +1004,7 @@ Expected: FAIL.
 
 - [ ] **Step 3: Add replay models**
 
-In `agent_security_scanner/web/models.py`, add:
+In `singularity/web/models.py`, add:
 
 ```python
 class ReplayRequest(BaseModel):
@@ -1019,7 +1019,7 @@ class ReplayResponse(BaseModel):
 
 - [ ] **Step 4: Create replay.py endpoint**
 
-Create `agent_security_scanner/web/api/replay.py`:
+Create `singularity/web/api/replay.py`:
 
 ```python
 from __future__ import annotations
@@ -1064,9 +1064,9 @@ async def replay_finding(finding_id: str, request: ReplayRequest) -> ReplayRespo
 
 - [ ] **Step 5: Register the router**
 
-In `agent_security_scanner/web/api/__init__.py`, add `from . import replay` and include it in the router list.
+In `singularity/web/api/__init__.py`, add `from . import replay` and include it in the router list.
 
-In `agent_security_scanner/web/app.py`, add `from .api import replay` and `app.include_router(replay.router, prefix="/api")`.
+In `singularity/web/app.py`, add `from .api import replay` and `app.include_router(replay.router, prefix="/api")`.
 
 - [ ] **Step 6: Run test to verify it passes**
 
@@ -1076,7 +1076,7 @@ Expected: PASS.
 - [ ] **Step 7: Commit**
 
 ```bash
-git add agent_security_scanner/web/api/replay.py agent_security_scanner/web/api/__init__.py agent_security_scanner/web/models.py agent_security_scanner/web/app.py tests/unit/test_web_api.py
+git add singularity/web/api/replay.py singularity/web/api/__init__.py singularity/web/models.py singularity/web/app.py tests/unit/test_web_api.py
 git commit -m "feat: add POST /api/findings/{id}/replay endpoint"
 ```
 
@@ -1085,9 +1085,9 @@ git commit -m "feat: add POST /api/findings/{id}/replay endpoint"
 ## Task 9: Add GET /api/scans/{id}/attack-surface endpoint
 
 **Files:**
-- Create: `agent_security_scanner/web/api/attack_surface.py`
-- Modify: `agent_security_scanner/web/models.py`
-- Modify: `agent_security_scanner/web/app.py`
+- Create: `singularity/web/api/attack_surface.py`
+- Modify: `singularity/web/models.py`
+- Modify: `singularity/web/app.py`
 - Test: `tests/unit/test_web_api.py`
 
 - [ ] **Step 1: Write the failing test**
@@ -1098,7 +1098,7 @@ Append to `tests/unit/test_web_api.py`:
 @pytest.mark.asyncio
 async def test_attack_surface_endpoint():
     """GET /api/scans/{id}/attack-surface should return graph structure."""
-    from agent_security_scanner.web.app import create_app
+    from singularity.web.app import create_app
 
     app = create_app()
     routes = [r.path for r in app.routes]
@@ -1112,7 +1112,7 @@ Expected: FAIL.
 
 - [ ] **Step 3: Add attack surface models**
 
-In `agent_security_scanner/web/models.py`, add:
+In `singularity/web/models.py`, add:
 
 ```python
 class AttackSurfaceNode(BaseModel):
@@ -1138,7 +1138,7 @@ class AttackSurfaceResponse(BaseModel):
 
 - [ ] **Step 4: Create attack_surface.py endpoint**
 
-Create `agent_security_scanner/web/api/attack_surface.py`:
+Create `singularity/web/api/attack_surface.py`:
 
 ```python
 from __future__ import annotations
@@ -1266,7 +1266,7 @@ def _max_severity(current: str | None, new: str) -> str:
 
 - [ ] **Step 5: Register the router**
 
-In `agent_security_scanner/web/app.py`, add:
+In `singularity/web/app.py`, add:
 ```python
 from .api import attack_surface
 app.include_router(attack_surface.router, prefix="/api")
@@ -1280,7 +1280,7 @@ Expected: PASS.
 - [ ] **Step 7: Commit**
 
 ```bash
-git add agent_security_scanner/web/api/attack_surface.py agent_security_scanner/web/models.py agent_security_scanner/web/app.py tests/unit/test_web_api.py
+git add singularity/web/api/attack_surface.py singularity/web/models.py singularity/web/app.py tests/unit/test_web_api.py
 git commit -m "feat: add GET /api/scans/{id}/attack-surface endpoint"
 ```
 
@@ -1293,24 +1293,24 @@ git commit -m "feat: add GET /api/scans/{id}/attack-surface endpoint"
 
 - [ ] **Step 1: Install missing Linux Tailwind binary**
 
-Run: `cd /home/cybathreat/Projects/agent-security-scanner/dashboard && npm install`
+Run: `cd /home/cybathreat/Projects/singularity/dashboard && npm install`
 
 Expected: installs `@tailwindcss/oxide-linux-x64-gnu` and resolves the build error.
 
 - [ ] **Step 2: Add new frontend dependencies**
 
-Run: `cd /home/cybathreat/Projects/agent-security-scanner/dashboard && npm install @xyflow/react @dnd-kit/core @dnd-kit/sortable html2pdf.js`
+Run: `cd /home/cybathreat/Projects/singularity/dashboard && npm install @xyflow/react @dnd-kit/core @dnd-kit/sortable html2pdf.js`
 
 - [ ] **Step 3: Verify build works**
 
-Run: `cd /home/cybathreat/Projects/agent-security-scanner/dashboard && npm run build`
+Run: `cd /home/cybathreat/Projects/singularity/dashboard && npm run build`
 
 Expected: Build succeeds with no errors.
 
 - [ ] **Step 4: Commit**
 
 ```bash
-cd /home/cybathreat/Projects/agent-security-scanner/dashboard
+cd /home/cybathreat/Projects/singularity/dashboard
 git add package.json package-lock.json
 git commit -m "fix: resolve Tailwind Linux binary and add @xyflow/react, @dnd-kit, html2pdf.js"
 ```
@@ -1455,7 +1455,7 @@ Add the corresponding type imports at the top of api.ts.
 
 - [ ] **Step 3: Verify TypeScript compiles**
 
-Run: `cd /home/cybathreat/Projects/agent-security-scanner/dashboard && npx tsc --noEmit`
+Run: `cd /home/cybathreat/Projects/singularity/dashboard && npx tsc --noEmit`
 
 Expected: No type errors.
 
@@ -1568,7 +1568,7 @@ The CI/CD section already shows copy-paste snippets. Add a "Apply to Config" but
 
 - [ ] **Step 5: Verify TypeScript compiles**
 
-Run: `cd /home/cybathreat/Projects/agent-security-scanner/dashboard && npx tsc --noEmit`
+Run: `cd /home/cybathreat/Projects/singularity/dashboard && npx tsc --noEmit`
 
 - [ ] **Step 6: Commit**
 
@@ -1773,7 +1773,7 @@ export default function ReplayPage() {
 
 - [ ] **Step 2: Verify TypeScript compiles**
 
-Run: `cd /home/cybathreat/Projects/agent-security-scanner/dashboard && npx tsc --noEmit`
+Run: `cd /home/cybathreat/Projects/singularity/dashboard && npx tsc --noEmit`
 
 - [ ] **Step 3: Commit**
 
@@ -1924,7 +1924,7 @@ Prepend the executive summary to the report output when the section is enabled.
 
 - [ ] **Step 5: Verify build**
 
-Run: `cd /home/cybathreat/Projects/agent-security-scanner/dashboard && npm run build`
+Run: `cd /home/cybathreat/Projects/singularity/dashboard && npm run build`
 
 - [ ] **Step 6: Commit**
 
@@ -2066,7 +2066,7 @@ const deleteMutation = useMutation({
 
 - [ ] **Step 4: Verify build**
 
-Run: `cd /home/cybathreat/Projects/agent-security-scanner/dashboard && npm run build`
+Run: `cd /home/cybathreat/Projects/singularity/dashboard && npm run build`
 
 - [ ] **Step 5: Commit**
 
@@ -2318,7 +2318,7 @@ export default function AttackSurfacePage() {
 
 - [ ] **Step 4: Verify build**
 
-Run: `cd /home/cybathreat/Projects/agent-security-scanner/dashboard && npm run build`
+Run: `cd /home/cybathreat/Projects/singularity/dashboard && npm run build`
 
 - [ ] **Step 5: Commit**
 
@@ -2367,7 +2367,7 @@ Add `ModuleStatusInfo` to the types import. This is already in the updated `type
 
 - [ ] **Step 2: Verify build**
 
-Run: `cd /home/cybathreat/Projects/agent-security-scanner/dashboard && npm run build`
+Run: `cd /home/cybathreat/Projects/singularity/dashboard && npm run build`
 
 - [ ] **Step 3: Commit**
 
@@ -2384,19 +2384,19 @@ git commit -m "fix: show module statuses on active scan detail page"
 
 - [ ] **Step 1: Run backend unit tests**
 
-Run: `cd /home/cybathreat/Projects/agent-security-scanner && pytest tests/unit/ -v`
+Run: `cd /home/cybathreat/Projects/singularity && pytest tests/unit/ -v`
 
 Expected: All tests pass.
 
 - [ ] **Step 2: Run backend lint and type check**
 
-Run: `cd /home/cybathreat/Projects/agent-security-scanner && ruff check agent_security_scanner/ && mypy agent_security_scanner/`
+Run: `cd /home/cybathreat/Projects/singularity && ruff check singularity/ && mypy singularity/`
 
 Expected: Clean.
 
 - [ ] **Step 3: Verify frontend builds**
 
-Run: `cd /home/cybathreat/Projects/agent-security-scanner/dashboard && npm run build`
+Run: `cd /home/cybathreat/Projects/singularity/dashboard && npm run build`
 
 Expected: Build succeeds.
 
@@ -2404,12 +2404,12 @@ Expected: Build succeeds.
 
 Run backend:
 ```bash
-cd /home/cybathreat/Projects/agent-security-scanner && python -m agent_security_scanner.web.app
+cd /home/cybathreat/Projects/singularity && python -m singularity.web.app
 ```
 
 Run frontend:
 ```bash
-cd /home/cybathreat/Projects/agent-security-scanner/dashboard && npm run dev
+cd /home/cybathreat/Projects/singularity/dashboard && npm run dev
 ```
 
 Verify in browser:

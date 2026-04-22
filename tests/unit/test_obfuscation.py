@@ -7,11 +7,11 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from agent_security_scanner.modules.prompt_injection_submodules.obfuscation import (
+from singularity.modules.prompt_injection_submodules.obfuscation import (
     ObfuscationScanner,
     ObfuscationScannerConfig,
 )
-from agent_security_scanner.modules.base import Severity
+from singularity.modules.base import Severity
 
 
 class TestObfuscationScannerConfig:
@@ -52,8 +52,8 @@ class TestObfuscationScanner:
     def test_payload_structure(self):
         scanner = ObfuscationScanner()
         for payloads in [
-            scanner.UNICODE_BYPASS_PAYLOADS,
-            scanner.ENCODING_BYPASS_PAYLOADS,
+            scanner.UNICODE_BYPSINGULARITY_PAYLOADS,
+            scanner.ENCODING_BYPSINGULARITY_PAYLOADS,
             scanner.CHARACTER_SUBSTITUTION_PAYLOADS,
         ]:
             for payload in payloads:

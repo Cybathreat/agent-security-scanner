@@ -11,11 +11,11 @@ Run: pytest tests/unit/test_recursive_agents.py -v
 import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from agent_security_scanner.modules.agent.recursive_agents import (
+from singularity.modules.agent.recursive_agents import (
     RecursiveAgentsScannerConfig,
     RecursiveAgentsScanner,
 )
-from agent_security_scanner.modules.base import Severity
+from singularity.modules.base import Severity
 
 
 class TestRecursiveAgentsConfig:

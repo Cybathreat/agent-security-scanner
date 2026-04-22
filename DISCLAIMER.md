@@ -2,7 +2,7 @@
 
 ## Legal Disclaimer
 
-**Agent Security Scanner** is provided for **educational, research, and defensive security purposes only**.
+**Singularity** is provided for **educational, research, and defensive security purposes only**.
 
 ---
 
@@ -92,7 +92,7 @@ These frameworks are used under fair use for security research purposes.
 
 For questions about this disclaimer or proper use:
 - Email: ahmed.chiboub@cybacrest.com
-- GitHub: https://github.com/Cybathreat/agent-security-scanner
+- GitHub: https://github.com/Cybathreat/singularity
 
 ---
 
