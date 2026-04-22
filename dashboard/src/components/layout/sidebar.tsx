@@ -38,7 +38,7 @@ export function Sidebar() {
       <div className="flex items-center gap-2 px-3 py-4 mb-2">
         <Shield className="h-7 w-7 text-primary" />
         <span className="font-mono font-bold text-lg tracking-tight">
-          ASS
+          SGL
         </span>
       </div>
 
