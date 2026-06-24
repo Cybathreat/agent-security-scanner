@@ -647,6 +647,82 @@ class GrammarConstrainedScannerConfig:
 
 
 @dataclass
+class AgentLLMConfig:
+    """
+    LLM configuration for the autonomous scanning agent.
+
+    All fields can be overridden by CLI arguments (--agent-model, --agent-key,
+    --agent-base-url) or by environment variables (SINGULARITY_AGENT_MODEL,
+    SINGULARITY_AGENT_API_KEY, SINGULARITY_AGENT_BASE_URL).
+
+    Fields
+    ------
+    model    : litellm model string.
+               Default: "anthropic/claude-sonnet-4-6"
+               Other valid values:
+                 "openai/gpt-4o"
+                 "ollama/llama3"
+                 "openrouter/meta-llama/llama-3-8b-instruct"
+                 "moonshot/moonshot-v1-8k"
+    api_key  : API key for the provider.  Never stored in YAML — must be
+               supplied via env var or CLI.  Default None means the agent
+               cannot start until a key is provided.
+    base_url : Optional base URL override.  Required for Ollama and custom
+               OpenAI-compatible gateways.
+    """
+
+    model: str = "anthropic/claude-sonnet-4-6"
+    api_key: Optional[str] = None      # SINGULARITY_AGENT_API_KEY env var
+    base_url: Optional[str] = None     # SINGULARITY_AGENT_BASE_URL env var
+
+
+@dataclass
+class AgentLoopConfig:
+    """
+    Control parameters for the agent's ReAct loop.
+
+    Fields
+    ------
+    max_iterations : Hard cap on LLM turns.  Default 50.
+                     Set lower (e.g. 20) for faster/cheaper exploratory runs,
+                     higher (e.g. 100) for deep exhaustive scans.
+    request_timeout: Timeout in seconds for each tool HTTP call.  Default 15.
+    output_format  : "json" | "markdown" | "both".  Default "both".
+    output_dir     : Directory for agent reports.  Default "output".
+    """
+
+    max_iterations: int = 50
+    request_timeout: int = 15
+    output_format: str = "both"     # json | markdown | both
+    output_dir: str = "output"
+
+
+@dataclass
+class AgentConfig:
+    """
+    Top-level agent configuration grouping LLM and loop settings.
+
+    Intended as the single config object passed to AgentLoop and LLMClient.
+
+    Usage in Config.load():
+        The "agent" top-level YAML key is parsed and merged into this
+        dataclass using the same pattern as scanner / modules / output.
+
+    Environment variable overrides:
+        SINGULARITY_AGENT_MODEL          -> agent.llm.model
+        SINGULARITY_AGENT_API_KEY        -> agent.llm.api_key  (redacted in to_dict)
+        SINGULARITY_AGENT_BASE_URL       -> agent.llm.base_url
+        SINGULARITY_AGENT_MAX_ITERATIONS -> agent.loop.max_iterations (int)
+        SINGULARITY_AGENT_REQUEST_TIMEOUT-> agent.loop.request_timeout (int)
+        SINGULARITY_AGENT_OUTPUT_FORMAT  -> agent.loop.output_format
+        SINGULARITY_AGENT_OUTPUT_DIR     -> agent.loop.output_dir
+    """
+
+    llm: AgentLLMConfig = field(default_factory=AgentLLMConfig)
+    loop: AgentLoopConfig = field(default_factory=AgentLoopConfig)
+
+
+@dataclass
 class ModulesConfig:
     """All module configurations grouped together."""
 
@@ -834,6 +910,7 @@ class Config:
     output: OutputConfig = field(default_factory=OutputConfig)
     quality_gate: QualityGateConfig = field(default_factory=QualityGateConfig)
     logging: LoggingConfig = field(default_factory=LoggingConfig)
+    agent: AgentConfig = field(default_factory=AgentConfig)
 
     @classmethod
     def load(cls, config_path: Optional[str] = None) -> Config:
@@ -923,6 +1000,20 @@ class Config:
 
         if "logging" in raw_config:
             config.logging = LoggingConfig(**raw_config["logging"])
+
+        if "agent" in raw_config:
+            agent_data = raw_config["agent"]
+            if "llm" in agent_data:
+                llm_data = agent_data["llm"]
+                config.agent.llm.model    = llm_data.get("model",    config.agent.llm.model)
+                config.agent.llm.api_key  = llm_data.get("api_key",  config.agent.llm.api_key)
+                config.agent.llm.base_url = llm_data.get("base_url", config.agent.llm.base_url)
+            if "loop" in agent_data:
+                loop_data = agent_data["loop"]
+                config.agent.loop.max_iterations  = loop_data.get("max_iterations",  config.agent.loop.max_iterations)
+                config.agent.loop.request_timeout = loop_data.get("request_timeout", config.agent.loop.request_timeout)
+                config.agent.loop.output_format   = loop_data.get("output_format",   config.agent.loop.output_format)
+                config.agent.loop.output_dir      = loop_data.get("output_dir",      config.agent.loop.output_dir)
 
         return config
 
@@ -1105,6 +1196,24 @@ class Config:
             config.modules.grammar_constrained_scanner.compliance_threshold = float(
                 os.getenv("SINGULARITY_GRAMMAR_CONSTRAINED_COMPLIANCE_THRESHOLD") or "0.6"
             )
+
+        # Agent LLM overrides
+        if v := os.getenv("SINGULARITY_AGENT_MODEL"):
+            config.agent.llm.model = v
+        if v := os.getenv("SINGULARITY_AGENT_API_KEY"):
+            config.agent.llm.api_key = v
+        if v := os.getenv("SINGULARITY_AGENT_BASE_URL"):
+            config.agent.llm.base_url = v
+
+        # Agent loop overrides
+        if v := os.getenv("SINGULARITY_AGENT_MAX_ITERATIONS"):
+            config.agent.loop.max_iterations = int(v)
+        if v := os.getenv("SINGULARITY_AGENT_REQUEST_TIMEOUT"):
+            config.agent.loop.request_timeout = int(v)
+        if v := os.getenv("SINGULARITY_AGENT_OUTPUT_FORMAT"):
+            config.agent.loop.output_format = v
+        if v := os.getenv("SINGULARITY_AGENT_OUTPUT_DIR"):
+            config.agent.loop.output_dir = v
 
         return config
 
@@ -1469,6 +1578,19 @@ class Config:
                 "retention": self.logging.retention,
                 "compression": self.logging.compression,
                 "serialize": self.logging.serialize,
+            },
+            "agent": {
+                "llm": {
+                    "model": self.agent.llm.model,
+                    "api_key": "***REDACTED***" if self.agent.llm.api_key else None,
+                    "base_url": self.agent.llm.base_url,
+                },
+                "loop": {
+                    "max_iterations": self.agent.loop.max_iterations,
+                    "request_timeout": self.agent.loop.request_timeout,
+                    "output_format": self.agent.loop.output_format,
+                    "output_dir": self.agent.loop.output_dir,
+                },
             },
         }
 

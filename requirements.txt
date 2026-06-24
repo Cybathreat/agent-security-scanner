@@ -29,3 +29,6 @@ mypy>=1.8.0
 
 # Code quality
 ruff>=0.1.0
+
+# Agent LLM client — unified interface for Anthropic, OpenAI, Ollama, OpenRouter, KIMI
+litellm>=1.40.0

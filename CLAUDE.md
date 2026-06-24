@@ -7,6 +7,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ```bash
 # Install dependencies (Python 3.10+)
 pip install -r requirements.txt
+# or with optional groups (pyproject.toml):
+pip install -e ".[web]"    # web server deps
+pip install -e ".[dev]"    # dev/test deps
 
 # Tests
 pytest tests/ -v --cov=singularity --cov-report=html  # All tests with coverage (70% gate)
@@ -15,16 +18,23 @@ pytest tests/integration/ -v                    # Integration tests only
 pytest tests/unit/test_base.py -v               # Single test file
 pytest tests/ -k "test_prompt_injection" -v     # Filter by name
 pytest tests/ -m integration -v                 # Filter by marker
+# asyncio_mode = "auto" (set in pyproject.toml) — no @pytest.mark.asyncio needed
 
 # Lint & type check
-ruff check singularity/
+ruff check singularity/        # line-length=100, target py310
 mypy singularity/
 
 # Run the CLI scanner
 python -m singularity.cli scan --target <url> --output output/
 python -m singularity.cli scan --target <url> --modules prompt_injection,rag_security
 python -m singularity.cli scan --target <url> --fail-on high --max-findings 10
+python -m singularity.cli scan --target <url> --bearer-token <token>
+python -m singularity.cli scan --target <url> --auth-header "X-API-Key: abc" --api-format openai
 python -m singularity.cli config --generate
+
+# Run the autonomous agent scanner
+python -m singularity.cli agent --target <url> --agent-model anthropic/claude-opus-4-8 --agent-key <key>
+python -m singularity.cli agent --target <url> --agent-model openai/gpt-4o --agent-key <key> --max-iterations 30
 
 # Run the web server (FastAPI backend)
 python -m singularity.cli web --port 8000 --host 0.0.0.0
@@ -45,32 +55,32 @@ pre-commit run --all-files
 
 ## Architecture
 
-The project has two runtime surfaces: a **CLI scanner** and a **web app** (FastAPI backend + Next.js dashboard).
-
-**Entry point:** `singularity.cli:main()` — argparse-based CLI with `scan`, `config`, and `web` subcommands. PyPI entry point: `singularity` command.
+The project has three runtime surfaces: a **CLI scanner**, an **autonomous agent scanner**, and a **web app** (FastAPI backend + Next.js dashboard). Entry point: `singularity.cli:main()` — argparse CLI with `scan`, `agent`, `config`, and `web` subcommands. PyPI entry point: `singularity` command (pyproject.toml).
 
 **Exit codes:** 0 = pass, 1 = error, 2 = quality gate failed.
 
 ### CLI scanner module hierarchy
 
-The scanner uses a two-tier module system. **Top-level modules** are registered in `ALL_MODULES` and instantiated by `ScanEngine._build_module()`. Many top-level modules delegate internally to **submodules** in their respective `*_submodules/` directories.
+The scanner uses a two-tier module system. **Top-level modules** are registered in `ALL_MODULES` and instantiated by `ScanEngine._build_module()`. Most delegate internally to **submodules** in their `*_submodules/` directories.
 
 ```
 singularity/
 ├── core/
-│   ├── engine.py      # ScanEngine — ALL_MODULES list, _build_module(), _build_submodule()
-│   ├── config.py      # Config dataclasses (one per module), load_config(), env overrides (SINGULARITY_ prefix)
-│   ├── quality_gate.py # GateThreshold, GateResult, evaluate() — CI/CD quality gate evaluation
+│   ├── engine.py      # ScanEngine — ALL_MODULES, _build_module(), _build_submodule(), _run_gateway_discovery()
+│   ├── config.py      # Config dataclasses (one per module/submodule), load_config(), env overrides
+│   ├── quality_gate.py # GateThreshold, GateResult, evaluate()
 │   └── logging.py     # loguru setup_logger() — console + rotating file + optional JSON
 ├── modules/
-│   ├── base.py        # BaseModule[ConfigT], Finding, ScanResult, Severity, Sensitivity, SEVERITY_WEIGHT, SEVERITY_LEVELS
-│   ├── misconfigurations.py        # delegates to misconfig_submodules/ (4 submodules)
-│   ├── prompt_injection.py         # delegates to prompt_injection_submodules/ (21 submodules)
-│   ├── tool_boundaries.py          # delegates to tool_boundaries_submodules/ (5 submodules)
-│   ├── rag_security.py             # delegates to rag_security_submodules/ (7 submodules)
-│   ├── agent/                      # tool_hijacking, recursive_agents, memory_poisoning, planning_attacks
-│   └── infrastructure/             # secret_scanner, dependency_audit, plugin_security
-├── web/                            # FastAPI backend (see Web Stack below)
+│   ├── base.py        # BaseModule[ConfigT], Finding, ScanResult, Severity, Sensitivity, SEVERITY_WEIGHT
+│   ├── gateway_discovery.py          # Phase 0 — LLM endpoint fingerprinting (run before main modules)
+│   ├── misconfigurations.py          # → misconfig_submodules/ (auth, cors, rate_limit, info_disclosure)
+│   ├── prompt_injection.py           # → prompt_injection_submodules/ (21 submodules)
+│   ├── tool_boundaries.py            # → tool_boundaries_submodules/ (permission, sandbox, tool_chains, mcp, confused_deputy)
+│   ├── rag_security.py               # → rag_security_submodules/ (document_poisoning, exfiltration, vector_db, embedding_attacks, multi_tenant, phantom_document, chunk_boundary)
+│   ├── agent/                        # tool_hijacking, recursive_agents, memory_poisoning, planning_attacks
+│   └── infrastructure/               # secret_scanner, dependency_audit, plugin_security, model_provenance
+├── agent/             # Autonomous agent scanner (see Agent Scanner section)
+├── web/               # FastAPI backend (see Web Stack section)
 ├── output/
 │   ├── json_report.py
 │   └── markdown_report.py
@@ -79,7 +89,9 @@ singularity/
 
 The 11 registered modules in `ALL_MODULES` (engine.py): `misconfigurations`, `prompt_injection`, `tool_boundaries`, `rag_security`, `tool_hijacking`, `recursive_agents`, `memory_poisoning`, `planning_attacks`, `secret_scanner`, `dependency_audit`, `plugin_security`.
 
-Modules are **deferred-imported** — only loaded when instantiated by `_build_module()` to keep CLI startup fast.
+**Phase 0** (`gateway_discovery`) runs before all modules via `ScanEngine._run_gateway_discovery()` and returns an `LLMGatewayProfile` (endpoint format, auth scheme, model fingerprint) that informs subsequent modules. It is not in `ALL_MODULES` and cannot be selected via `--modules`.
+
+Modules are **deferred-imported** — only loaded when instantiated by `_build_module()`.
 
 ### Key patterns
 
@@ -92,6 +104,20 @@ Modules are **deferred-imported** — only loaded when instantiated by `_build_m
 **Config loading order:** defaults → YAML file → env vars (`SINGULARITY_` prefix, e.g., `SINGULARITY_SCANNER_TIMEOUT`, `SINGULARITY_LOG_LEVEL`, `SINGULARITY_OUTPUT_FORMAT`, `SINGULARITY_QUALITY_GATE_FAIL_ON_SEVERITY`).
 
 **Quality gate evaluation.** CLI flags `--fail-on`, `--max-findings`, `--max-risk-score` map to `GateThreshold`. The `evaluate()` function in `core/quality_gate.py` computes risk score as sum of `SEVERITY_WEIGHT` values (critical=100, high=50, medium=10, low=1, info=0) and returns `GateResult` with `passed`, `exit_code`, and `reason`. Default `--fail-on critical`.
+
+### Agent scanner (`singularity/agent/`)
+
+The `agent` CLI subcommand runs an **autonomous ReAct-style security research loop** driven by an LLM via [litellm](https://docs.litellm.ai/) (supports Anthropic, OpenAI, Ollama, OpenRouter, KIMI — pass any litellm model string to `--agent-model`).
+
+| File | Purpose |
+|------|---------|
+| `loop.py` | `AgentLoop` — appends messages, calls LLM, dispatches tools, loops until "SCAN COMPLETE" or `max_iterations` |
+| `tools.py` | 9 async tools: `http_request`, `idor_header_test`, `run_auth_scan`, `run_rate_limit_test`, `run_prompt_injection_scan`, `tool_schema_injection`, `run_tool_boundary_test`, `behavioral_comparison`, `save_finding` |
+| `llm_client.py` | `LLMClient` — thin litellm wrapper, normalises provider-specific kwargs |
+| `system_prompt.py` | `SYSTEM_PROMPT` constant — 7-phase methodology: Reconnaissance, Auth, Rate Limiting, Prompt Injection, Tool Schema Injection, Tool Boundary, Synthesis |
+| `findings.py` | `AgentFinding` dataclass — mirrors `Finding` but sourced from agent tool calls |
+
+Agent config lives in `AgentConfig` → `AgentLLMConfig` + `AgentLoopConfig` in `core/config.py`, and under the `agent:` key in `config/config.yaml`.
 
 ### Adding a new module
 
@@ -128,9 +154,12 @@ The `singularity web` command starts a **FastAPI** backend that persists scans t
 - `POST /api/scans` — start a scan; `GET /api/scans/{id}` — poll status/results; `DELETE /api/scans/{id}`
 - `GET /api/findings` — list with filter by severity/category; `PATCH /api/findings/{id}` — annotate (false positive, notes, assigned_to)
 - `GET /api/modules` — available modules
+- `GET /api/config`, `PATCH /api/config` — read/update scanner configuration at runtime
+- `POST /api/replay` — replay a finding with modified parameters
+- `GET /api/attack-surface` — graph data for the attack surface map
 - `WS /ws/scans/{scan_id}/progress` — real-time progress stream
 
-**Background scan flow:** `POST /api/scans` → `ScanManager.start_scan()` enqueues to ThreadPoolExecutor → worker thread runs `ScanEngine.scan()` → publishes `ScanProgressEvent` objects to `asyncio.Queue` → WebSocket handler streams them to the browser.
+**Background scan flow:** `POST /api/scans` → `ScanManager.start_scan()` enqueues to `ThreadPoolExecutor` → worker thread runs `ScanEngine.scan()` → publishes `ScanProgressEvent` objects to `asyncio.Queue` → WebSocket handler streams them to the browser.
 
 ### Frontend (`dashboard/`)
 

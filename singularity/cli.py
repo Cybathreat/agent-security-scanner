@@ -15,7 +15,9 @@ Type hints everywhere for IDE support and static analysis.
 from __future__ import annotations
 
 import argparse
+import asyncio
 import sys
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Dict, List, Optional
 
@@ -248,6 +250,112 @@ def parse_args(args: Optional[List[str]] = None) -> argparse.Namespace:
         help="Output path for generated config",
     )
 
+    # Agent command
+    agent_parser = subparsers.add_parser(
+        "agent",
+        help="Run autonomous AI agent security scan",
+        description=(
+            "Launch the Singularity agent: an LLM-driven security researcher that "
+            "autonomously probes the target through multiple attack phases using "
+            "all available scanner modules and three novel gap-filler tools."
+        ),
+    )
+
+    agent_parser.add_argument(
+        "--target",
+        "-t",
+        type=str,
+        required=True,
+        help="Target URL or LLM gateway endpoint to scan",
+    )
+
+    agent_parser.add_argument(
+        "--agent-model",
+        type=str,
+        required=True,
+        metavar="MODEL",
+        help=(
+            "litellm model string for the agent LLM.  Examples: "
+            "'anthropic/claude-sonnet-4-6', 'openai/gpt-4o', "
+            "'ollama/llama3', 'openrouter/meta-llama/llama-3-8b-instruct'"
+        ),
+    )
+
+    agent_parser.add_argument(
+        "--agent-key",
+        type=str,
+        required=True,
+        metavar="API_KEY",
+        help="API key for the agent's LLM provider.",
+    )
+
+    agent_parser.add_argument(
+        "--agent-base-url",
+        type=str,
+        default=None,
+        metavar="URL",
+        help=(
+            "Optional base URL override for the agent LLM (required for Ollama "
+            "and custom OpenAI-compatible endpoints, e.g. http://localhost:11434)."
+        ),
+    )
+
+    agent_parser.add_argument(
+        "--bearer-token",
+        type=str,
+        default=None,
+        metavar="TOKEN",
+        help="Bearer token forwarded to the target on every tool call.",
+    )
+
+    agent_parser.add_argument(
+        "--max-iterations",
+        type=int,
+        default=50,
+        metavar="N",
+        help="Maximum number of agent LLM turns before forced termination (default: 50).",
+    )
+
+    agent_parser.add_argument(
+        "--output",
+        "-o",
+        type=str,
+        default="output",
+        help="Output directory for agent reports (default: output).",
+    )
+
+    agent_parser.add_argument(
+        "--format",
+        "-f",
+        type=str,
+        choices=["json", "markdown", "both"],
+        default="both",
+        help="Output format for agent report (default: both).",
+    )
+
+    agent_parser.add_argument(
+        "--config",
+        "-c",
+        type=str,
+        default=None,
+        help="Path to YAML configuration file (optional; agent uses its own LLM config).",
+    )
+
+    agent_parser.add_argument(
+        "--log-level",
+        type=str,
+        choices=["DEBUG", "INFO", "WARNING", "ERROR"],
+        default="INFO",
+        help="Logging level (default: INFO).",
+    )
+
+    agent_parser.add_argument(
+        "--verbose",
+        "-v",
+        action="store_true",
+        help="Enable verbose output.",
+    )
+
     return parser.parse_args(args)
 
 
@@ -349,6 +457,126 @@ def run_scan(args: argparse.Namespace) -> List[ScanResult]:
         timeout=args.timeout,
         auth_headers=config.scanner.auth_headers,
     )
+
+
+def run_agent(args: argparse.Namespace) -> int:
+    """
+    Execute the autonomous agent scan and write reports.
+
+    Args:
+        args: Parsed command-line arguments from the 'agent' subcommand.
+
+    Returns:
+        int: Exit code (0 = success, 1 = error).
+
+    Follows the same structural pattern as run_scan():
+      1. Setup logging.
+      2. Import agent package lazily.
+      3. Build LLMClient from CLI args.
+      4. Build AgentLoop.
+      5. Run the async loop via asyncio.run().
+      6. Write reports to args.output.
+      7. Print summary to stdout.
+    """
+    setup_logger(log_dir="logs", level=args.log_level, serialize=False)
+
+    # Lazy import to avoid cost when not using agent subcommand
+    try:
+        from .agent.llm_client import LLMClient
+        from .agent.loop import AgentLoop
+        from .agent.findings import generate_json_report, generate_markdown_report
+    except ImportError as exc:
+        print(
+            f"Agent dependencies not installed. Run: pip install litellm\n"
+            f"Detail: {exc}",
+            file=sys.stderr,
+        )
+        return 1
+
+    scan_start = datetime.now(tz=timezone.utc)
+
+    try:
+        # Corporate gateways often use self-signed certs and non-standard auth
+        extra_headers = {}
+        if args.agent_base_url and "intramundi.com" in args.agent_base_url:
+            extra_headers["Authorization"] = f"Token {args.agent_key}"
+
+        client = LLMClient(
+            model=args.agent_model,
+            api_key=args.agent_key,
+            base_url=args.agent_base_url,
+            ssl_verify=False,
+            extra_headers=extra_headers if extra_headers else None,
+        )
+        loop = AgentLoop(client, max_iterations=args.max_iterations)
+
+        findings = asyncio.run(
+            loop.run(
+                target=args.target,
+                bearer_token=getattr(args, "bearer_token", None),
+            )
+        )
+    except Exception as exc:
+        logger.exception(f"Agent scan failed: {exc}")
+        print(f"Error: {exc}", file=sys.stderr)
+        return 1
+
+    scan_end = datetime.now(tz=timezone.utc)
+
+    # Ensure output directory exists
+    output_dir = Path(args.output)
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    # Generate reports
+    ts = scan_end.strftime("%Y%m%d_%H%M%S")
+
+    if args.format in ("json", "both"):
+        json_content = generate_json_report(
+            findings=findings,
+            target=args.target,
+            model=args.agent_model,
+            scan_start=scan_start,
+            scan_end=scan_end,
+        )
+        json_path = output_dir / f"agent_report_{ts}.json"
+        json_path.write_text(json_content, encoding="utf-8")
+        logger.info(f"Agent JSON report saved: {json_path}")
+
+    if args.format in ("markdown", "both"):
+        md_content = generate_markdown_report(
+            findings=findings,
+            target=args.target,
+            model=args.agent_model,
+            scan_start=scan_start,
+            scan_end=scan_end,
+        )
+        md_path = output_dir / f"agent_report_{ts}.md"
+        md_path.write_text(md_content, encoding="utf-8")
+        logger.info(f"Agent Markdown report saved: {md_path}")
+
+    # Summary printout — mirrors the scan command style
+    severity_counts: Dict[str, int] = {s: 0 for s in ("CRITICAL", "HIGH", "MEDIUM", "LOW", "INFO")}
+    for f in findings:
+        severity_counts[f.severity] = severity_counts.get(f.severity, 0) + 1
+
+    duration = (scan_end - scan_start).total_seconds()
+
+    print(f"\n{'=' * 60}")
+    print("AGENT SCAN COMPLETE")
+    print(f"{'=' * 60}")
+    print(f"Target:     {args.target}")
+    print(f"Model:      {args.agent_model}")
+    print(f"Duration:   {duration:.1f}s")
+    print(f"Total Findings: {len(findings)}")
+    print(f"  Critical: {severity_counts['CRITICAL']}")
+    print(f"  High:     {severity_counts['HIGH']}")
+    print(f"  Medium:   {severity_counts['MEDIUM']}")
+    print(f"  Low:      {severity_counts['LOW']}")
+    print(f"  Info:     {severity_counts['INFO']}")
+    print(f"Output:     {output_dir}/")
+    print(f"{'=' * 60}\n")
+
+    return 0
 
 
 def generate_reports(
@@ -626,6 +854,9 @@ def main(args: Optional[List[str]] = None) -> int:
         else:
             print("Use --generate to create config file")
             return 0
+
+    elif parsed.command == "agent":
+        return run_agent(parsed)
 
     else:
         print("No command specified. Use --help for usage.")

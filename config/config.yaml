@@ -1,3 +1,13 @@
+agent:
+  llm:
+    api_key: null
+    base_url: null
+    model: anthropic/claude-sonnet-4-6
+  loop:
+    max_iterations: 50
+    output_dir: output
+    output_format: both
+    request_timeout: 15
 logging:
   compression: zip
   format: '{time:YYYY-MM-DD HH:mm:ss} | {level} | {name} | {function} | {message}'
