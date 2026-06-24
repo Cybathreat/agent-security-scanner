@@ -496,17 +496,11 @@ def run_agent(args: argparse.Namespace) -> int:
     scan_start = datetime.now(tz=timezone.utc)
 
     try:
-        # Corporate gateways often use self-signed certs and non-standard auth
-        extra_headers = {}
-        if args.agent_base_url and "intramundi.com" in args.agent_base_url:
-            extra_headers["Authorization"] = f"Token {args.agent_key}"
-
         client = LLMClient(
             model=args.agent_model,
             api_key=args.agent_key,
             base_url=args.agent_base_url,
             ssl_verify=False,
-            extra_headers=extra_headers if extra_headers else None,
         )
         loop = AgentLoop(client, max_iterations=args.max_iterations)
 
