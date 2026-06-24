@@ -44,8 +44,14 @@ Thumbs.db
 .env
 .env.local
 
-# Output
+# Output & reports
 output/
+htmlcov/
 
-# Local package (removed — code lives in agent_security_scanner/)
-src/.superpowers/
+# Scan database & engagement-specific configs
+data/
+config/rct-*.yaml
+config/*-scan-config.yaml
+
+# Superpowers tool state
+.superpowers/
