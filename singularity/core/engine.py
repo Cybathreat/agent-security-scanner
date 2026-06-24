@@ -9,11 +9,12 @@ Type hints everywhere for IDE support and static analysis.
 
 from __future__ import annotations
 
-from typing import Any, List, Optional, cast
+from typing import Any, Dict, List, Optional, cast
 
 from loguru import logger
 
 from .config import Config
+from .gateway_profile import LLMGatewayProfile
 from ..modules.base import BaseModule, ScanResult
 
 
@@ -110,6 +111,7 @@ class ScanEngine:
         target: str,
         modules: Optional[List[str]] = None,
         timeout: int = 30,
+        auth_headers: Optional[Dict[str, str]] = None,
     ) -> List[ScanResult]:
         """
         Execute a security scan against the target.
@@ -118,6 +120,7 @@ class ScanEngine:
             target: URL or API endpoint to scan.
             modules: List of module names to run. Defaults to all modules.
             timeout: Per-request timeout in seconds.
+            auth_headers: HTTP headers added to every request (e.g. Authorization).
 
         Returns:
             List[ScanResult]: Results from each executed module.
@@ -127,6 +130,14 @@ class ScanEngine:
         logger.info(f"Scan started — target: {target}")
         logger.info(f"Modules: {', '.join(module_names)}")
         logger.info(f"Timeout: {timeout}s")
+        # Merge extra_headers (gateway-specific required headers) into auth_headers
+        merged_headers = {**(auth_headers or {}), **self.config.gateway_discovery.extra_headers}
+
+        if merged_headers:
+            logger.info(f"Request headers: {list(merged_headers.keys())}")
+
+        # Phase 0 — always run gateway discovery first
+        gateway_profile = self._run_gateway_discovery(target, timeout, merged_headers)
 
         results: List[ScanResult] = []
 
@@ -136,7 +147,12 @@ class ScanEngine:
                 continue
 
             logger.info(f"Running module: {name}")
-            result = module.scan(target, timeout=timeout)
+            result = module.scan(
+                target,
+                timeout=timeout,
+                auth_headers=merged_headers,
+                gateway_profile=gateway_profile,
+            )
             results.append(result)
 
             logger.info(
@@ -152,6 +168,58 @@ class ScanEngine:
         )
 
         return results
+
+    def _run_gateway_discovery(
+        self,
+        target: str,
+        timeout: int,
+        auth_headers: Dict[str, str],
+    ) -> LLMGatewayProfile:
+        """Run Phase 0 gateway discovery and return the profile."""
+        gd_config = self.config.gateway_discovery
+
+        # Short-circuit: user already knows the endpoint
+        if gd_config.llm_endpoint:
+            profile = LLMGatewayProfile(target=target)
+            profile.chat_endpoint = gd_config.llm_endpoint
+            profile.api_format = gd_config.api_format or "openai"
+            logger.info(
+                f"Using manual LLM endpoint: {profile.chat_endpoint} "
+                f"(format={profile.api_format})"
+            )
+            return profile
+
+        from ..modules.gateway_discovery import GatewayDiscoveryModule
+
+        # Merge extra_headers into auth_headers for all probes
+        merged_headers = {**auth_headers, **gd_config.extra_headers}
+
+        logger.info("Phase 0 — running gateway discovery")
+        module = GatewayDiscoveryModule(gd_config)
+        result = module.scan(target, timeout=timeout, auth_headers=merged_headers)
+
+        profile_dict = result.metadata.get("gateway_profile", {})
+        profile = LLMGatewayProfile(target=target)
+
+        if isinstance(profile_dict, dict):
+            profile.chat_endpoint = profile_dict.get("chat_endpoint")
+            profile.models_endpoint = profile_dict.get("models_endpoint")
+            profile.health_endpoint = profile_dict.get("health_endpoint")
+            profile.api_format = gd_config.api_format or profile_dict.get("api_format", "unknown")
+            profile.llm_type = profile_dict.get("llm_type", "unknown")
+            profile.model_name = profile_dict.get("model_name")
+            profile.available_models = profile_dict.get("available_models", [])
+            profile.has_system_prompt = profile_dict.get("has_system_prompt", False)
+            profile.system_prompt_hint = profile_dict.get("system_prompt_hint")
+            profile.supports_tools = profile_dict.get("supports_tools", False)
+            profile.discovery_errors = profile_dict.get("discovery_errors", [])
+
+        logger.info(
+            f"Gateway profile: endpoint={profile.chat_endpoint}, "
+            f"format={profile.api_format}, type={profile.llm_type}, "
+            f"model={profile.model_name}"
+        )
+        return profile
 
     def _build_module(self, name: str) -> Optional[BaseModule[Any]]:
         """

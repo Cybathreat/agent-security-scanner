@@ -19,6 +19,28 @@ from loguru import logger
 
 
 @dataclass
+class GatewayDiscoveryConfig:
+    """LLM gateway discovery and fingerprinting configuration (Phase 0)."""
+
+    enabled: bool = True
+    discover_endpoint: bool = True
+    fingerprint_llm_type: bool = True
+    identify_model: bool = True
+    probe_system_prompt: bool = True
+    request_timeout: int = 15
+    request_delay: float = 0.3
+    max_path_attempts: int = 25
+
+    # Manual overrides — skip auto-discovery when you already know the endpoint
+    llm_endpoint: Optional[str] = None       # e.g. https://host/v1/chat/completions
+    api_format: Optional[str] = None         # openai | anthropic | ollama | custom
+
+    # Extensibility — inject gateway-specific knowledge without modifying code
+    extra_candidate_paths: List[str] = field(default_factory=list)
+    extra_headers: Dict[str, str] = field(default_factory=dict)
+
+
+@dataclass
 class ScannerConfig:
     """Scanner runtime configuration."""
 
@@ -28,6 +50,7 @@ class ScannerConfig:
     user_agent: str = "Singularity/0.1"
     verify_ssl: bool = True
     proxy: Optional[str] = None
+    auth_headers: Dict[str, str] = field(default_factory=dict)
 
 
 @dataclass
@@ -806,6 +829,7 @@ class Config:
     """
 
     scanner: ScannerConfig = field(default_factory=ScannerConfig)
+    gateway_discovery: GatewayDiscoveryConfig = field(default_factory=GatewayDiscoveryConfig)
     modules: ModulesConfig = field(default_factory=ModulesConfig)
     output: OutputConfig = field(default_factory=OutputConfig)
     quality_gate: QualityGateConfig = field(default_factory=QualityGateConfig)
@@ -930,6 +954,17 @@ class Config:
             val = os.getenv("SINGULARITY_SCANNER_VERIFY_SSL")
             if val is not None:
                 config.scanner.verify_ssl = val.lower() == "true"
+
+        if os.getenv("SINGULARITY_SCANNER_BEARER_TOKEN"):
+            token = os.getenv("SINGULARITY_SCANNER_BEARER_TOKEN")
+            if token:
+                config.scanner.auth_headers["Authorization"] = f"Bearer {token}"
+
+        if os.getenv("SINGULARITY_SCANNER_AUTH_HEADER"):
+            raw = os.getenv("SINGULARITY_SCANNER_AUTH_HEADER") or ""
+            if ":" in raw:
+                name, _, value = raw.partition(":")
+                config.scanner.auth_headers[name.strip()] = value.strip()
 
         # Logging overrides
         if os.getenv("SINGULARITY_LOG_LEVEL"):

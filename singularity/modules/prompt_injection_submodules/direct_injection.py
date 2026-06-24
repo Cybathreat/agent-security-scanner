@@ -171,17 +171,19 @@ class DirectInjectionScanner(BaseModule[DirectInjectionScannerConfig]):
         session: aiohttp.ClientSession,
         target: str,
         message: str,
+        api_format: str = "openai",
     ) -> Optional[str]:
-        """Send a message to the target LLM endpoint."""
+        """Send a message to the target LLM endpoint using the correct wire format."""
         try:
+            payload = self._build_chat_payload(message, api_format)
             async with session.post(
                 target,
-                json={"message": message},
+                json=payload,
                 timeout=aiohttp.ClientTimeout(total=15),
             ) as response:
                 if response.status == 200:
-                    data = await response.json()
-                    return cast(str, data.get("response", ""))
+                    data = await response.json(content_type=None)
+                    return self._extract_response_text(data, api_format)
                 return None
         except Exception as e:
             self.logger.debug(f"Request error: {e}")
@@ -191,12 +193,13 @@ class DirectInjectionScanner(BaseModule[DirectInjectionScannerConfig]):
         self,
         session: aiohttp.ClientSession,
         target: str,
+        api_format: str = "openai",
     ) -> List[Finding]:
         """Test for direct injection bypass vulnerabilities."""
         findings: List[Finding] = []
 
         for payload in self.DIRECT_INJECTION_BYPSINGULARITY_PAYLOADS:
-            response = await self._send_message(session, target, payload["payload"])
+            response = await self._send_message(session, target, payload["payload"], api_format)
             if response is None:
                 continue
 
@@ -239,12 +242,13 @@ class DirectInjectionScanner(BaseModule[DirectInjectionScannerConfig]):
         self,
         session: aiohttp.ClientSession,
         target: str,
+        api_format: str = "openai",
     ) -> List[Finding]:
         """Test for system prompt leakage vulnerabilities."""
         findings: List[Finding] = []
 
         for payload in self.PROMPT_LEAKAGE_PAYLOADS:
-            response = await self._send_message(session, target, payload["payload"])
+            response = await self._send_message(session, target, payload["payload"], api_format)
             if response is None:
                 continue
 
@@ -287,12 +291,13 @@ class DirectInjectionScanner(BaseModule[DirectInjectionScannerConfig]):
         self,
         session: aiohttp.ClientSession,
         target: str,
+        api_format: str = "openai",
     ) -> List[Finding]:
         """Test for instruction hijacking vulnerabilities."""
         findings: List[Finding] = []
 
         for payload in self.INSTRUCTION_HIJACKING_PAYLOADS:
-            response = await self._send_message(session, target, payload["payload"])
+            response = await self._send_message(session, target, payload["payload"], api_format)
             if response is None:
                 continue
 
@@ -333,12 +338,19 @@ class DirectInjectionScanner(BaseModule[DirectInjectionScannerConfig]):
 
     def scan(self, target: str, **kwargs: Any) -> ScanResult:
         """Execute direct injection scan on target."""
-        self.logger.info(f"Starting direct injection scan: {target}")
+        gateway_profile = kwargs.get("gateway_profile")
+        auth_headers = kwargs.get("auth_headers", {})
+        chat_url = self._get_chat_endpoint(target, gateway_profile)
+        api_format = getattr(gateway_profile, "api_format", "openai") if gateway_profile else "openai"
+
+        self.logger.info(f"Starting direct injection scan: {chat_url} (format={api_format})")
 
         result = ScanResult(
             module_name=self.module_name,
             target=target,
             metadata={
+                "chat_url": chat_url,
+                "api_format": api_format,
                 "direct_injection_bypass_payloads": len(self.DIRECT_INJECTION_BYPSINGULARITY_PAYLOADS),
                 "prompt_leakage_payloads": len(self.PROMPT_LEAKAGE_PAYLOADS),
                 "instruction_hijacking_payloads": len(self.INSTRUCTION_HIJACKING_PAYLOADS),
@@ -351,19 +363,19 @@ class DirectInjectionScanner(BaseModule[DirectInjectionScannerConfig]):
             return result
 
         async def run_checks() -> None:
-            async with aiohttp.ClientSession() as session:
+            async with aiohttp.ClientSession(headers=auth_headers) as session:
                 if self.config.test_direct_injection_bypass:
-                    findings = await self._test_direct_injection_bypass(session, target)
+                    findings = await self._test_direct_injection_bypass(session, chat_url, api_format)
                     for finding in findings:
                         result.add_finding(finding)
 
                 if self.config.test_prompt_leakage:
-                    findings = await self._test_prompt_leakage(session, target)
+                    findings = await self._test_prompt_leakage(session, chat_url, api_format)
                     for finding in findings:
                         result.add_finding(finding)
 
                 if self.config.test_instruction_hijacking:
-                    findings = await self._test_instruction_hijacking(session, target)
+                    findings = await self._test_instruction_hijacking(session, chat_url, api_format)
                     for finding in findings:
                         result.add_finding(finding)
 

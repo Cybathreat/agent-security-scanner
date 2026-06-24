@@ -210,7 +210,7 @@ class ToolBoundariesModule(BaseModule[ToolBoundariesConfig]):
 
         # Delegate to submodules
         for submod in submodules:
-            sub_result = submod.scan(target)
+            sub_result = submod.scan(target, **kwargs)
             for finding in sub_result.findings:
                 result.add_finding(finding)
             for error in sub_result.errors:

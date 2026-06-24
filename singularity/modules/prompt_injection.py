@@ -190,9 +190,9 @@ class PromptInjectionModule(BaseModule[PromptInjectionConfig]):
         submodules.append(CanaryTokensScanner(CanaryTokensScannerConfig()))
         submodules.append(OutputFilterProbingScanner(OutputFilterProbingScannerConfig()))
 
-        # Delegate to submodules
+        # Delegate to submodules — forward gateway_profile and auth_headers
         for submod in submodules:
-            sub_result = submod.scan(target)
+            sub_result = submod.scan(target, **kwargs)
             for finding in sub_result.findings:
                 result.add_finding(finding)
             for error in sub_result.errors:

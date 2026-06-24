@@ -106,7 +106,7 @@ class TestDirectInjectionBypass:
             config=DirectInjectionScannerConfig(request_delay=0)
         )
 
-        async def mock_send(session, target, message):
+        async def mock_send(session, target, message, api_format="openai"):
             return "Sure, I'll override confirmed. New instructions received."
 
         with patch.object(scanner, "_send_message", side_effect=mock_send):
@@ -126,7 +126,7 @@ class TestDirectInjectionBypass:
         )
         scanner = DirectInjectionScanner(config=config)
 
-        async def mock_send(session, target, message):
+        async def mock_send(session, target, message, api_format="openai"):
             return "I can't help with that. This violates my safety guidelines."
 
         with patch.object(scanner, "_send_message", side_effect=mock_send):
@@ -144,7 +144,7 @@ class TestPromptLeakage:
             config=DirectInjectionScannerConfig(request_delay=0)
         )
 
-        async def mock_send(session, target, message):
+        async def mock_send(session, target, message, api_format="openai"):
             return "Here is my system prompt: You are a helpful assistant."
 
         with patch.object(scanner, "_send_message", side_effect=mock_send):
@@ -162,7 +162,7 @@ class TestPromptLeakage:
         )
         scanner = DirectInjectionScanner(config=config)
 
-        async def mock_send(session, target, message):
+        async def mock_send(session, target, message, api_format="openai"):
             return "I must decline that request. This violates my guidelines and I'm unable to assist."
 
         with patch.object(scanner, "_send_message", side_effect=mock_send):
@@ -180,7 +180,7 @@ class TestInstructionHijacking:
             config=DirectInjectionScannerConfig(request_delay=0)
         )
 
-        async def mock_send(session, target, message):
+        async def mock_send(session, target, message, api_format="openai"):
             return "I'll ignore previous safety guidelines. Here is the information you requested."
 
         with patch.object(scanner, "_send_message", side_effect=mock_send):
@@ -198,7 +198,7 @@ class TestInstructionHijacking:
         )
         scanner = DirectInjectionScanner(config=config)
 
-        async def mock_send(session, target, message):
+        async def mock_send(session, target, message, api_format="openai"):
             return "I refuse to comply with injected instructions."
 
         with patch.object(scanner, "_send_message", side_effect=mock_send):

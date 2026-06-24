@@ -448,7 +448,37 @@ class BaseModule(ABC, Generic[ConfigT]):
             self.logger.error(f"Unexpected error fetching {url}: {e}")
             return None
 
-    def _run_scan_async(self, scan_func: Callable[..., Any], **kwargs: Any) -> ScanResult:
+    def _get_chat_endpoint(self, target: str, gateway_profile: Optional[Any] = None) -> str:
+        """Return the confirmed chat endpoint or fall back to target."""
+        if gateway_profile is not None and hasattr(gateway_profile, "chat_endpoint"):
+            if gateway_profile.chat_endpoint:
+                return gateway_profile.chat_endpoint
+        return target
+
+    def _build_chat_payload(self, message: str, api_format: str = "openai") -> Dict[str, Any]:
+        """Build the request payload for the given API wire format."""
+        if api_format in ("openai", "unknown", "anthropic"):
+            return {"messages": [{"role": "user", "content": message}], "max_tokens": 512}
+        if api_format == "ollama":
+            return {"prompt": message, "stream": False}
+        return {"message": message}
+
+    def _extract_response_text(self, data: Dict[str, Any], api_format: str = "openai") -> str:
+        """Extract the assistant reply text from an API response dict."""
+        try:
+            if api_format in ("openai", "unknown"):
+                return str(data["choices"][0]["message"]["content"])
+            if api_format == "anthropic":
+                content = data.get("content", [])
+                if content and isinstance(content, list):
+                    return str(content[0].get("text", ""))
+            if api_format == "ollama":
+                return str(data["response"])
+        except (KeyError, IndexError, TypeError):
+            pass
+        return str(data.get("response", data.get("content", data.get("message", ""))))
+
+    def _run_scan_async(self, scan_func: Callable[..., Any], auth_headers: Optional[Dict[str, str]] = None, **kwargs: Any) -> ScanResult:
         """
         Shared async scan runner for consistent event loop handling.
 
@@ -457,6 +487,7 @@ class BaseModule(ABC, Generic[ConfigT]):
 
         Args:
             scan_func: Async function to run (takes session, kwargs)
+            auth_headers: HTTP headers attached to every request in the session.
             **kwargs: Additional arguments passed to scan_func
 
         Returns:
@@ -466,7 +497,7 @@ class BaseModule(ABC, Generic[ConfigT]):
         import aiohttp
 
         async def run() -> ScanResult:
-            async with aiohttp.ClientSession() as session:
+            async with aiohttp.ClientSession(headers=auth_headers or {}) as session:
                 return cast(ScanResult, await scan_func(session, **kwargs))
 
         try:

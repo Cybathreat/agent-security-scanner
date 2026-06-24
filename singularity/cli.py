@@ -17,7 +17,7 @@ from __future__ import annotations
 import argparse
 import sys
 from pathlib import Path
-from typing import List, Optional
+from typing import Dict, List, Optional
 
 from loguru import logger
 
@@ -156,6 +156,49 @@ def parse_args(args: Optional[List[str]] = None) -> argparse.Namespace:
         help="Maximum aggregate risk score allowed before quality gate fails",
     )
 
+    scan_parser.add_argument(
+        "--bearer-token",
+        type=str,
+        default=None,
+        metavar="TOKEN",
+        help="Bearer token sent as 'Authorization: Bearer <TOKEN>' on all requests",
+    )
+
+    scan_parser.add_argument(
+        "--auth-header",
+        type=str,
+        action="append",
+        default=None,
+        metavar="NAME:VALUE",
+        help="Custom auth header in 'Name: Value' format (can be repeated)",
+    )
+
+    scan_parser.add_argument(
+        "--llm-endpoint",
+        type=str,
+        default=None,
+        metavar="URL",
+        help="LLM chat completions URL — skips Phase 0 auto-discovery (e.g. https://host/v1/chat/completions)",
+    )
+
+    scan_parser.add_argument(
+        "--api-format",
+        type=str,
+        choices=["openai", "anthropic", "ollama", "custom"],
+        default=None,
+        metavar="FORMAT",
+        help="LLM API wire format — skips format auto-detection (openai|anthropic|ollama|custom)",
+    )
+
+    scan_parser.add_argument(
+        "--extra-header",
+        type=str,
+        action="append",
+        default=None,
+        metavar="NAME:VALUE",
+        help="Extra header sent on every LLM request (e.g. 'X-Use-Case: 5'), can be repeated",
+    )
+
     # Web command
     web_parser = subparsers.add_parser("web", help="Start web dashboard server")
 
@@ -263,10 +306,49 @@ def run_scan(args: argparse.Namespace) -> List[ScanResult]:
     # Load configuration
     config = load_config(args.config)
 
+    # Merge CLI auth headers into config (CLI takes precedence)
+    if getattr(args, "bearer_token", None):
+        config.scanner.auth_headers["Authorization"] = f"Bearer {args.bearer_token}"
+    for raw in getattr(args, "auth_header", None) or []:
+        if ":" in raw:
+            name, _, value = raw.partition(":")
+            config.scanner.auth_headers[name.strip()] = value.strip()
+
+    # Gateway discovery overrides
+    if getattr(args, "llm_endpoint", None):
+        config.gateway_discovery.llm_endpoint = args.llm_endpoint
+    if getattr(args, "api_format", None):
+        config.gateway_discovery.api_format = args.api_format
+    for raw in getattr(args, "extra_header", None) or []:
+        if ":" in raw:
+            name, _, value = raw.partition(":")
+            config.gateway_discovery.extra_headers[name.strip()] = value.strip()
+        else:
+            logger.warning(f"--extra-header ignored (no colon): {raw!r}")
+
+    for raw in getattr(args, "auth_header", None) or []:
+        if ":" not in raw:
+            logger.warning(f"--auth-header ignored (no colon): {raw!r}")
+
     modules = None if args.modules == "all" else [m.strip() for m in args.modules.split(",")]
 
+    if getattr(args, "dry_run", False):
+        logger.info("Dry-run mode — config loaded, modules resolved, no scan executed")
+        logger.info(f"Target: {args.target}")
+        logger.info(f"Modules: {modules or 'all'}")
+        logger.info(f"LLM endpoint: {config.gateway_discovery.llm_endpoint or 'auto-discover'}")
+        logger.info(f"API format: {config.gateway_discovery.api_format or 'auto-detect'}")
+        logger.info(f"Auth headers: {list(config.scanner.auth_headers.keys())}")
+        logger.info(f"Extra headers: {list(config.gateway_discovery.extra_headers.keys())}")
+        return []
+
     engine = ScanEngine(config)
-    return engine.run(args.target, modules=modules, timeout=args.timeout)
+    return engine.run(
+        args.target,
+        modules=modules,
+        timeout=args.timeout,
+        auth_headers=config.scanner.auth_headers,
+    )
 
 
 def generate_reports(

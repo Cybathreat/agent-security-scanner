@@ -164,7 +164,7 @@ class MisconfigurationsModule(BaseModule[MisconfigurationsConfig]):
             submodules.append(InfoDisclosureScanner(self._info_disclosure_scanner_config))
 
         for submod in submodules:
-            sub_result = submod.scan(target)
+            sub_result = submod.scan(target, **kwargs)
             for finding in sub_result.findings:
                 result.add_finding(finding)
             for error in sub_result.errors:
